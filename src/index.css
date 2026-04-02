@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Global resets ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #eef0f7;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Animations ───────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px) scaleY(0.96); transform-origin: top; }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+.animate-fadeIn    { animation: fadeIn    0.18s ease-out both; }
+.animate-slideDown { animation: slideDown 0.18s ease-out both; }
+.animate-spin-fast { animation: spin 0.65s linear infinite; }
+
+/* ── Skeleton shimmer ─────────────────────────────────────────────── */
+.skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 40%,
+    #f1f5f9 80%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* ── Custom scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Table row colors + hover ──────────────────────────────────────── */
+.row-threshold   { background: #f0fdf4; }
+.row-threshold:hover { background: #dcfce7; }
+.row-manual      { background: #fffbeb; }
+.row-manual:hover { background: #fef3c7; }
+.row-even        { background: #f8fafc; }
+.row-even:hover  { background: #e0e7ff; }
+.row-odd         { background: #ffffff; }
+.row-odd:hover   { background: #e0e7ff; }
+.row-threshold td, .row-manual td, .row-even td, .row-odd td {
+  transition: background 0.13s ease;
+}
+
+/* ── Payroll table helpers ─────────────────────────────────────────── */
+
+/* Threshold row: green left border */
+.threshold-row td:first-child {
+  border-left: 3px solid #16a34a;
+}
+
+/* Red underline on % ВЫП cell when requiresCardCheck */
+.perf-underline {
+  text-decoration: underline;
+  text-decoration-color: #ef4444;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Column header sort hover */
+.sortable-th:hover .sort-icon { opacity: 1; }
+.sort-icon { opacity: 0; transition: opacity 0.15s; }
+
+/* ── Payroll table helpers ─────────────────────────────────────────── */
+
+/* Threshold row: green left border */
+.threshold-row td:first-child {
+  border-left: 3px solid #16a34a;
+}
+
+/* Red underline on % ВЫП cell when requiresCardCheck */
+.perf-underline {
+  text-decoration: underline;
+  text-decoration-color: #ef4444;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Column header sort hover */
+.sortable-th:hover .sort-icon { opacity: 1; }
+.sort-icon { opacity: 0; transition: opacity 0.15s; }
+
+/* Sticky first three columns */
+.payroll-table thead th:nth-child(1),
+.payroll-table thead th:nth-child(2),
+.payroll-table thead th:nth-child(3),
+.payroll-table tbody td:nth-child(1),
+.payroll-table tbody td:nth-child(2),
+.payroll-table tbody td:nth-child(3),
+.payroll-table tfoot td:nth-child(1),
+.payroll-table tfoot td:nth-child(2),
+.payroll-table tfoot td:nth-child(3) {
+  position: sticky;
+  background: inherit;
+  z-index: 2;
+}
+.payroll-table thead th:nth-child(1),
+.payroll-table tbody td:nth-child(1),
+.payroll-table tfoot td:nth-child(1) { left: 0; }
+.payroll-table thead th:nth-child(2),
+.payroll-table tbody td:nth-child(2),
+.payroll-table tfoot td:nth-child(2) { left: 40px; }
+.payroll-table thead th:nth-child(3),
+.payroll-table tbody td:nth-child(3),
+.payroll-table tfoot td:nth-child(3) { left: 96px; }
+
