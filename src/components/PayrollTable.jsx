@@ -38,7 +38,7 @@ const COLUMNS = [
   { key: 'vacation',        label: 'VACATION',                                                                               group: 'EFFICIENCY',         width: 290 },
   // ATTENDANCE & BONUS
   { key: 'b1',              label: '%(B1)',                                                                                    group: 'ATTENDANCE & BONUS', width: 54  },
-  { key: 'b2',              label: '%(B2)',                                                                                    group: 'ATTENDANCE & BONUS', width: 54  },
+  { key: 'b2',              label: '%(B2)',                                                                                    group: 'ATTENDANCE & BONUS', width: 72  },
   { key: 'surcharge',       label: '\u0421\u0422. \u041d\u0410\u0414.',                                                      group: 'ATTENDANCE & BONUS', width: 60  },
   { key: 'limit',           label: '\u041b\u0418\u041c\u0418\u0422',                                                         group: 'ATTENDANCE & BONUS', width: 60  },
   // LIMITS & GRADES
@@ -233,9 +233,40 @@ function CellValue({ colKey, agent }) {
         </span>
       );
 
+    case 'b2': {
+      const given = agent.b2;
+      const standard = agent.surcharge;
+      if (given == null) return <span>&#x2013;</span>;
+      const diff = given - standard;
+      const isUp = diff > 0;
+      const isDown = diff < 0;
+      const pct = standard ? Math.abs(Math.round((diff / standard) * 100)) : 0;
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 4 }}>
+          <span style={{ fontWeight: 600 }}>{given}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 36 }}>
+            {diff !== 0 ? (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 1,
+                fontSize: 10, fontWeight: 700,
+                color: isUp ? '#15803d' : '#dc2626',
+              }}>
+                {isUp
+                  ? <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  : <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5l3 3 3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                }
+                {pct}%
+              </span>
+            ) : (
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>&#x2014;</span>
+            )}
+          </span>
+        </span>
+      );
+    }
+
     case 'limit':
     case 'b1':
-    case 'b2':
     case 'surcharge':
     case 'razryad':
       return <span>{agent[colKey] ?? '\u2013'}</span>;
