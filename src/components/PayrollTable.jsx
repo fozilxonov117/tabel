@@ -187,11 +187,7 @@ function CellValue({ colKey, agent }) {
       return <span>{fmtTime(agent[colKey])}</span>;
 
     case 'perfPct':
-      return (
-        <span className={agent.flags?.requiresCardCheck ? 'perf-underline font-semibold' : 'font-semibold'}>
-          {agent[colKey]}%
-        </span>
-      );
+      return <span className="font-semibold">{agent[colKey]}%</span>;
 
     case 'explanation':
       return agent[colKey] ? <ExplanationBadge value={agent[colKey]} /> : null;
