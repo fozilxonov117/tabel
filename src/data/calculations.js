@@ -90,8 +90,9 @@ export function computeAgent(agent) {
   const attendanceFactor = agent.b1 / 100;
   const qualityFactor = (agent.b2 / 100);
 
-  // factScore: weighted average of attendance and quality
-  const factScore = parseFloat(((attendanceFactor * 50 + qualityFactor * 50)).toFixed(1));
+  // factScore: use manually-set value from mock data, or compute from b1/b2
+  const computedFactScore = parseFloat(((attendanceFactor * 50 + qualityFactor * 50)).toFixed(1));
+  const factScore = agent.factScore !== undefined ? agent.factScore : computedFactScore;
 
   // Actual bonus = baseSalary * bonusMultiplier, adjusted by surcharge coefficient
   const surchargeAdj = agent.surcharge / 100;
@@ -103,6 +104,18 @@ export function computeAgent(agent) {
   const наРуки = итог - налог;
   const наКарту = наРуки - agent.advance;
 
+  // New supplementary fields – use agent value if provided, otherwise derive a default
+  const limit           = agent.limit           ?? agent.surcharge;
+  const razryad         = agent.razryad         ?? (perfPct >= 110 ? 7 : perfPct >= 100 ? 6 : perfPct >= 90 ? 5 : 4);
+  const profitFromOp    = agent.profitFromOp    ?? 0;
+  const nadbavka        = agent.nadbavka        ?? baseSalary;
+  const noch            = agent.noch            ?? 0;
+  const vecher          = agent.vecher          ?? 0;
+  const prazdnichny     = agent.prazdnichny     ?? 0;
+  const stoimostBiletov = agent.stoimostBiletov ?? 0;
+  const addBonus        = agent.addBonus        ?? 0;
+  const vyslugaLet      = agent.vyslugaLet      ?? Math.round(baseSalary * 0.05);
+
   return {
     ...agent,
     perfPct,
@@ -111,6 +124,16 @@ export function computeAgent(agent) {
     налог,
     наРуки,
     наКарту,
+    limit,
+    razryad,
+    profitFromOp,
+    nadbavka,
+    noch,
+    vecher,
+    prazdnichny,
+    stoimostBiletov,
+    addBonus,
+    vyslugaLet,
   };
 }
 
@@ -141,6 +164,14 @@ export function computeTotals(computedAgents) {
     налог: sum('налог'),
     advance: sum('advance'),
     baseSalary: sum('baseSalary'),
+    nadbavka: sum('nadbavka'),
+    noch: sum('noch'),
+    vecher: sum('vecher'),
+    prazdnichny: sum('prazdnichny'),
+    stoimostBiletov: sum('stoimostBiletov'),
+    addBonus: sum('addBonus'),
+    vyslugaLet: sum('vyslugaLet'),
+    profitFromOp: sum('profitFromOp'),
     count: computedAgents.length,
   };
 }

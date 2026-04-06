@@ -24,13 +24,9 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
         boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
       }}
     >
-      {/* в”Ђв”Ђ Search в”Ђв”Ђ */}
-      <div className="flex items-center gap-2 flex-1 max-w-sm">
+      {/* Search + Filters + Refresh on left */}
+      <div className="flex items-center gap-2 flex-1 max-w-lg">
         <SearchInput value={searchQuery} onChange={onSearchChange} />
-      </div>
-
-      {/* в”Ђв”Ђ Filter + Refresh в”Ђв”Ђ */}
-      <div className="flex items-center gap-2">
         <FiltersBtn />
         <RefreshBtn onClick={onRefresh} />
       </div>
@@ -165,22 +161,24 @@ function SearchInput({ value, onChange }) {
       {/* Animated clear button */}
       <AnimatePresence>
         {value && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.6 }}
-            transition={{ duration: 0.15 }}
-            onClick={() => onChange('')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center"
-            style={{ background: '#94a3b8', border: 'none', cursor: 'pointer' }}
-            whileHover={{ background: '#6366f1', scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <line x1="1.5" y1="1.5" x2="6.5" y2="6.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="6.5" y1="1.5" x2="1.5" y2="6.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </motion.button>
+          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => onChange('')}
+              className="w-4 h-4 rounded-full flex items-center justify-center"
+              style={{ background: '#94a3b8', border: 'none', cursor: 'pointer' }}
+              whileHover={{ background: '#6366f1', scale: 1.15 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                <line x1="1.5" y1="1.5" x2="6.5" y2="6.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="6.5" y1="1.5" x2="1.5" y2="6.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </motion.button>
+          </div>
         )}
       </AnimatePresence>
     </div>

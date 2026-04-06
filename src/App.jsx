@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Header from './components/Header';
-import GroupTabs from './components/GroupTabs';
 import Toolbar from './components/Toolbar';
 import PayrollTable from './components/PayrollTable';
 import StatusBar from './components/StatusBar';
@@ -14,12 +13,13 @@ const DEFAULT_VISIBLE_COLUMNS = {
   'CALL METRICS': true,
   'EFFICIENCY': true,
   'ATTENDANCE & BONUS': true,
+  'LIMITS & GRADES': true,
   'TOTALS (BI-BK)': true,
-  'DEDUCTIONS (BL-BM)': true,
+  'ALLOWANCES': true,
 };
 
 export default function App() {
-  const [activeGroup, setActiveGroup] = useState(GROUP_NAMES[1]);
+  const [activeGroup, setActiveGroup] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
@@ -29,10 +29,12 @@ export default function App() {
   // Clean up timer on unmount
   useEffect(() => () => clearTimeout(loadingTimer.current), []);
 
-  const computedAgents = useMemo(
-    () => processGroup(mockAgents[activeGroup] || []),
-    [activeGroup]
-  );
+  const computedAgents = useMemo(() => {
+    if (activeGroup === 'All') {
+      return GROUP_NAMES.flatMap(g => processGroup(mockAgents[g] || []));
+    }
+    return processGroup(mockAgents[activeGroup] || []);
+  }, [activeGroup]);
 
   const filteredAgents = useMemo(() => {
     if (!searchQuery.trim()) return computedAgents;
@@ -70,9 +72,8 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#eef0f7' }}>
-      <Header />
-      <GroupTabs activeGroup={activeGroup} onGroupChange={handleGroupChange} />
+    <div className="h-screen flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#eef0f7' }}>
+      <Header activeGroup={activeGroup} onGroupChange={handleGroupChange} />
       <Toolbar
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
@@ -86,19 +87,13 @@ export default function App() {
           agents={filteredAgents}
           activeGroup={activeGroup}
           visibleColumns={visibleColumns}
-          page={page}
-          perPage={PER_PAGE}
           totalAll={TOTAL_AGENTS}
           isLoading={isLoading}
         />
       </div>
       <StatusBar
-        page={page}
-        perPage={PER_PAGE}
         totalFiltered={filteredAgents.length}
         totalAll={TOTAL_AGENTS}
-        totalPages={totalPages}
-        onPageChange={setPage}
       />
     </div>
   );

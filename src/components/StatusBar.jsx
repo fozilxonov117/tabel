@@ -1,14 +1,10 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
-import Pagination from './Pagination';
 
 const LAST_SYNC = 'OCT 25, 14:22:01';
 const SOURCE = 'PBX INTERNAL API V2.4';
 
-export default function StatusBar({ page, perPage, totalFiltered, totalAll, totalPages, onPageChange }) {
-  const startRow = totalFiltered === 0 ? 0 : (page - 1) * perPage + 1;
-  const endRow = Math.min(page * perPage, totalFiltered);
-
+export default function StatusBar({ totalFiltered, totalAll }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -20,12 +16,11 @@ export default function StatusBar({ page, perPage, totalFiltered, totalAll, tota
         background: '#ffffff',
         borderTop: '1px solid #e8eaf0',
         boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
+        flexShrink: 0,
       }}
     >
       {/* Left: legend chips */}
       <div className="flex items-center gap-4">
-        <LegendChip color="#fef9c3" dot="#ca8a04" label="Manual Input" />
-        <LegendChip color="#dcfce7" dot="#16a34a" label="Threshold Achieved" />
         <LegendChip color="#fee2e2" dot="#dc2626" label="Requires Card Check" />
       </div>
 
@@ -39,21 +34,20 @@ export default function StatusBar({ page, perPage, totalFiltered, totalAll, tota
         />
         <span style={{ fontWeight: 500 }}>SOURCE:</span>
         <span style={{ color: '#64748b', fontWeight: 700 }}>{SOURCE}</span>
-        <span style={{ opacity: 0.4 }}>В·</span>
+        <span style={{ opacity: 0.4 }}>·</span>
         <span style={{ fontWeight: 500 }}>LAST SYNC:</span>
         <span style={{ color: '#64748b', fontWeight: 700 }}>{LAST_SYNC}</span>
       </div>
 
-      {/* Right: count + pagination */}
+      {/* Right: total agent count */}
       <div className="flex items-center gap-3">
         <span style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap' }}>
-          Displaying{' '}
-          <strong style={{ color: '#1e293b', fontWeight: 700 }}>{startRow}вЂ“{endRow}</strong>
-          {' '}of{' '}
-          <strong style={{ color: '#1e293b', fontWeight: 700 }}>{totalAll}</strong>
+          <strong style={{ color: '#1e293b', fontWeight: 700 }}>{totalFiltered}</strong>
+          {totalFiltered !== totalAll && (
+            <span> of <strong style={{ color: '#1e293b', fontWeight: 700 }}>{totalAll}</strong></span>
+          )}
           {' '}Agents
         </span>
-        <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
       </div>
     </motion.div>
   );
@@ -89,3 +83,4 @@ function LegendChip({ color, dot, label }) {
     </motion.div>
   );
 }
+

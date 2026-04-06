@@ -62,17 +62,13 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* ── Table row colors + hover ──────────────────────────────────────── */
-.row-threshold   { background: #f0fdf4; }
-.row-threshold:hover { background: #dcfce7; }
-.row-manual      { background: #fffbeb; }
-.row-manual:hover { background: #fef3c7; }
-.row-even        { background: #f8fafc; }
-.row-even:hover  { background: #e0e7ff; }
-.row-odd         { background: #ffffff; }
-.row-odd:hover   { background: #e0e7ff; }
 .row-threshold td, .row-manual td, .row-even td, .row-odd td {
+  background: #fffffa;
   transition: background 0.13s ease;
 }
+.row-threshold:hover td, .row-manual:hover td, .row-even:hover td, .row-odd:hover td {
+  background: #e0f2fe;
+}
 
 /* ── Payroll table helpers ─────────────────────────────────────────── */
 
@@ -93,46 +89,5 @@ body {
 .sortable-th:hover .sort-icon { opacity: 1; }
 .sort-icon { opacity: 0; transition: opacity 0.15s; }
 
-/* ── Payroll table helpers ─────────────────────────────────────────── */
 
-/* Threshold row: green left border */
-.threshold-row td:first-child {
-  border-left: 3px solid #16a34a;
-}
-
-/* Red underline on % ВЫП cell when requiresCardCheck */
-.perf-underline {
-  text-decoration: underline;
-  text-decoration-color: #ef4444;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-}
-
-/* Column header sort hover */
-.sortable-th:hover .sort-icon { opacity: 1; }
-.sort-icon { opacity: 0; transition: opacity 0.15s; }
-
-/* Sticky first three columns */
-.payroll-table thead th:nth-child(1),
-.payroll-table thead th:nth-child(2),
-.payroll-table thead th:nth-child(3),
-.payroll-table tbody td:nth-child(1),
-.payroll-table tbody td:nth-child(2),
-.payroll-table tbody td:nth-child(3),
-.payroll-table tfoot td:nth-child(1),
-.payroll-table tfoot td:nth-child(2),
-.payroll-table tfoot td:nth-child(3) {
-  position: sticky;
-  background: inherit;
-  z-index: 2;
-}
-.payroll-table thead th:nth-child(1),
-.payroll-table tbody td:nth-child(1),
-.payroll-table tfoot td:nth-child(1) { left: 0; }
-.payroll-table thead th:nth-child(2),
-.payroll-table tbody td:nth-child(2),
-.payroll-table tfoot td:nth-child(2) { left: 40px; }
-.payroll-table thead th:nth-child(3),
-.payroll-table tbody td:nth-child(3),
-.payroll-table tfoot td:nth-child(3) { left: 96px; }
 
