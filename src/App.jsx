@@ -5,6 +5,7 @@ import PayrollTable from './components/PayrollTable';
 import StatusBar from './components/StatusBar';
 import { mockAgents, TOTAL_AGENTS, GROUP_NAMES } from './data/mockData';
 import { processGroup, generateCSV } from './data/calculations';
+import { LangProvider } from './i18n/LangContext';
 
 const PER_PAGE = 23;
 
@@ -72,6 +73,7 @@ export default function App() {
   }, []);
 
   return (
+    <LangProvider>
     <div className="h-screen flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#eef0f7' }}>
       <Header activeGroup={activeGroup} onGroupChange={handleGroupChange} />
       <Toolbar
@@ -96,5 +98,6 @@ export default function App() {
         totalAll={TOTAL_AGENTS}
       />
     </div>
+    </LangProvider>
   );
 }

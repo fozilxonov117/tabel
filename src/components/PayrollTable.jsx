@@ -1,64 +1,65 @@
 ﻿import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fmtTime, fmtNum, computeTotals } from '../data/calculations';
+import { useLang } from '../i18n/LangContext';
+import { translations } from '../i18n/translations';
 
-// ── Cyrillic key constants (Unicode escapes – encoding-safe) ──────────────────
-const K_ITOG    = '\u0438\u0442\u043e\u0433';             // итог
-const K_NARUKI  = '\u043d\u0430\u0420\u0443\u043a\u0438';  // наРуки
-const K_NAKARTU = '\u043d\u0430\u041a\u0430\u0440\u0442\u0443'; // наКарту
-const K_NALOG   = '\u043d\u0430\u043b\u043e\u0433';       // налог
+// ── Cyrillic key constants (must match mockData.js property names exactly) ────
+const K_ITOG    = 'итог';
+const K_NARUKI  = 'наРуки';
+const K_NAKARTU = 'наКарту';
+const K_NALOG   = 'налог';
 
 // ── Column group header definitions ──────────────────────────────────────────
 const COL_GROUPS = [
-  { label: 'BASIC INFO',         span: 3, color: '#3730a3', bg: '#fffffa' },
-  { label: 'CALL METRICS',       span: 5, color: '#1e40af', bg: '#fffffa' },
-  { label: 'EFFICIENCY',         span: 3, color: '#4c1d95', bg: '#fffffa' },
-  { label: 'ATTENDANCE & BONUS', span: 4, color: '#14532d', bg: '#fffffa' },
-  { label: 'LIMITS & GRADES',    span: 2, color: '#0f766e', bg: '#fffffa' },
-  { label: 'TOTALS (BI-BK)',     span: 7, color: '#78350f', bg: '#fffffa' },
-  { label: 'ALLOWANCES',         span: 6, color: '#5b21b6', bg: '#fffffa' },
+  { label: 'BASIC INFO',         labelKey: 'group.BASIC INFO',         span: 3, color: '#3730a3', bg: '#fffffa' },
+  { label: 'CALL METRICS',       labelKey: 'group.CALL METRICS',       span: 5, color: '#1e40af', bg: '#fffffa' },
+  { label: 'EFFICIENCY',         labelKey: 'group.EFFICIENCY',         span: 3, color: '#4c1d95', bg: '#fffffa' },
+  { label: 'ATTENDANCE & BONUS', labelKey: 'group.ATTENDANCE & BONUS', span: 3, color: '#14532d', bg: '#fffffa' },
+  { label: 'LIMITS & GRADES',    labelKey: 'group.LIMITS & GRADES',    span: 2, color: '#0f766e', bg: '#fffffa' },
+  { label: 'TOTALS (BI-BK)',     labelKey: 'group.TOTALS (BI-BK)',     span: 7, color: '#78350f', bg: '#fffffa' },
+  { label: 'ALLOWANCES',         labelKey: 'group.ALLOWANCES',         span: 6, color: '#5b21b6', bg: '#fffffa' },
 ];
 
 // ── Individual column definitions ─────────────────────────────────────────────
 // All columns are center-aligned. Width values are in pixels.
 const COLUMNS = [
   // BASIC INFO
-  { key: 'vetka',           label: '\u0412\u0435\u0442\u043a\u0430',                                                          group: 'BASIC INFO',         width: 60,  allGroupOnly: true },
-  { key: 'shtat',           label: '\u0428\u0422\u0410\u0422',                                                                 group: 'BASIC INFO',         width: 44  },
-  { key: 'name',            label: '\u0424\u0418\u041e (AGENT NAME)',                                                          group: 'BASIC INFO',         width: 240 },
+  { key: 'vetka',           labelKey: 'col.vetka',            group: 'BASIC INFO',         width: 60,  allGroupOnly: true },
+  { key: 'shtat',           labelKey: 'col.shtat',            group: 'BASIC INFO',         width: 44  },
+  { key: 'name',            labelKey: 'col.name',             group: 'BASIC INFO',         width: 240 },
   // CALL METRICS
-  { key: 'planCalls',       label: '\u041f\u041b\u0410\u041d \u0417\u0412\u041e\u041d\u041a\u041e\u0412',                  group: 'CALL METRICS',       width: 78  },
-  { key: 'factCalls',       label: '\u0424\u0410\u041a\u0422 \u0417\u0412\u041e\u041d\u041a\u041e\u0412',                  group: 'CALL METRICS',       width: 78  },
-  { key: 'planTime',        label: '\u041f\u041b\u0410\u041d \u0421\u0412\u041e',                                           group: 'CALL METRICS',       width: 66  },
-  { key: 'factTime',        label: '\u0424\u0410\u041a\u0422 \u0421\u0412\u041e',                                           group: 'CALL METRICS',       width: 66  },
-  { key: 'perfPct',         label: '% \u0412\u042b\u041f.',                                                                   group: 'CALL METRICS',       width: 62  },
+  { key: 'planCalls',       labelKey: 'col.planCalls',        group: 'CALL METRICS',       width: 78  },
+  { key: 'factCalls',       labelKey: 'col.factCalls',        group: 'CALL METRICS',       width: 78  },
+  { key: 'planTime',        labelKey: 'col.planTime',         group: 'CALL METRICS',       width: 66  },
+  { key: 'factTime',        labelKey: 'col.factTime',         group: 'CALL METRICS',       width: 66  },
+  { key: 'perfPct',         labelKey: 'col.perfPct',          group: 'CALL METRICS',       width: 62  },
   // EFFICIENCY
-  { key: 'factScore',       label: '\u0424\u0410\u041a\u0422 \u0411\u0410\u041b\u041b',                                     group: 'EFFICIENCY',         width: 66  },
-  { key: 'explanation',     label: '\u041e\u0411\u042a\u042f\u0421\u041d\u0418\u0422.',                                     group: 'EFFICIENCY',         width: 44  },
-  { key: 'vacation',        label: 'VACATION',                                                                               group: 'EFFICIENCY',         width: 290 },
+  { key: 'factScore',       labelKey: 'col.factScore',        group: 'EFFICIENCY',         width: 66  },
+  { key: 'explanation',     labelKey: 'col.explanation',      group: 'EFFICIENCY',         width: 150 },
+  { key: 'vacation',        labelKey: 'col.vacation',         group: 'EFFICIENCY',         width: 150 },
   // ATTENDANCE & BONUS
-  { key: 'b1',              label: '%(B1)',                                                                                    group: 'ATTENDANCE & BONUS', width: 54  },
-  { key: 'b2',              label: '%(B2)',                                                                                    group: 'ATTENDANCE & BONUS', width: 72  },
-  { key: 'surcharge',       label: '\u0421\u0422. \u041d\u0410\u0414.',                                                      group: 'ATTENDANCE & BONUS', width: 60  },
-  { key: 'limit',           label: '\u041b\u0418\u041c\u0418\u0422',                                                         group: 'ATTENDANCE & BONUS', width: 60  },
+  { key: 'b2',              labelKey: 'col.b2',               group: 'ATTENDANCE & BONUS', width: 90  },
+  { key: 'surcharge',       labelKey: 'col.surcharge',        group: 'ATTENDANCE & BONUS', width: 60  },
+  { key: 'limit',           labelKey: 'col.limit',            group: 'ATTENDANCE & BONUS', width: 60  },
   // LIMITS & GRADES
-  { key: 'profitFromOp',    label: '\u041f\u0440\u0438\u0431\u044b\u043b\u044c \u043e\u0442 \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u0430', group: 'LIMITS & GRADES', width: 100 },
-  { key: 'razryad',         label: '\u0420\u0430\u0437\u0440\u044f\u0434',                                                   group: 'LIMITS & GRADES',    width: 62  },
+  { key: 'profitFromOp',    labelKey: 'col.profitFromOp',     group: 'LIMITS & GRADES',    width: 100 },
+  { key: 'razryad',         labelKey: 'col.razryad',          group: 'LIMITS & GRADES',    width: 62  },
   // TOTALS (BI-BK) — includes former deductions + nadbavka
-  { key: K_ITOG,            label: '\u0418\u0422\u041e\u0413',                                                               group: 'TOTALS (BI-BK)',     width: 96  },
-  { key: K_NARUKI,          label: '\u041d\u0410 \u0420\u0423\u041a\u0418',                                                  group: 'TOTALS (BI-BK)',     width: 92  },
-  { key: K_NAKARTU,         label: '\u041d\u0410 \u041a\u0410\u0420\u0422\u0423',                                           group: 'TOTALS (BI-BK)',     width: 92  },
-  { key: K_NALOG,           label: '\u041d\u0410\u041b\u041e\u0413+',                                                       group: 'TOTALS (BI-BK)',     width: 88  },
-  { key: 'advance',         label: '\u0410\u0412\u0410\u041d\u0421',                                                        group: 'TOTALS (BI-BK)',     width: 88  },
-  { key: 'baseSalary',      label: '\u041e\u041a\u041b\u0410\u0414',                                                        group: 'TOTALS (BI-BK)',     width: 92  },
-  { key: 'nadbavka',        label: '\u041d\u0430\u0434\u0431\u0430\u0432\u043a\u0430',                                     group: 'TOTALS (BI-BK)',     width: 92  },
+  { key: K_ITOG,            labelKey: 'col.итог',             group: 'TOTALS (BI-BK)',     width: 96  },
+  { key: K_NARUKI,          labelKey: 'col.наРуки',           group: 'TOTALS (BI-BK)',     width: 92  },
+  { key: K_NAKARTU,         labelKey: 'col.наКарту',          group: 'TOTALS (BI-BK)',     width: 92  },
+  { key: K_NALOG,           labelKey: 'col.налог',            group: 'TOTALS (BI-BK)',     width: 88  },
+  { key: 'advance',         labelKey: 'col.advance',          group: 'TOTALS (BI-BK)',     width: 88  },
+  { key: 'baseSalary',      labelKey: 'col.baseSalary',       group: 'TOTALS (BI-BK)',     width: 92  },
+  { key: 'nadbavka',        labelKey: 'col.nadbavka',         group: 'TOTALS (BI-BK)',     width: 92  },
   // ALLOWANCES
-  { key: 'noch',            label: '\u041d\u043e\u0447\u044c',                                                              group: 'ALLOWANCES',         width: 72  },
-  { key: 'vecher',          label: '\u0412\u0435\u0447\u0435\u0440',                                                        group: 'ALLOWANCES',         width: 72  },
-  { key: 'prazdnichny',     label: '\u041f\u0440\u0430\u0437\u0434\u043d\u0438\u0447\u043d\u044b\u0439',                   group: 'ALLOWANCES',         width: 90  },
-  { key: 'stoimostBiletov', label: '\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c \u0431\u0438\u043b\u0435\u0442\u043e\u0432', group: 'ALLOWANCES',  width: 100 },
-  { key: 'addBonus',        label: '\u0410\u0414\u0414',                                                                     group: 'ALLOWANCES',         width: 64  },
-  { key: 'vyslugaLet',      label: '\u0412\u044b\u0441\u043b\u0443\u0433\u0430 \u043b\u0435\u0442',                       group: 'ALLOWANCES',         width: 90  },
+  { key: 'noch',            labelKey: 'col.noch',             group: 'ALLOWANCES',         width: 72  },
+  { key: 'vecher',          labelKey: 'col.vecher',           group: 'ALLOWANCES',         width: 72  },
+  { key: 'prazdnichny',     labelKey: 'col.prazdnichny',      group: 'ALLOWANCES',         width: 90  },
+  { key: 'stoimostBiletov', labelKey: 'col.stoimostBiletov',  group: 'ALLOWANCES',         width: 100 },
+  { key: 'addBonus',        labelKey: 'col.addBonus',         group: 'ALLOWANCES',         width: 64  },
+  { key: 'vyslugaLet',      labelKey: 'col.vyslugaLet',       group: 'ALLOWANCES',         width: 90  },
 ];
 
 // Keys whose zero value displays as '–' in cells
@@ -66,111 +67,180 @@ const DASH_IF_ZERO = new Set(['profitFromOp', 'noch', 'vecher', 'prazdnichny', '
 
 // ── Explanation badge metadata ─────────────────────────────────────────────
 const EXPL_META = {
-  '\u041e\u043f\u043e\u0437\u0434\u0430\u043d\u0438\u0435': {
+  'Опоздание': {
     color: '#92400e', bg: '#fef3c7', border: '#fcd34d',
-    icon: (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+    icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>),
   },
-  '\u041e\u0442\u043f\u0440\u0430\u0448\u0438\u0432\u0430\u043d\u0438\u0435': {
+  'Отпрашивание': {
     color: '#1e40af', bg: '#dbeafe', border: '#93c5fd',
-    icon: (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M9 3H4a1 1 0 00-1 1v8a1 1 0 001 1h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M11 10l3-2-3-2M14 8H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+    icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 4l4 4-4 4V9H3V7h14V4zM7 17h14v-2H7v-3l-4 4 4 4v-3z"/></svg>),
   },
-  '\u041f\u0440\u0435\u0432\u044b\u0448\u0435\u043d\u0438\u0435 \u0431\u043b\u043e\u043a\u0430': {
+  'Превышение блока': {
     color: '#6d28d9', bg: '#ede9fe', border: '#c4b5fd',
-    icon: (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2L14 13H2L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 6.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.25" r="0.75" fill="currentColor"/></svg>),
+    icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>),
   },
-  '\u041d\u0430\u0440\u0443\u0448\u0435\u043d\u0438\u0435 \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0435\u0433\u043e \u043f\u043e\u0440\u044f\u0434\u043a\u0430': {
+  'Нарушение внутреннего порядка': {
     color: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
-    icon: (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 5.5h6M5 8h4M5 10.5h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>),
+    icon: (<svg width="20" height="20" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 5.5h6M5 8h4M5 10.5h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>),
   },
-  '\u0422\u0435\u043b\u0435\u0444\u043e\u043d': {
+  'Телефон': {
     color: '#0891b2', bg: '#ecfeff', border: '#67e8f9',
-    icon: (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 3.5a.5.5 0 01.5-.5h1.5l1 2.5L5 6.5C5.8 8.2 7.8 10.2 9.5 11l1.5-1.5 2.5 1V13a.5.5 0 01-.5.5C6 13.5 3.5 8.5 3.5 3.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>),
+    icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm-2 20h-4v-1h4v1zm3.25-3H6.75V4h10.5v14z"/></svg>),
   },
-  '\u0414\u0440\u0443\u0433\u043e\u0435': {
+  'Другое': {
     color: '#475569', bg: '#f1f5f9', border: '#cbd5e1',
-    icon: (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 6.5C6.5 5.67 7.17 5 8 5s1.5.67 1.5 1.5C9.5 8 8 8 8 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="8" cy="11.25" r="0.75" fill="currentColor"/></svg>),
+    icon: (<svg width="20" height="20" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 6.5C6.5 5.67 7.17 5 8 5s1.5.67 1.5 1.5C9.5 8 8 8 8 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="8" cy="11.25" r="0.75" fill="currentColor"/></svg>),
   },
 };
 
 // ── Vacation type metadata ─────────────────────────────────────────────────
 const VACATION_META = {
-  '\u0414\u0414\u041e 2':                 { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd' },
-  '\u0414\u0414\u041e 3':                 { color: '#4338ca', bg: '#e0e7ff',  border: '#a5b4fc' },
-  '\u0423\u0432\u043e\u043b\u0435\u043d': { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5' },
-  '\u0411':                               { color: '#d97706', bg: '#fef3c7',  border: '#fcd34d' },
-  '\u041e':                               { color: '#15803d', bg: '#dcfce7',  border: '#86efac' },
-  '\u0423':                               { color: '#7c3aed', bg: '#ede9fe',  border: '#c4b5fd' },
-  '\u0414\u0414\u041e \u0411':            { color: '#0f766e', bg: '#ccfbf1',  border: '#5eead4' },
-  '\u041d':                               { color: '#9f1239', bg: '#fff1f2',  border: '#fecdd3' },
-  '\u0411\u0421':                         { color: '#b45309', bg: '#fffbeb',  border: '#fde68a' },
-  '7.0':                                  { color: '#475569', bg: '#f1f5f9',  border: '#cbd5e1' },
-  '\u0411\u041e':                         { color: '#0e7490', bg: '#ecfeff',  border: '#a5f3fc' },
-  '\u0413\u0421':                         { color: '#be185d', bg: '#fdf2f8',  border: '#f9a8d4' },
+  'ДДО 2':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd' },
+  'ДДО 3':   { color: '#4338ca', bg: '#e0e7ff',  border: '#a5b4fc' },
+  'Уволен':  { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5' },
+  'Б':       { color: '#d97706', bg: '#fef3c7',  border: '#fcd34d' },
+  'О':       { color: '#15803d', bg: '#dcfce7',  border: '#86efac' },
+  'У':       { color: '#7c3aed', bg: '#ede9fe',  border: '#c4b5fd' },
+  'ДДО Б':   { color: '#0f766e', bg: '#ccfbf1',  border: '#5eead4' },
+  'Н':       { color: '#9f1239', bg: '#fff1f2',  border: '#fecdd3' },
+  'БС':      { color: '#b45309', bg: '#fffbeb',  border: '#fde68a' },
+  '7.0':     { color: '#475569', bg: '#f1f5f9',  border: '#cbd5e1' },
+  'БО':      { color: '#0e7490', bg: '#ecfeff',  border: '#a5f3fc' },
+  'ГС':      { color: '#be185d', bg: '#fdf2f8',  border: '#f9a8d4' },
 };
 
-function ExplanationBadge({ value }) {
-  const [open, setOpen] = React.useState(false);
-  const wrapRef = React.useRef(null);
-  const meta = EXPL_META[value] || EXPL_META['\u0414\u0440\u0443\u0433\u043e\u0435'];
-  React.useEffect(() => {
-    if (!open) return;
-    const handler = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+function ExplanationIconItem({ type, count, rowHovered }) {
+  const [hovered, setHovered] = React.useState(false);
+  const meta = EXPL_META[type] || EXPL_META['Другое'];
+  const showTooltip = hovered || rowHovered;
   return (
-    <span ref={wrapRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-      <motion.button
-        whileHover={{ scale: 1.2 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setOpen(v => !v)}
+    <span style={{ position: 'relative', display: 'inline-flex' }}>
+      <span
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 26, height: 26, borderRadius: 7,
           background: meta.bg, color: meta.color,
           border: `1.5px solid ${meta.border}`,
-          cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
-          padding: 0, outline: 'none',
+          cursor: 'default', boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
+          position: 'relative',
         }}
       >
         {meta.icon}
-      </motion.button>
+        {count > 1 && (
+          <span style={{
+            position: 'absolute', top: -5, right: -5,
+            background: '#3b82f6', color: '#fff',
+            fontSize: 9, fontWeight: 800,
+            minWidth: 14, height: 14, borderRadius: 7,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '1.5px solid #fff', lineHeight: 1,
+            paddingLeft: 1, paddingRight: 1, zIndex: 1,
+          }}>
+            {count}
+          </span>
+        )}
+      </span>
       <AnimatePresence>
-        {open && (
+        {showTooltip && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.88 }}
+            initial={{ opacity: 0, y: 4, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.88 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            exit={{ opacity: 0, y: 4, scale: 0.9 }}
+            transition={{ duration: 0.15 }}
             style={{
               position: 'absolute',
-              bottom: 'calc(100% + 8px)',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: '#1e293b',
-              color: '#f1f5f9',
-              fontSize: 11,
-              fontWeight: 600,
-              whiteSpace: 'nowrap',
-              padding: '5px 10px',
-              borderRadius: 8,
-              boxShadow: '0 6px 20px rgba(0,0,0,0.30)',
-              zIndex: 9999,
-              pointerEvents: 'none',
-              letterSpacing: '0.02em',
+              bottom: 'calc(100% + 6px)',
+              left: '0',
+              background: '#ffffff', color: '#1e293b',
+              fontSize: 11, fontWeight: 600,
+              whiteSpace: 'nowrap', padding: '4px 9px',
+              borderRadius: 7, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+              border: '1px solid #e2e8f0',
+              zIndex: 9999, pointerEvents: 'none',
             }}
           >
-            {value}
+            {count > 1 ? `${type} ×${count}` : type}
             <span style={{
+              position: 'absolute', top: '100%', left: '10px',
+              borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
+              borderTop: '4px solid #e2e8f0',
+            }} />
+            <span style={{
+              position: 'absolute', top: 'calc(100% - 1px)', left: '10px',
+              borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
+              borderTop: '4px solid #ffffff',
+            }} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+}
+
+function ExplanationIcons({ types, rowHovered }) {
+  const counts = {};
+  types.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+  return (
+    <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 3, alignItems: 'center', justifyContent: 'center' }}>
+      {Object.entries(counts).map(([type, count]) => (
+        <ExplanationIconItem key={type} type={type} count={count} rowHovered={rowHovered} />
+      ))}
+    </span>
+  );
+}
+
+function VacationBadge({ v, rowHovered }) {
+  const [hovered, setHovered] = React.useState(false);
+  const { lang } = useLang();
+  const t = k => translations[lang]?.[k] ?? k;
+  const vm = VACATION_META[v.type] || { color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' };
+  const showTooltip = hovered || rowHovered;
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+      <span
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          background: vm.bg, color: vm.color,
+          border: `1.5px solid ${vm.border}`,
+          padding: '2px 8px', borderRadius: 5,
+          fontSize: 11, fontWeight: 700, letterSpacing: '0.03em',
+          whiteSpace: 'nowrap', cursor: 'default',
+        }}
+      >
+        {v.type}
+      </span>
+      <AnimatePresence>
+        {showTooltip && v.from && v.to && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.9 }}
+            transition={{ duration: 0.15 }}
+            style={{
               position: 'absolute',
-              top: '100%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              borderLeft: '5px solid transparent',
-              borderRight: '5px solid transparent',
-              borderTop: '5px solid #1e293b',
+              bottom: 'calc(100% + 6px)',
+              left: '0',
+              background: '#ffffff', color: '#1e293b',
+              fontSize: 11, fontWeight: 600,
+              whiteSpace: 'nowrap', padding: '5px 10px',
+              borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
+              border: '1px solid #e2e8f0',
+              zIndex: 9999, pointerEvents: 'none',
+            }}
+          >
+            {v.type} · {t('vac.from')}: {v.from} — {t('vac.to')}: {v.to}
+            <span style={{
+              position: 'absolute', top: '100%', left: '10px',
+              borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+              borderTop: '5px solid #e2e8f0',
+            }} />
+            <span style={{
+              position: 'absolute', top: 'calc(100% - 1px)', left: '10px',
+              borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+              borderTop: '5px solid #ffffff',
             }} />
           </motion.div>
         )}
@@ -180,7 +250,9 @@ function ExplanationBadge({ value }) {
 }
 
 /* ── Cell value renderer ──────────────────────────────────────────────────── */
-function CellValue({ colKey, agent }) {
+function CellValue({ colKey, agent, rowHovered }) {
+  const { lang } = useLang();
+  const t = k => translations[lang]?.[k] ?? k;
   switch (colKey) {
     case 'planTime':
     case 'factTime':
@@ -189,31 +261,16 @@ function CellValue({ colKey, agent }) {
     case 'perfPct':
       return <span className="font-semibold">{agent[colKey]}%</span>;
 
-    case 'explanation':
-      return agent[colKey] ? <ExplanationBadge value={agent[colKey]} /> : null;
+    case 'explanation': {
+      const val = agent[colKey];
+      const arr = Array.isArray(val) ? val.filter(Boolean) : (val ? [val] : []);
+      return arr.length > 0 ? <ExplanationIcons types={arr} rowHovered={rowHovered} /> : null;
+    }
 
     case 'vacation': {
       const v = agent[colKey];
       if (!v) return null;
-      const vm = VACATION_META[v.type] || { color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' };
-      return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-          <span style={{
-            background: vm.bg, color: vm.color,
-            border: `1.5px solid ${vm.border}`,
-            padding: '2px 8px', borderRadius: 5,
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.03em',
-            whiteSpace: 'nowrap',
-          }}>
-            {v.type}
-          </span>
-          {v.from && v.to && (
-            <span style={{ color: '#64748b', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>
-              (\u0441: {v.from} \u0434\u043e: {v.to})
-            </span>
-          )}
-        </span>
-      );
+      return <VacationBadge v={v} rowHovered={rowHovered} />;
     }
 
     case 'vetka':
@@ -233,48 +290,15 @@ function CellValue({ colKey, agent }) {
         </span>
       );
 
-    case 'b2': {
-      const given = agent.b2;
-      const standard = agent.surcharge;
-      if (given == null) return <span>&#x2013;</span>;
-      const diff = given - standard;
-      const isUp = diff > 0;
-      const isDown = diff < 0;
-      const pct = standard ? Math.abs(Math.round((diff / standard) * 100)) : 0;
-      return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 4 }}>
-          <span style={{ fontWeight: 600 }}>{given}</span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 36 }}>
-            {diff !== 0 ? (
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 1,
-                fontSize: 10, fontWeight: 700,
-                color: isUp ? '#15803d' : '#dc2626',
-              }}>
-                {isUp
-                  ? <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  : <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5l3 3 3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                }
-                {pct}%
-              </span>
-            ) : (
-              <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>&#x2014;</span>
-            )}
-          </span>
-        </span>
-      );
-    }
-
     case 'limit':
-    case 'b1':
     case 'surcharge':
     case 'razryad':
-      return <span>{agent[colKey] ?? '\u2013'}</span>;
+      return <span>{agent[colKey] ?? '–'}</span>;
 
     default: {
       const v = agent[colKey];
       if (DASH_IF_ZERO.has(colKey)) {
-        return <span>{(!v || v === 0) ? '\u2013' : fmtNum(v)}</span>;
+        return <span>{(!v || v === 0) ? '–' : fmtNum(v)}</span>;
       }
       // Money columns
       if (colKey === K_ITOG || colKey === K_NARUKI || colKey === K_NAKARTU ||
@@ -282,9 +306,68 @@ function CellValue({ colKey, agent }) {
           colKey === 'nadbavka' || colKey === 'vyslugaLet') {
         return <span>{fmtNum(v)}</span>;
       }
-      return <span>{v ?? '\u2013'}</span>;
+      return <span>{v ?? '–'}</span>;
     }
   }
+}
+
+/* ── Editable B2 cell ────────────────────────────────────────────────────── */
+function B2Cell({ agentId, b1Val, override, onSave, onActivate }) {
+  const [editing, setEditing] = React.useState(false);
+  const [inputVal, setInputVal] = React.useState('');
+  const inputRef = React.useRef(null);
+  const currentVal = override !== undefined ? override : b1Val;
+
+  React.useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const startEdit = () => {
+    setInputVal(String(currentVal ?? ''));
+    setEditing(true);
+    onActivate(agentId);
+  };
+
+  const commit = () => {
+    const num = parseFloat(inputVal);
+    if (!isNaN(num)) onSave(agentId, num);
+    setEditing(false);
+  };
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter') commit();
+    if (e.key === 'Escape') setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        value={inputVal}
+        onChange={e => setInputVal(e.target.value)}
+        onBlur={commit}
+        onKeyDown={handleKey}
+        style={{
+          width: 56, background: 'transparent', border: 'none',
+          borderBottom: '1.5px solid #6366f1', outline: 'none',
+          fontSize: 11, fontWeight: 700, textAlign: 'center', color: 'inherit',
+        }}
+      />
+    );
+  }
+  return (
+    <span
+      onClick={startEdit}
+      title="Click to edit"
+      style={{ fontWeight: 700, cursor: 'pointer', userSelect: 'none' }}
+    >
+      {currentVal ?? '–'}
+    </span>
+  );
 }
 
 /* ── Skeleton row ─────────────────────────────────────────────────────────── */
@@ -302,8 +385,37 @@ function SkeletonRow({ colCount }) {
 
 /* ── Main component ───────────────────────────────────────────────────────── */
 export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading }) {
+  const { lang } = useLang();
+  const t = k => translations[lang]?.[k] ?? k;
   const visibleCols = COLUMNS.filter(c => visibleColumns[c.group] !== false && (!c.allGroupOnly || activeGroup === 'All'));
   const totalWidth  = visibleCols.reduce((sum, c) => sum + c.width, 0);
+
+  const [ctxMenu, setCtxMenu] = React.useState({ visible: false, x: 0, y: 0, agentId: null });
+  const [b2Overrides, setB2Overrides] = React.useState({});
+  const [hoveredRowId, setHoveredRowId] = React.useState(null);
+
+  const handleContextMenu = (e, agentId = null) => {
+    if (e.shiftKey) return; // Shift+right-click → browser default
+    e.preventDefault();
+    e.stopPropagation();
+    const x = Math.min(e.clientX, window.innerWidth - 210);
+    const y = Math.min(e.clientY, window.innerHeight - 80);
+    setCtxMenu({ visible: true, x, y, agentId });
+  };
+
+  const handleTableContextMenu = (e) => {
+    if (e.shiftKey) return;
+    e.preventDefault();
+    const x = Math.min(e.clientX, window.innerWidth - 210);
+    const y = Math.min(e.clientY, window.innerHeight - 80);
+    setCtxMenu({ visible: true, x, y, agentId: null });
+  };
+
+  React.useEffect(() => {
+    const close = () => setCtxMenu(m => m.visible ? { ...m, visible: false } : m);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, []);
 
   /* Empty state */
   if (!isLoading && (!agents || agents.length === 0)) {
@@ -335,7 +447,61 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   const allAgents = agents || [];
 
   return (
-    <div className="relative overflow-x-auto">
+    <div className="relative overflow-x-auto" onContextMenu={handleTableContextMenu}>
+      {/* Custom context menu */}
+      <AnimatePresence>
+        {ctxMenu.visible && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.12 }}
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'fixed',
+              top: ctxMenu.y,
+              left: ctxMenu.x,
+              zIndex: 99999,
+              background: '#ffffff',
+              borderRadius: 10,
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 10px 30px rgba(0,0,0,0.15)',
+              border: '1px solid #e2e8f0',
+              padding: '4px',
+              minWidth: 200,
+            }}
+          >
+            {/* Header label */}
+            <div style={{ padding: '6px 12px 4px', fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.07em', textTransform: 'uppercase', borderBottom: '1px solid #f1f5f9', marginBottom: 3 }}>
+              {ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined ? t('ctx.b2cell') : t('ctx.actions')}
+            </div>
+            <button
+              onClick={() => {
+                if (ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined) {
+                  setB2Overrides(prev => { const n = { ...prev }; delete n[ctxMenu.agentId]; return n; });
+                } else {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+                setCtxMenu(m => ({ ...m, visible: false }));
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                width: '100%', padding: '7px 12px',
+                background: 'none', border: 'none', borderRadius: 7,
+                color: '#1e293b', fontSize: 13, fontWeight: 500,
+                cursor: 'pointer', textAlign: 'left',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#6366f1', flexShrink: 0 }}>
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+              </svg>
+              {ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined ? t('ctx.resetCell') : t('ctx.return')}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Loading overlay */}
       <AnimatePresence>
         {isLoading && (
@@ -389,7 +555,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {g.label}
+                  {t(g.labelKey)}
                 </th>
               );
             })}
@@ -418,7 +584,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 }}
               >
                 <span className="inline-flex flex-col items-center gap-0.5">
-                  <span>{col.label}</span>
+                  <span>{t(col.labelKey)}</span>
                   <span className="sort-icon" style={{ color: '#94a3b8', opacity: 0 }}>
                     <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
                       <path d="M4 1v6M1.5 4.5 4 7l2.5-2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -447,11 +613,42 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: Math.min(idx * 0.018, 0.32), duration: 0.18, ease: 'easeOut' }}
                     className={rowClass}
+                    onMouseEnter={() => setHoveredRowId(agent.id)}
+                    onMouseLeave={() => setHoveredRowId(null)}
                   >
                     {visibleCols.map((col, i) => {
                       const isRedCell = col.key === 'factScore' && agent[col.key] < 80;
-                      const isGroupStart = i === 0 || visibleCols[i - 1].group !== col.group;
-                      const isGroupEnd   = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
+                      const isGroupEnd = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
+                      const borderRight = isGroupEnd ? '3px solid #94a3b8' : '1px solid #f3f4f6';
+
+                      if (col.key === 'b2') {
+                        const b2Override = b2Overrides[agent.id];
+                        const b2Val = b2Override !== undefined ? b2Override : agent.b1;
+                        const b2IsHigher = b2Val > agent.b1;
+                        const b2IsLower  = b2Val < agent.b1;
+                        return (
+                          <td
+                            key="b2"
+                            onContextMenu={e => handleContextMenu(e, agent.id)}
+                            style={{
+                            textAlign: 'center', padding: '5px 5px', fontSize: 11,
+                            borderBottom: '1px solid #e5e7eb', borderRight, whiteSpace: 'nowrap',
+                            background: b2IsHigher ? '#dcfce7' : b2IsLower ? '#fee2e2' : undefined,
+                            color: b2IsHigher ? '#15803d' : b2IsLower ? '#dc2626' : '#374151',
+                          }}>
+                            <B2Cell
+                              agentId={agent.id}
+                              b1Val={agent.b1}
+                              override={b2Override}
+                              onSave={(id, val) => {
+                                setB2Overrides(prev => ({ ...prev, [id]: val }));
+                              }}
+                              onActivate={() => {}}
+                            />
+                          </td>
+                        );
+                      }
+
                       return (
                         <td
                           key={col.key}
@@ -460,14 +657,15 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             padding: '5px 5px',
                             fontSize: 11,
                             borderBottom: '1px solid #e5e7eb',
-                            borderRight: isGroupEnd ? '3px solid #94a3b8' : '1px solid #f3f4f6',
+                            borderRight,
                             whiteSpace: 'nowrap',
-                            background: isRedCell ? '#991b1b' : undefined,
-                            color: isRedCell ? '#ffffff' : col.key === 'name' ? '#4338ca' : '#374151',
-                            fontWeight: col.key === 'name' ? 600 : 400,
+                            
+                            background: isRedCell ? '#fee2e2' : undefined,
+                            color: isRedCell ? '#dc2626' : col.key === 'name' ? '#4338ca' : '#374151',
+                            fontWeight: isRedCell ? 700 : col.key === 'name' ? 600 : 600,
                           }}
                         >
-                          <CellValue colKey={col.key} agent={agent} />
+                          <CellValue colKey={col.key} agent={agent} rowHovered={hoveredRowId === agent.id} />
                         </td>
                       );
                     })}
@@ -495,7 +693,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   colSpanVal = 1 + (hasName ? 1 : 0);
                   content = (
                     <span className="font-black text-[10px] whitespace-nowrap" style={{ color: '#1e293b', letterSpacing: '0.02em' }}>
-                      TOTALS / ALL ACTIVE AGENTS{' '}
+                      {t('footer.totals')}{' '}
                       <span style={{ color: '#0369a1', fontWeight: 700 }}>N={totalAll}</span>
                     </span>
                   );

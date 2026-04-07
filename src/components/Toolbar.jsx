@@ -1,7 +1,11 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLang } from '../i18n/LangContext';
+import { translations } from '../i18n/translations';
 
 export default function Toolbar({ searchQuery, onSearchChange, onExport, visibleColumns, onColumnToggle, onRefresh }) {
+  const { lang } = useLang();
+  const t = k => translations[lang]?.[k] ?? k;
   const [columnsOpen, setColumnsOpen] = useState(false);
   const colRef = useRef(null);
 
@@ -44,7 +48,7 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
               </svg>
             }
           >
-            Columns
+            {t('toolbar.columns')}
           </ToolbarBtn>
 
           <AnimatePresence>
@@ -68,7 +72,7 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
                   className="mb-2.5 font-black uppercase tracking-widest"
                   style={{ fontSize: 9, color: '#94a3b8' }}
                 >
-                  Toggle Columns
+                  {t('toolbar.toggleColumns')}
                 </p>
                 {Object.keys(visibleColumns).map((col, i) => (
                   <motion.label
@@ -105,7 +109,7 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
                       className="text-xs font-medium transition-colors duration-150"
                       style={{ color: visibleColumns[col] ? '#4f46e5' : '#64748b' }}
                     >
-                      {col}
+                      {t('group.' + col)}
                     </span>
                   </motion.label>
                 ))}
