@@ -17,8 +17,9 @@ const COL_GROUPS = [
   { label: 'CALL METRICS',       labelKey: 'group.CALL METRICS',       color: '#1e40af', bg: '#fffffa' },
   { label: 'EFFICIENCY',         labelKey: 'group.EFFICIENCY',         color: '#4c1d95', bg: '#fffffa' },
   { label: 'KPI',                labelKey: 'group.KPI',                color: '#b45309', bg: '#fffbeb' },
-  { label: 'ATTENDANCE & BONUS', labelKey: 'group.ATTENDANCE & BONUS', color: '#14532d', bg: '#fffffa' },
+  { label: 'BONUS', labelKey: 'group.BONUS', color: '#14532d', bg: '#fffffa' },
   { label: 'LIMITS & GRADES',    labelKey: 'group.LIMITS & GRADES',    color: '#0f766e', bg: '#fffffa' },
+  { label: 'TABEL',              labelKey: 'group.TABEL',              color: '#0e7490', bg: '#ecfeff' },
   { label: 'TOTALS (BI-BK)',     labelKey: 'group.TOTALS (BI-BK)',     color: '#78350f', bg: '#fffffa' },
   { label: 'ALLOWANCES',         labelKey: 'group.ALLOWANCES',         color: '#5b21b6', bg: '#fffffa' },
 ];
@@ -41,14 +42,26 @@ const COLUMNS = [
   { key: 'vacation',        labelKey: 'col.vacation',         group: 'EFFICIENCY',         width: 150 },
   // KPI
   { key: 'factScore',       labelKey: 'col.factScore',        group: 'KPI',                width: 66  },
-  // ATTENDANCE & BONUS
-  { key: 'b2',              labelKey: 'col.b2',               group: 'ATTENDANCE & BONUS', width: 90  },
-  { key: 'surcharge',       labelKey: 'col.surcharge',        group: 'ATTENDANCE & BONUS', width: 60  },
-  { key: 'limit',           labelKey: 'col.limit',            group: 'ATTENDANCE & BONUS', width: 60  },
+  // BONUS
+  { key: 'b2',              labelKey: 'col.b2',               group: 'BONUS', width: 90  },
+  { key: 'surcharge',       labelKey: 'col.surcharge',        group: 'BONUS', width: 60  },
   // LIMITS & GRADES
-  { key: 'profitFromOp',    labelKey: 'col.profitFromOp',     group: 'LIMITS & GRADES',    width: 100 },
+  { key: 'limit',           labelKey: 'col.limit',            group: 'LIMITS & GRADES',    width: 60  },
   { key: 'razryad',         labelKey: 'col.razryad',          group: 'LIMITS & GRADES',    width: 62  },
-  // TOTALS (BI-BK) — includes former deductions + nadbavka
+  // TABEL — 4 summary cols (always visible) + 31 calendar day cols
+  { key: 'tabel_worked',    labelKey: 'col.tabel_worked',     group: 'TABEL',              width: 48  },
+  { key: 'tabel_prazdHrs',  labelKey: 'col.tabel_prazdHrs',  group: 'TABEL',              width: 54  },
+  { key: 'tabel_vecherHrs', labelKey: 'col.tabel_vecherHrs', group: 'TABEL',              width: 54  },
+  { key: 'tabel_nochHrs',   labelKey: 'col.tabel_nochHrs',   group: 'TABEL',              width: 54  },
+  ...Array.from({ length: 31 }, (_, i) => ({
+    key: `day_${String(i + 1).padStart(2, '0')}`,
+    labelKey: String(i + 1),
+    group: 'TABEL',
+    width: 26,
+    day: i + 1,
+  })),
+  // TOTALS (BI-BK) — profitFromOp + deductions + nadbavka
+  { key: 'profitFromOp',    labelKey: 'col.profitFromOp',     group: 'TOTALS (BI-BK)',     width: 100 },
   { key: K_ITOG,            labelKey: 'col.итог',             group: 'TOTALS (BI-BK)',     width: 96  },
   { key: K_NARUKI,          labelKey: 'col.наРуки',           group: 'TOTALS (BI-BK)',     width: 92  },
   { key: K_NAKARTU,         labelKey: 'col.наКарту',          group: 'TOTALS (BI-BK)',     width: 92  },
@@ -73,8 +86,9 @@ const SECTION_ANCHORS = {
   'CALL METRICS':       new Set(['perfPct']),
   'EFFICIENCY':         new Set(['explanation', 'vacation']),
   'KPI':                new Set(['factScore']),
-  'ATTENDANCE & BONUS': new Set(['b2']),
-  'LIMITS & GRADES':    new Set(['profitFromOp', 'razryad']),
+  'BONUS': new Set(['b2']),
+  'LIMITS & GRADES':    new Set(['limit', 'razryad']),
+  'TABEL':              new Set(['tabel_worked', 'tabel_prazdHrs', 'tabel_vecherHrs', 'tabel_nochHrs']),
   'TOTALS (BI-BK)':     new Set([K_ITOG]),
   'ALLOWANCES':         new Set(['vyslugaLet']),
 };
@@ -85,6 +99,99 @@ const COLLAPSIBLE_GROUPS = new Set(
     COLUMNS.some(c => c.group === g && !SECTION_ANCHORS[g].has(c.key))
   )
 );
+
+// ── TABEL: March 2026 schedule helpers ──────────────────────────────────────────
+const TABEL_WEEKENDS  = new Set([1, 7, 8, 14, 15, 21, 22, 28, 29]); // Sun 1,8,15,22,29 | Sat 7,14,21,28
+const TABEL_WORK_DAYS = Array.from({ length: 31 }, (_, i) => i + 1).filter(d => !TABEL_WEEKENDS.has(d));
+const _schedCache = new Map();
+
+// Agents on 11-hour 2-day-work / 2-day-rest rotating shift (no fixed weekends)
+const ELEVEN_HOUR_AGENTS = new Set([
+  '1242-8', '1242-16', '1242-27', '1242-35', '1242-43', '1242-57',
+  '1000-6', '1009-6', '1170-6', '1170-8',
+]);
+
+// Parse 'DD.MM.YYYY' → March day (1-31), 0 = before March, 32 = after March
+function getMarchDay(dateStr) {
+  if (!dateStr) return null;
+  const [d, m, y] = dateStr.split('.').map(Number);
+  if (y !== 2026) return null;
+  if (m < 3) return 0;
+  if (m === 3) return d;
+  return 32;
+}
+
+function getAgentSchedule(agent) {
+  if (_schedCache.has(agent.id)) return _schedCache.get(agent.id);
+
+  // Vacation date range clamped to March days 1-31
+  let vacFrom = null, vacTo = null;
+  if (agent.vacation?.from && agent.vacation?.to) {
+    const f = getMarchDay(agent.vacation.from);
+    const t = getMarchDay(agent.vacation.to);
+    if (f !== null && t !== null) {
+      vacFrom = Math.max(1, f);
+      vacTo   = Math.min(31, t === 32 ? 31 : t);
+    }
+  }
+  const vacType = agent.vacation?.type ?? null;
+
+  // Hash agent id for deterministic RNG
+  let h = 0;
+  for (let i = 0; i < agent.id.length; i++) h = (Math.imul(31, h) + agent.id.charCodeAt(i)) | 0;
+
+  const sched = {};
+
+  if (ELEVEN_HOUR_AGENTS.has(agent.id)) {
+    // ── 11-hour shift: 2 work days, 2 rest days, rotating (no fixed weekends) ──
+    const phase = (h >>> 0) % 4; // per-agent rotation offset so shifts stagger
+    for (let d = 1; d <= 31; d++) {
+      if (vacFrom !== null && d >= vacFrom && d <= vacTo) {
+        sched[d] = vacType; // vacation covers all days including non-work days
+      } else {
+        const pos = ((d - 1) + phase) % 4;
+        sched[d] = pos < 2 ? 11 : null; // 11h worked or rest
+      }
+    }
+  } else {
+    // ── 8-hour shift: Mon-Fri schedule ──
+    const targetWorked = Math.min(agent.worked ?? 22, TABEL_WORK_DAYS.length);
+    const missCount    = TABEL_WORK_DAYS.length - targetWorked;
+    const missedDays   = new Set();
+    const pool = [...TABEL_WORK_DAYS];
+    let rng = (h >>> 0) + 1;
+    for (let i = 0; i < missCount; i++) {
+      rng = ((rng * 1664525) + 1013904223) >>> 0;
+      const idx = rng % pool.length;
+      missedDays.add(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    const nochDayCount = Math.round((agent.noch || 0) / 8000);
+    const nochDays = new Set();
+    if (nochDayCount > 0) {
+      const wp = TABEL_WORK_DAYS.filter(d => !missedDays.has(d));
+      let rng2 = ((h ^ 0x5A5A5A5A) >>> 0) + 1;
+      for (let i = 0; i < Math.min(nochDayCount, wp.length); i++) {
+        rng2 = ((rng2 * 1664525) + 1013904223) >>> 0;
+        nochDays.add(wp[rng2 % wp.length]);
+      }
+    }
+    for (let d = 1; d <= 31; d++) {
+      if (vacFrom !== null && d >= vacFrom && d <= vacTo) {
+        sched[d] = vacType;                      // vacation covers all days including weekends
+      } else if (TABEL_WEEKENDS.has(d)) {
+        sched[d] = null;                         // weekend
+      } else if (missedDays.has(d)) {
+        sched[d] = agent.vacation?.type ?? 'Н'; // absent
+      } else {
+        sched[d] = nochDays.has(d) ? 11 : 8;   // worked
+      }
+    }
+  }
+
+  _schedCache.set(agent.id, sched);
+  return sched;
+}
 
 // ── Explanation badge metadata ─────────────────────────────────────────────
 const EXPL_META = {
@@ -330,6 +437,20 @@ function CellValue({ colKey, agent, rowHovered }) {
         </span>
       );
 
+    case 'tabel_worked':
+      return <span style={{ fontWeight: 800, color: '#0369a1' }}>{agent.worked ?? 0}</span>;
+    case 'tabel_prazdHrs': {
+      const v = Math.round((agent.prazdnichny || 0) / 15000);
+      return <span style={{ color: v > 0 ? '#78350f' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
+    }
+    case 'tabel_vecherHrs': {
+      const v = Math.round((agent.vecher || 0) / 5000);
+      return <span style={{ color: v > 0 ? '#7c3aed' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
+    }
+    case 'tabel_nochHrs': {
+      const v = Math.round((agent.noch || 0) / 7500);
+      return <span style={{ color: v > 0 ? '#1d4ed8' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
+    }
     case 'limit':
     case 'surcharge':
     case 'razryad':
@@ -1196,6 +1317,41 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             onSave={(id, val) => setB2Overrides(prev => ({ ...prev, [id]: val }))}
                             b2Comments={b2Comments}
                           />
+                        );
+                      }
+
+                      // ── TABEL calendar day cell ─────────────────────────────────
+                      if (col.day) {
+                        const sched = getAgentSchedule(agent);
+                        const val = sched[col.day];
+                        const isWeekend = val === null;
+                        const isSymbol  = typeof val === 'string';
+                        const vacStyle  = isSymbol
+                          ? (VACATION_META[val] ?? { color: '#64748b', bg: '#f1f5f9' })
+                          : null;
+                        return (
+                          <td
+                            key={col.key}
+                            style={{
+                              textAlign: 'center',
+                              padding: '1px 0',
+                              fontSize: 10,
+                              fontWeight: isSymbol ? 700 : 600,
+                              borderBottom: '1px solid #e5e7eb',
+                              borderRight,
+                              background: isWeekend ? '#f8fafc'
+                                        : isSymbol  ? vacStyle.bg
+                                        : val === 11 ? '#dbeafe'
+                                        : '#f0fdf4',
+                              color: isWeekend  ? 'transparent'
+                                   : isSymbol   ? vacStyle.color
+                                   : val === 11 ? '#1d4ed8'
+                                   : '#166534',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {isWeekend ? '' : val}
+                          </td>
                         );
                       }
 

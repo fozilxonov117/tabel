@@ -14,8 +14,9 @@ const DEFAULT_VISIBLE_COLUMNS = {
   'CALL METRICS': true,
   'EFFICIENCY': true,
   'KPI': true,
-  'ATTENDANCE & BONUS': true,
+  'BONUS': true,
   'LIMITS & GRADES': true,
+  'TABEL': true,
   'TOTALS (BI-BK)': true,
   'ALLOWANCES': true,
 };
