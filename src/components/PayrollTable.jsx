@@ -13,13 +13,14 @@ const K_NALOG   = 'налог';
 
 // ── Column group header definitions ──────────────────────────────────────────
 const COL_GROUPS = [
-  { label: 'BASIC INFO',         labelKey: 'group.BASIC INFO',         span: 3, color: '#3730a3', bg: '#fffffa' },
-  { label: 'CALL METRICS',       labelKey: 'group.CALL METRICS',       span: 5, color: '#1e40af', bg: '#fffffa' },
-  { label: 'EFFICIENCY',         labelKey: 'group.EFFICIENCY',         span: 3, color: '#4c1d95', bg: '#fffffa' },
-  { label: 'ATTENDANCE & BONUS', labelKey: 'group.ATTENDANCE & BONUS', span: 3, color: '#14532d', bg: '#fffffa' },
-  { label: 'LIMITS & GRADES',    labelKey: 'group.LIMITS & GRADES',    span: 2, color: '#0f766e', bg: '#fffffa' },
-  { label: 'TOTALS (BI-BK)',     labelKey: 'group.TOTALS (BI-BK)',     span: 7, color: '#78350f', bg: '#fffffa' },
-  { label: 'ALLOWANCES',         labelKey: 'group.ALLOWANCES',         span: 6, color: '#5b21b6', bg: '#fffffa' },
+  { label: 'BASIC INFO',         labelKey: 'group.BASIC INFO',         color: '#3730a3', bg: '#fffffa' },
+  { label: 'CALL METRICS',       labelKey: 'group.CALL METRICS',       color: '#1e40af', bg: '#fffffa' },
+  { label: 'EFFICIENCY',         labelKey: 'group.EFFICIENCY',         color: '#4c1d95', bg: '#fffffa' },
+  { label: 'KPI',                labelKey: 'group.KPI',                color: '#b45309', bg: '#fffbeb' },
+  { label: 'ATTENDANCE & BONUS', labelKey: 'group.ATTENDANCE & BONUS', color: '#14532d', bg: '#fffffa' },
+  { label: 'LIMITS & GRADES',    labelKey: 'group.LIMITS & GRADES',    color: '#0f766e', bg: '#fffffa' },
+  { label: 'TOTALS (BI-BK)',     labelKey: 'group.TOTALS (BI-BK)',     color: '#78350f', bg: '#fffffa' },
+  { label: 'ALLOWANCES',         labelKey: 'group.ALLOWANCES',         color: '#5b21b6', bg: '#fffffa' },
 ];
 
 // ── Individual column definitions ─────────────────────────────────────────────
@@ -36,9 +37,10 @@ const COLUMNS = [
   { key: 'factTime',        labelKey: 'col.factTime',         group: 'CALL METRICS',       width: 66  },
   { key: 'perfPct',         labelKey: 'col.perfPct',          group: 'CALL METRICS',       width: 62  },
   // EFFICIENCY
-  { key: 'factScore',       labelKey: 'col.factScore',        group: 'EFFICIENCY',         width: 66  },
   { key: 'explanation',     labelKey: 'col.explanation',      group: 'EFFICIENCY',         width: 150 },
   { key: 'vacation',        labelKey: 'col.vacation',         group: 'EFFICIENCY',         width: 150 },
+  // KPI
+  { key: 'factScore',       labelKey: 'col.factScore',        group: 'KPI',                width: 66  },
   // ATTENDANCE & BONUS
   { key: 'b2',              labelKey: 'col.b2',               group: 'ATTENDANCE & BONUS', width: 90  },
   { key: 'surcharge',       labelKey: 'col.surcharge',        group: 'ATTENDANCE & BONUS', width: 60  },
@@ -59,12 +61,30 @@ const COLUMNS = [
   { key: 'vecher',          labelKey: 'col.vecher',           group: 'ALLOWANCES',         width: 72  },
   { key: 'prazdnichny',     labelKey: 'col.prazdnichny',      group: 'ALLOWANCES',         width: 90  },
   { key: 'stoimostBiletov', labelKey: 'col.stoimostBiletov',  group: 'ALLOWANCES',         width: 100 },
-  { key: 'addBonus',        labelKey: 'col.addBonus',         group: 'ALLOWANCES',         width: 64  },
   { key: 'vyslugaLet',      labelKey: 'col.vyslugaLet',       group: 'ALLOWANCES',         width: 90  },
 ];
 
 // Keys whose zero value displays as '–' in cells
-const DASH_IF_ZERO = new Set(['profitFromOp', 'noch', 'vecher', 'prazdnichny', 'stoimostBiletov', 'addBonus']);
+const DASH_IF_ZERO = new Set(['profitFromOp', 'noch', 'vecher', 'prazdnichny', 'stoimostBiletov']);
+
+// ── Anchor columns that stay visible when a section is collapsed ─────────────
+const SECTION_ANCHORS = {
+  'BASIC INFO':         new Set(['name']),
+  'CALL METRICS':       new Set(['perfPct']),
+  'EFFICIENCY':         new Set(['explanation', 'vacation']),
+  'KPI':                new Set(['factScore']),
+  'ATTENDANCE & BONUS': new Set(['b2']),
+  'LIMITS & GRADES':    new Set(['profitFromOp', 'razryad']),
+  'TOTALS (BI-BK)':     new Set([K_ITOG]),
+  'ALLOWANCES':         new Set(['vyslugaLet']),
+};
+
+// Precompute which groups actually have collapsible (non-anchor) columns
+const COLLAPSIBLE_GROUPS = new Set(
+  Object.keys(SECTION_ANCHORS).filter(g =>
+    COLUMNS.some(c => c.group === g && !SECTION_ANCHORS[g].has(c.key))
+  )
+);
 
 // ── Explanation badge metadata ─────────────────────────────────────────────
 const EXPL_META = {
@@ -511,7 +531,7 @@ function SkeletonRow({ colCount }) {
 }
 
 /* ── Main component ───────────────────────────────────────────────────────── */
-export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading, onDeleteAgents, b2Comments }) {
+export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading, onDeleteAgents, onTransferAgents, groupNames, b2Comments }) {
   const { lang } = useLang();
   const t = k => translations[lang]?.[k] ?? k;
 
@@ -521,7 +541,23 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
     () => colKeyOrder.map(k => COLUMNS.find(c => c.key === k)).filter(Boolean),
     [colKeyOrder]
   );
-  const visibleCols = orderedCols.filter(c => visibleColumns[c.group] !== false && (!c.allGroupOnly || activeGroup === 'All'));
+
+  // ─ Section collapse state ────────────────────────────────────────
+  const [collapsedGroups, setCollapsedGroups] = React.useState(new Set());
+  const toggleGroupCollapse = (label) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label); else next.add(label);
+      return next;
+    });
+  };
+
+  const visibleCols = orderedCols.filter(c => {
+    if (visibleColumns[c.group] === false) return false;
+    if (c.allGroupOnly && activeGroup !== 'All') return false;
+    if (collapsedGroups.has(c.group) && !(SECTION_ANCHORS[c.group]?.has(c.key))) return false;
+    return true;
+  });
   const totalWidth  = visibleCols.reduce((sum, c) => sum + c.width, 0);
 
   // Derive visible group order from the ordered visibleCols
@@ -539,44 +575,54 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
 
   // ─ Drag-mode state ────────────────────────────────────────
   const [dragMode, setDragMode] = React.useState(false);
-  const [holdProgress, setHoldProgress] = React.useState({ key: null, pct: 0 });
   const [dragOverKey, setDragOverKey] = React.useState(null);
   const [dragOverGroup, setDragOverGroup] = React.useState(null);
-  const holdTimerRef = React.useRef(null);
+  const holdTimeoutRef = React.useRef(null);
+  const holdElemRef    = React.useRef(null);
 
   React.useEffect(() => {
-    const onKey = e => { if (e.key === 'Escape') { setDragMode(false); setHoldProgress({ key: null, pct: 0 }); } };
+    const onKey = e => { if (e.key === 'Escape') setDragMode(false); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
-  const startHold = (key) => {
+  // No setInterval / no setState during hold → zero re-renders while holding.
+  // CSS @keyframes (injected below) drives the visual progress bar entirely on the GPU.
+  const startHold = (elem) => {
     clearHold();
-    let elapsed = 0;
-    holdTimerRef.current = setInterval(() => {
-      elapsed += 40;
-      setHoldProgress({ key, pct: Math.min(100, (elapsed / 2000) * 100) });
-      if (elapsed >= 2000) {
-        clearInterval(holdTimerRef.current);
-        setDragMode(true);
-        setHoldProgress({ key: null, pct: 0 });
-      }
-    }, 40);
+    holdElemRef.current = elem;
+    elem.classList.add('is-holding');
+    holdTimeoutRef.current = setTimeout(() => {
+      elem.classList.remove('is-holding');
+      holdElemRef.current = null;
+      setDragMode(true);          // single state update, once, after 1 s
+    }, 1000);
   };
   const clearHold = () => {
-    clearInterval(holdTimerRef.current);
-    setHoldProgress({ key: null, pct: 0 });
+    clearTimeout(holdTimeoutRef.current);
+    if (holdElemRef.current) {
+      holdElemRef.current.classList.remove('is-holding');
+      holdElemRef.current = null;
+    }
   };
 
   const moveCol = (fromKey, toKey) => {
     if (fromKey === toKey) return;
     setColKeyOrder(prev => {
-      const next = [...prev];
-      const from = next.indexOf(fromKey);
-      const to   = next.indexOf(toKey);
+      const from = prev.indexOf(fromKey);
+      const to   = prev.indexOf(toKey);
       if (from === -1 || to === -1) return prev;
+      const next = [...prev];
       next.splice(from, 1);
-      next.splice(to, 0, fromKey);
+      // After removing `from`, re-compute where toKey now sits
+      const newTo = next.indexOf(toKey);
+      if (from < to) {
+        // Moving right: land AFTER the target
+        next.splice(newTo + 1, 0, fromKey);
+      } else {
+        // Moving left: land BEFORE the target
+        next.splice(newTo, 0, fromKey);
+      }
       return next;
     });
   };
@@ -584,13 +630,28 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   const moveGroup = (fromGroup, toGroup) => {
     if (fromGroup === toGroup) return;
     setColKeyOrder(prev => {
-      const groupKeys = prev.filter(k => { const c = COLUMNS.find(x => x.key === k); return c && c.group === fromGroup; });
-      const rest      = prev.filter(k => !groupKeys.includes(k));
-      const pivot     = rest.find(k => { const c = COLUMNS.find(x => x.key === k); return c && c.group === toGroup; });
-      if (!pivot) return prev;
-      const idx = rest.indexOf(pivot);
+      const groupKeys = prev.filter(k => COLUMNS.find(x => x.key === k)?.group === fromGroup);
+      if (!groupKeys.length) return prev;
+      const rest = prev.filter(k => !groupKeys.includes(k));
+
+      // Determine direction in the original (pre-removal) order
+      const fromPos = prev.findIndex(k => groupKeys.includes(k));
+      const toPos   = prev.findIndex(k => COLUMNS.find(x => x.key === k)?.group === toGroup);
+      if (toPos === -1) return prev;
+
       const result = [...rest];
-      result.splice(idx, 0, ...groupKeys);
+      if (fromPos < toPos) {
+        // Moving right: insert AFTER the last key of toGroup in rest
+        let lastIdx = -1;
+        result.forEach((k, i) => { if (COLUMNS.find(x => x.key === k)?.group === toGroup) lastIdx = i; });
+        if (lastIdx === -1) return prev;
+        result.splice(lastIdx + 1, 0, ...groupKeys);
+      } else {
+        // Moving left: insert BEFORE the first key of toGroup in rest
+        const firstIdx = result.findIndex(k => COLUMNS.find(x => x.key === k)?.group === toGroup);
+        if (firstIdx === -1) return prev;
+        result.splice(firstIdx, 0, ...groupKeys);
+      }
       return result;
     });
   };
@@ -601,11 +662,11 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   const [hoveredRowId, setHoveredRowId] = React.useState(null);
   const [selectedForDelete, setSelectedForDelete] = React.useState(new Set());
   const [deleteMode, setDeleteMode] = React.useState(false);
+  const [transferMode, setTransferMode] = React.useState(false);
+  const [selectedForTransfer, setSelectedForTransfer] = React.useState(new Set());
 
-  const exitDeleteMode = () => {
-    setDeleteMode(false);
-    setSelectedForDelete(new Set());
-  };
+  const exitDeleteMode = () => { setDeleteMode(false); setSelectedForDelete(new Set()); };
+  const exitTransferMode = () => { setTransferMode(false); setSelectedForTransfer(new Set()); };
 
   const handleContextMenu = (e, agentId = null) => {
     if (e.shiftKey) return; // Shift+right-click → browser default
@@ -661,6 +722,19 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
 
   return (
     <div className="relative overflow-x-auto" onContextMenu={handleTableContextMenu}>
+      {/* CSS for hold animation — runs on GPU, zero JS re-renders */}
+      <style>{`
+        .hold-bar {
+          position: absolute; bottom: 0; left: 0;
+          height: 2px; width: 0; border-radius: 2px;
+          background: #6366f1; pointer-events: none;
+        }
+        .is-holding .hold-bar {
+          animation: hold-grow 1s linear forwards;
+        }
+        @keyframes hold-grow { from { width: 0% } to { width: 100% } }
+      `}</style>
+
       {/* Drag-mode banner */}
       {dragMode && (
         <div style={{
@@ -726,12 +800,38 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               </svg>
               {ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined ? t('ctx.resetCell') : t('ctx.return')}
             </button>
-            {/* Delete button — enters selection mode */}
+            {/* Delete + Transfer buttons — enter selection mode */}
             {ctxMenu.agentId && (
               <>
                 <div style={{ margin: '3px 8px', borderTop: '1px solid #f1f5f9' }} />
+                {/* Transfer button — only available when viewing a specific branch */}
+                {activeGroup !== 'All' && (
+                  <button
+                    onClick={() => {
+                      exitDeleteMode();
+                      setTransferMode(true);
+                      setSelectedForTransfer(new Set([ctxMenu.agentId]));
+                      setCtxMenu(m => ({ ...m, visible: false }));
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      width: '100%', padding: '7px 12px',
+                      background: 'none', border: 'none', borderRadius: 7,
+                      color: '#0369a1', fontSize: 13, fontWeight: 500,
+                      cursor: 'pointer', textAlign: 'left',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#e0f2fe'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0, color: '#0369a1' }}>
+                      <path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/>
+                    </svg>
+                    Перенести
+                  </button>
+                )}
                 <button
                   onClick={() => {
+                    exitTransferMode();
                     setDeleteMode(true);
                     setSelectedForDelete(new Set());
                     setCtxMenu(m => ({ ...m, visible: false }));
@@ -749,10 +849,85 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
                     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                   </svg>
-                  {t('ctx.delete')}  
+                  {t('ctx.delete')}
                 </button>
               </>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating transfer action bar */}
+      <AnimatePresence>
+        {transferMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 99998,
+              background: '#ffffff',
+              borderRadius: 12,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              border: '1px solid #bae6fd',
+              padding: '10px 16px',
+              display: 'flex', alignItems: 'center', gap: 12,
+              minWidth: 380,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#0369a1"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#0369a1', fontWeight: 800 }}>{selectedForTransfer.size}</span>
+              {' '}выбрано · Перенести в:
+            </span>
+            {(groupNames || []).filter(g => g !== activeGroup).map(branch => (
+              <button
+                key={branch}
+                disabled={selectedForTransfer.size === 0}
+                onClick={() => {
+                  if (selectedForTransfer.size === 0) return;
+                  onTransferAgents([...selectedForTransfer], branch);
+                  exitTransferMode();
+                }}
+                style={{
+                  padding: '5px 14px', borderRadius: 7, border: '1px solid #bae6fd',
+                  background: selectedForTransfer.size === 0 ? '#f0f9ff' : '#0369a1',
+                  color: selectedForTransfer.size === 0 ? '#94a3b8' : '#ffffff',
+                  fontSize: 12, fontWeight: 700,
+                  cursor: selectedForTransfer.size === 0 ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.12s',
+                }}
+                onMouseEnter={e => { if (selectedForTransfer.size > 0) e.currentTarget.style.background = '#075985'; }}
+                onMouseLeave={e => { if (selectedForTransfer.size > 0) e.currentTarget.style.background = '#0369a1'; }}
+              >
+                {branch}
+              </button>
+            ))}
+            <button
+              onClick={() => {
+                const all = (agents || []).map(a => a.id);
+                const allSelected = all.every(id => selectedForTransfer.has(id));
+                setSelectedForTransfer(allSelected ? new Set() : new Set(all));
+              }}
+              style={{
+                marginLeft: 'auto', padding: '5px 12px', borderRadius: 7,
+                border: '1px solid #e2e8f0', background: '#f8fafc',
+                color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              {(agents || []).every(a => selectedForTransfer.has(a.id)) ? t('ctx.deselectAll') : t('ctx.selectAll')}
+            </button>
+            <button
+              onClick={exitTransferMode}
+              style={{
+                padding: '5px 14px', borderRadius: 7, border: '1px solid #e2e8f0',
+                background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              {t('ctx.deleteCancel')}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -863,20 +1038,23 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               const groupCols = visibleCols.filter(c => c.group === g.label);
               if (groupCols.length === 0) return null;
               const isOver = dragOverGroup === g.label;
+              const isCollapsed = collapsedGroups.has(g.label);
+              const isCollapsible = COLLAPSIBLE_GROUPS.has(g.label);
               return (
                 <th
                   key={g.label}
                   colSpan={groupCols.length}
                   draggable={dragMode}
-                  onMouseDown={dragMode ? undefined : e => { if (e.button === 0) startHold(`grp:${g.label}`); }}
+                  onMouseDown={dragMode ? undefined : e => { if (e.button === 0) startHold(e.currentTarget); }}
                   onMouseUp={clearHold}
                   onMouseLeave={clearHold}
+                  onClick={!dragMode && isCollapsible ? () => toggleGroupCollapse(g.label) : undefined}
                   onDragStart={e => { e.dataTransfer.setData('dtype', 'group'); e.dataTransfer.setData('dkey', g.label); e.dataTransfer.effectAllowed = 'move'; }}
                   onDragOver={e => { e.preventDefault(); setDragOverGroup(g.label); }}
                   onDragLeave={() => setDragOverGroup(null)}
                   onDrop={e => { e.preventDefault(); const from = e.dataTransfer.getData('dkey'); if (e.dataTransfer.getData('dtype') === 'group') moveGroup(from, g.label); setDragOverGroup(null); }}
                   style={{
-                    background: isOver ? '#dbeafe' : g.bg,
+                    background: isOver ? '#dbeafe' : isCollapsed ? `${g.color}18` : g.bg,
                     color: g.color,
                     borderBottom: `2px solid ${g.color}33`,
                     padding: '5px 6px',
@@ -884,25 +1062,24 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     fontWeight: 800, letterSpacing: '0.07em',
                     borderRight: '3px solid #94a3b8',
                     whiteSpace: 'nowrap',
-                    cursor: dragMode ? 'grab' : 'default',
+                    cursor: dragMode ? 'grab' : isCollapsible ? 'pointer' : 'default',
                     position: 'relative',
                     outline: isOver ? '2px dashed #3b82f6' : undefined,
                     transition: 'background 0.15s',
+                    userSelect: 'none',
                   }}
                 >
                   {dragMode && (
                     <span style={{ marginRight: 4, opacity: 0.5, fontSize: 10 }}>&#8597;</span>
                   )}
-                  {t(g.labelKey)}
-                  {/* hold-progress bar */}
-                  {holdProgress.key === `grp:${g.label}` && holdProgress.pct > 0 && (
-                    <span style={{
-                      position: 'absolute', bottom: 0, left: 0,
-                      height: 2, background: '#6366f1',
-                      width: `${holdProgress.pct}%`,
-                      borderRadius: 2, transition: 'width 0.04s linear',
-                    }} />
+                  {isCollapsible && !dragMode && (
+                    <span style={{ marginRight: 3, fontSize: 8, opacity: 0.65, display: 'inline-block', transition: 'transform 0.15s', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>&#9660;</span>
                   )}
+                  {t(g.labelKey)}
+                  {isCollapsed && (
+                    <span style={{ marginLeft: 4, fontSize: 8, opacity: 0.55, fontWeight: 600 }}>+{COLUMNS.filter(c => c.group === g.label && !SECTION_ANCHORS[g.label]?.has(c.key)).length}</span>
+                  )}
+                  <span className="hold-bar" />
                 </th>
               );
             })}
@@ -918,7 +1095,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 key={col.key}
                 className="sortable-th"
                 draggable={dragMode}
-                onMouseDown={dragMode ? undefined : e => { if (e.button === 0) startHold(col.key); }}
+                onMouseDown={dragMode ? undefined : e => { if (e.button === 0) startHold(e.currentTarget); }}
                 onMouseUp={clearHold}
                 onMouseLeave={clearHold}
                 onDragStart={e => { e.dataTransfer.setData('dtype', 'col'); e.dataTransfer.setData('dkey', col.key); e.dataTransfer.effectAllowed = 'move'; }}
@@ -947,15 +1124,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   {dragMode && <span style={{ fontSize: 9, opacity: 0.45, letterSpacing: 0 }}>&#9776;</span>}
                   <span>{t(col.labelKey)}</span>
                 </span>
-                {/* hold-progress bar */}
-                {holdProgress.key === col.key && holdProgress.pct > 0 && (
-                  <span style={{
-                    position: 'absolute', bottom: 0, left: 0,
-                    height: 2, background: '#6366f1',
-                    width: `${holdProgress.pct}%`,
-                    borderRadius: 2, transition: 'width 0.04s linear',
-                  }} />
-                )}
+                <span className="hold-bar" />
               </th>
               );
             })}
@@ -971,6 +1140,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 const isEven = idx % 2 === 1;
                 const rowClass = isEven ? 'row-even' : 'row-odd';
                 const isSelectedForDelete = selectedForDelete.has(agent.id);
+                const isSelectedForTransfer = selectedForTransfer.has(agent.id);
 
                 return (
                   <motion.tr
@@ -982,17 +1152,25 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     onMouseEnter={() => setHoveredRowId(agent.id)}
                     onMouseLeave={() => setHoveredRowId(null)}
                     onContextMenu={e => handleContextMenu(e, agent.id)}
-                    onClick={deleteMode ? () => {
-                      setSelectedForDelete(prev => {
-                        const next = new Set(prev);
-                        if (next.has(agent.id)) next.delete(agent.id);
-                        else next.add(agent.id);
-                        return next;
-                      });
+                    onClick={(deleteMode || transferMode) ? () => {
+                      if (deleteMode) {
+                        setSelectedForDelete(prev => {
+                          const next = new Set(prev);
+                          if (next.has(agent.id)) next.delete(agent.id); else next.add(agent.id);
+                          return next;
+                        });
+                      } else {
+                        setSelectedForTransfer(prev => {
+                          const next = new Set(prev);
+                          if (next.has(agent.id)) next.delete(agent.id); else next.add(agent.id);
+                          return next;
+                        });
+                      }
                     } : undefined}
                     style={{
                       ...(isSelectedForDelete ? { background: '#fff1f2', outline: '2px solid #fca5a5', outlineOffset: '-1px', opacity: 0.75 } : {}),
-                      ...(deleteMode ? { cursor: 'pointer' } : {}),
+                      ...(isSelectedForTransfer ? { background: '#e0f2fe', outline: '2px solid #38bdf8', outlineOffset: '-1px', opacity: 0.75 } : {}),
+                      ...((deleteMode || transferMode) ? { cursor: 'pointer' } : {}),
                     }}
                   >
                     {visibleCols.map((col, i) => {

@@ -13,6 +13,7 @@ const DEFAULT_VISIBLE_COLUMNS = {
   'BASIC INFO': true,
   'CALL METRICS': true,
   'EFFICIENCY': true,
+  'KPI': true,
   'ATTENDANCE & BONUS': true,
   'LIMITS & GRADES': true,
   'TOTALS (BI-BK)': true,
@@ -26,6 +27,7 @@ export default function App() {
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
   const [isLoading, setIsLoading] = useState(false);
   const [deletedIds, setDeletedIds] = useState(new Set());
+  const [agentBranchOverrides, setAgentBranchOverrides] = useState({});
   const loadingTimer = useRef(null);
 
   // Clean up timer on unmount
@@ -33,10 +35,24 @@ export default function App() {
 
   const computedAgents = useMemo(() => {
     if (activeGroup === 'All') {
-      return GROUP_NAMES.flatMap(g => processGroup(mockAgents[g] || []));
+      return GROUP_NAMES.flatMap(g => {
+        const base = (mockAgents[g] || []).filter(a => !agentBranchOverrides[a.id] || agentBranchOverrides[a.id] === g);
+        const incoming = GROUP_NAMES.filter(src => src !== g).flatMap(src =>
+          (mockAgents[src] || []).filter(a => agentBranchOverrides[a.id] === g)
+        );
+        return processGroup([...base, ...incoming].map(a =>
+          agentBranchOverrides[a.id] ? { ...a, vetka: agentBranchOverrides[a.id] } : a
+        ));
+      });
     }
-    return processGroup(mockAgents[activeGroup] || []);
-  }, [activeGroup]);
+    const base = (mockAgents[activeGroup] || []).filter(a => !agentBranchOverrides[a.id] || agentBranchOverrides[a.id] === activeGroup);
+    const incoming = GROUP_NAMES.filter(g => g !== activeGroup).flatMap(g =>
+      (mockAgents[g] || []).filter(a => agentBranchOverrides[a.id] === activeGroup)
+    );
+    return processGroup([...base, ...incoming].map(a =>
+      agentBranchOverrides[a.id] ? { ...a, vetka: agentBranchOverrides[a.id] } : a
+    ));
+  }, [activeGroup, agentBranchOverrides]);
 
   const filteredAgents = useMemo(() => {
     let list = computedAgents;
@@ -74,6 +90,14 @@ export default function App() {
     setDeletedIds(prev => new Set([...prev, ...ids]));
   }, []);
 
+  const handleTransferAgents = useCallback((ids, targetBranch) => {
+    setAgentBranchOverrides(prev => {
+      const next = { ...prev };
+      ids.forEach(id => { next[id] = targetBranch; });
+      return next;
+    });
+  }, []);
+
   const handleRefresh = useCallback(() => {
     setSearchQuery('');
     setPage(1);
@@ -99,6 +123,8 @@ export default function App() {
           totalAll={TOTAL_AGENTS}
           isLoading={isLoading}
           onDeleteAgents={handleDeleteAgents}
+          onTransferAgents={handleTransferAgents}
+          groupNames={GROUP_NAMES}
           b2Comments={B2_COMMENTS}
         />
       </div>
