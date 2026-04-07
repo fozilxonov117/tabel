@@ -59,6 +59,12 @@ export const translations = {
     'ctx.actions': 'Actions',
     'ctx.b2cell': 'B2 Cell',
     'ctx.resetCell': 'Reset to Default',
+    'ctx.delete': 'Delete Row',
+    'ctx.deleteBar': 'selected for deletion',
+    'ctx.deleteConfirm': 'Delete',
+    'ctx.deleteCancel': 'Cancel',
+    'ctx.selectAll': 'Select All',
+    'ctx.deselectAll': 'Deselect All',
   },
 
   ru: {
@@ -121,6 +127,12 @@ export const translations = {
     'ctx.actions': 'Действия',
     'ctx.b2cell': 'Ячейка B2',
     'ctx.resetCell': 'Сбросить значение',
+    'ctx.delete': 'Удалить',
+    'ctx.deleteBar': 'выбрано для удаления',
+    'ctx.deleteConfirm': 'Удалить',
+    'ctx.deleteCancel': 'Отмена',
+    'ctx.selectAll': 'Выбрать все',
+    'ctx.deselectAll': 'Снять все',
   },
 
   uz: {
@@ -183,5 +195,11 @@ export const translations = {
     'ctx.actions': 'Amallar',
     'ctx.b2cell': 'B2 Katakcha',
     'ctx.resetCell': 'Asl qiymatga qaytarish',
+    'ctx.delete': 'Oʼchirish',
+    'ctx.deleteBar': 'oʼchirish uchun tanlandi',
+    'ctx.deleteConfirm': 'Oʼchirish',
+    'ctx.deleteCancel': 'Bekor qilish',
+    'ctx.selectAll': 'Hammasini tanlash',
+    'ctx.deselectAll': 'Barchasini bekor qilish',
   },
 };

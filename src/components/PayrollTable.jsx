@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fmtTime, fmtNum, computeTotals } from '../data/calculations';
 import { useLang } from '../i18n/LangContext';
@@ -109,10 +110,29 @@ const VACATION_META = {
   'ГС':      { color: '#be185d', bg: '#fdf2f8',  border: '#f9a8d4' },
 };
 
-function ExplanationIconItem({ type, count, rowHovered }) {
+// Quadrant positions based on icon index (fans outward to avoid overlap)
+// Index 0 (left icon):  tooltip top-left  (extends leftward)
+// Index 1 (right icon): tooltip top-right (extends rightward)
+// Index 2: bottom-left, Index 3: bottom-right
+const EXPL_QUADRANTS = [
+  { above: true,  leftAnchor: false }, // index 0: above, right:0 → extends LEFT
+  { above: true,  leftAnchor: true  }, // index 1: above, left:0  → extends RIGHT
+  { above: false, leftAnchor: false }, // index 2: below, right:0 → extends LEFT
+  { above: false, leftAnchor: true  }, // index 3: below, left:0  → extends RIGHT
+];
+
+function ExplanationIconItem({ type, count, rowHovered, index }) {
   const [hovered, setHovered] = React.useState(false);
   const meta = EXPL_META[type] || EXPL_META['Другое'];
   const showTooltip = hovered || rowHovered;
+  const q = EXPL_QUADRANTS[(index || 0) % 4];
+
+  const boxStyle = q.above
+    ? { bottom: 'calc(100% + 6px)', ...(q.leftAnchor ? { left: 0 } : { right: 0 }) }
+    : { top: 'calc(100% + 6px)',    ...(q.leftAnchor ? { left: 0 } : { right: 0 }) };
+  const arrowSide = q.leftAnchor ? { left: '10px' } : { right: '10px' };
+  const initY = q.above ? 4 : -4;
+
   return (
     <span style={{ position: 'relative', display: 'inline-flex' }}>
       <span
@@ -145,14 +165,13 @@ function ExplanationIconItem({ type, count, rowHovered }) {
       <AnimatePresence>
         {showTooltip && (
           <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.9 }}
+            initial={{ opacity: 0, y: initY, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.9 }}
+            exit={{ opacity: 0, y: initY, scale: 0.9 }}
             transition={{ duration: 0.15 }}
             style={{
               position: 'absolute',
-              bottom: 'calc(100% + 6px)',
-              left: '0',
+              ...boxStyle,
               background: '#ffffff', color: '#1e293b',
               fontSize: 11, fontWeight: 600,
               whiteSpace: 'nowrap', padding: '4px 9px',
@@ -162,16 +181,17 @@ function ExplanationIconItem({ type, count, rowHovered }) {
             }}
           >
             {count > 1 ? `${type} ×${count}` : type}
-            <span style={{
-              position: 'absolute', top: '100%', left: '10px',
-              borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
-              borderTop: '4px solid #e2e8f0',
-            }} />
-            <span style={{
-              position: 'absolute', top: 'calc(100% - 1px)', left: '10px',
-              borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
-              borderTop: '4px solid #ffffff',
-            }} />
+            {q.above ? (
+              <>
+                <span style={{ position: 'absolute', top: '100%', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #e2e8f0' }} />
+                <span style={{ position: 'absolute', top: 'calc(100% - 1px)', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #ffffff' }} />
+              </>
+            ) : (
+              <>
+                <span style={{ position: 'absolute', bottom: '100%', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderBottom: '4px solid #e2e8f0' }} />
+                <span style={{ position: 'absolute', bottom: 'calc(100% - 1px)', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderBottom: '4px solid #ffffff' }} />
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -184,8 +204,8 @@ function ExplanationIcons({ types, rowHovered }) {
   types.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 3, alignItems: 'center', justifyContent: 'center' }}>
-      {Object.entries(counts).map(([type, count]) => (
-        <ExplanationIconItem key={type} type={type} count={count} rowHovered={rowHovered} />
+      {Object.entries(counts).map(([type, count], index) => (
+        <ExplanationIconItem key={type} type={type} count={count} rowHovered={rowHovered} index={index} />
       ))}
     </span>
   );
@@ -215,32 +235,32 @@ function VacationBadge({ v, rowHovered }) {
       <AnimatePresence>
         {showTooltip && v.from && v.to && (
           <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.9 }}
+            initial={{ opacity: 0, y: -4, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.9 }}
+            exit={{ opacity: 0, y: -4, scale: 0.9 }}
             transition={{ duration: 0.15 }}
             style={{
               position: 'absolute',
-              bottom: 'calc(100% + 6px)',
+              top: 'calc(100% + 6px)',
               left: '0',
               background: '#ffffff', color: '#1e293b',
               fontSize: 11, fontWeight: 600,
               whiteSpace: 'nowrap', padding: '5px 10px',
-              borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
+              borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
               border: '1px solid #e2e8f0',
               zIndex: 9999, pointerEvents: 'none',
             }}
           >
             {v.type} · {t('vac.from')}: {v.from} — {t('vac.to')}: {v.to}
             <span style={{
-              position: 'absolute', top: '100%', left: '10px',
+              position: 'absolute', bottom: '100%', left: '10px',
               borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-              borderTop: '5px solid #e2e8f0',
+              borderBottom: '5px solid #e2e8f0',
             }} />
             <span style={{
-              position: 'absolute', top: 'calc(100% - 1px)', left: '10px',
+              position: 'absolute', bottom: 'calc(100% - 1px)', left: '10px',
               borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-              borderTop: '5px solid #ffffff',
+              borderBottom: '5px solid #ffffff',
             }} />
           </motion.div>
         )}
@@ -370,6 +390,113 @@ function B2Cell({ agentId, b1Val, override, onSave, onActivate }) {
   );
 }
 
+/* ── B2 cell with comment portal tooltip ─────────────────────────────────── */
+function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, rowHovered, onContextMenu, onSave, b2Comments }) {
+  const tdRef = React.useRef(null);
+  const comment = (b2Comments && b2Comments[agent.id]) || null;
+  const [tooltipPos, setTooltipPos] = React.useState(null);
+
+  React.useEffect(() => {
+    if (comment && rowHovered && tdRef.current) {
+      const rect = tdRef.current.getBoundingClientRect();
+      // cellCenterX: where the arrow tip points (cell horizontal center)
+      // box left: clamp so tooltip doesn't overflow viewport on either side
+      const cellCenterX = rect.left + rect.width / 2;
+      const boxWidth = 260;
+      const margin = 8;
+      let boxLeft = cellCenterX - boxWidth / 2;
+      if (boxLeft < margin) boxLeft = margin;
+      if (boxLeft + boxWidth > window.innerWidth - margin) boxLeft = window.innerWidth - margin - boxWidth;
+      // arrowLeft: relative offset inside the box pointing at cellCenterX
+      const arrowLeft = Math.max(12, Math.min(boxWidth - 12, cellCenterX - boxLeft));
+      setTooltipPos({ bottom: window.innerHeight - rect.top + 8, boxLeft, arrowLeft });
+    } else {
+      setTooltipPos(null);
+    }
+  }, [rowHovered, comment]);
+
+  return (
+    <td
+      ref={tdRef}
+      onContextMenu={onContextMenu}
+      style={{
+        position: 'relative',
+        textAlign: 'center', padding: '5px 5px', fontSize: 11,
+        borderBottom: '1px solid #e5e7eb', borderRight, whiteSpace: 'nowrap',
+        background: b2IsHigher ? '#dcfce7' : b2IsLower ? '#fee2e2' : undefined,
+        color: b2IsHigher ? '#15803d' : b2IsLower ? '#dc2626' : '#374151',
+      }}
+    >
+      {comment && (
+        <span style={{
+          position: 'absolute', top: 0, right: 0,
+          width: 0, height: 0,
+          borderStyle: 'solid',
+          borderWidth: '0 7px 7px 0',
+          borderColor: 'transparent #dc2626 transparent transparent',
+          pointerEvents: 'none',
+        }} />
+      )}
+      <B2Cell
+        agentId={agent.id}
+        b1Val={agent.b1}
+        override={b2Override}
+        onSave={onSave}
+        onActivate={() => {}}
+      />
+      {comment && ReactDOM.createPortal(
+        <AnimatePresence>
+          {tooltipPos && (
+            <motion.div
+              initial={{ opacity: 0, y: 4, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 4, scale: 0.9 }}
+              transition={{ duration: 0.15 }}
+              style={{
+                position: 'fixed',
+                bottom: tooltipPos.bottom,
+                left: tooltipPos.boxLeft,
+                width: 260,
+                zIndex: 99999,
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: 8,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                padding: '7px 11px',
+                pointerEvents: 'none',
+              }}
+            >
+              <p style={{
+                fontSize: 11, color: '#1e293b', fontWeight: 600,
+                lineHeight: 1.55, margin: 0,
+                whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+              }}>
+                {comment}
+              </p>
+              {/* arrow pointing down toward the cell */}
+              <span style={{
+                position: 'absolute', top: '100%',
+                left: tooltipPos.arrowLeft,
+                transform: 'translateX(-50%)',
+                borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
+                borderTop: '4px solid #e2e8f0',
+              }} />
+              <span style={{
+                position: 'absolute', top: 'calc(100% - 1px)',
+                left: tooltipPos.arrowLeft,
+                transform: 'translateX(-50%)',
+                borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
+                borderTop: '4px solid #ffffff',
+              }} />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+    </td>
+  );
+}
+
 /* ── Skeleton row ─────────────────────────────────────────────────────────── */
 function SkeletonRow({ colCount }) {
   return (
@@ -384,15 +511,101 @@ function SkeletonRow({ colCount }) {
 }
 
 /* ── Main component ───────────────────────────────────────────────────────── */
-export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading }) {
+export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading, onDeleteAgents, b2Comments }) {
   const { lang } = useLang();
   const t = k => translations[lang]?.[k] ?? k;
-  const visibleCols = COLUMNS.filter(c => visibleColumns[c.group] !== false && (!c.allGroupOnly || activeGroup === 'All'));
+
+  // ─ Column ordering (drag-to-reorder) ────────────────────────────
+  const [colKeyOrder, setColKeyOrder] = React.useState(() => COLUMNS.map(c => c.key));
+  const orderedCols = React.useMemo(
+    () => colKeyOrder.map(k => COLUMNS.find(c => c.key === k)).filter(Boolean),
+    [colKeyOrder]
+  );
+  const visibleCols = orderedCols.filter(c => visibleColumns[c.group] !== false && (!c.allGroupOnly || activeGroup === 'All'));
   const totalWidth  = visibleCols.reduce((sum, c) => sum + c.width, 0);
 
+  // Derive visible group order from the ordered visibleCols
+  const visibleGroups = React.useMemo(() => {
+    const seen = new Set();
+    return visibleCols.reduce((acc, col) => {
+      if (!seen.has(col.group)) {
+        seen.add(col.group);
+        const g = COL_GROUPS.find(g => g.label === col.group);
+        if (g) acc.push(g);
+      }
+      return acc;
+    }, []);
+  }, [visibleCols]);
+
+  // ─ Drag-mode state ────────────────────────────────────────
+  const [dragMode, setDragMode] = React.useState(false);
+  const [holdProgress, setHoldProgress] = React.useState({ key: null, pct: 0 });
+  const [dragOverKey, setDragOverKey] = React.useState(null);
+  const [dragOverGroup, setDragOverGroup] = React.useState(null);
+  const holdTimerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') { setDragMode(false); setHoldProgress({ key: null, pct: 0 }); } };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  const startHold = (key) => {
+    clearHold();
+    let elapsed = 0;
+    holdTimerRef.current = setInterval(() => {
+      elapsed += 40;
+      setHoldProgress({ key, pct: Math.min(100, (elapsed / 2000) * 100) });
+      if (elapsed >= 2000) {
+        clearInterval(holdTimerRef.current);
+        setDragMode(true);
+        setHoldProgress({ key: null, pct: 0 });
+      }
+    }, 40);
+  };
+  const clearHold = () => {
+    clearInterval(holdTimerRef.current);
+    setHoldProgress({ key: null, pct: 0 });
+  };
+
+  const moveCol = (fromKey, toKey) => {
+    if (fromKey === toKey) return;
+    setColKeyOrder(prev => {
+      const next = [...prev];
+      const from = next.indexOf(fromKey);
+      const to   = next.indexOf(toKey);
+      if (from === -1 || to === -1) return prev;
+      next.splice(from, 1);
+      next.splice(to, 0, fromKey);
+      return next;
+    });
+  };
+
+  const moveGroup = (fromGroup, toGroup) => {
+    if (fromGroup === toGroup) return;
+    setColKeyOrder(prev => {
+      const groupKeys = prev.filter(k => { const c = COLUMNS.find(x => x.key === k); return c && c.group === fromGroup; });
+      const rest      = prev.filter(k => !groupKeys.includes(k));
+      const pivot     = rest.find(k => { const c = COLUMNS.find(x => x.key === k); return c && c.group === toGroup; });
+      if (!pivot) return prev;
+      const idx = rest.indexOf(pivot);
+      const result = [...rest];
+      result.splice(idx, 0, ...groupKeys);
+      return result;
+    });
+  };
+
+  // ─ Existing state ───────────────────────────────────────────
   const [ctxMenu, setCtxMenu] = React.useState({ visible: false, x: 0, y: 0, agentId: null });
   const [b2Overrides, setB2Overrides] = React.useState({});
   const [hoveredRowId, setHoveredRowId] = React.useState(null);
+  const [selectedForDelete, setSelectedForDelete] = React.useState(new Set());
+  const [deleteMode, setDeleteMode] = React.useState(false);
+
+  const exitDeleteMode = () => {
+    setDeleteMode(false);
+    setSelectedForDelete(new Set());
+  };
 
   const handleContextMenu = (e, agentId = null) => {
     if (e.shiftKey) return; // Shift+right-click → browser default
@@ -448,6 +661,21 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
 
   return (
     <div className="relative overflow-x-auto" onContextMenu={handleTableContextMenu}>
+      {/* Drag-mode banner */}
+      {dragMode && (
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 99997,
+          background: '#eff6ff', borderBottom: '2px solid #3b82f6',
+          padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 8,
+          fontSize: 11, fontWeight: 700, color: '#1d4ed8',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 9h14M5 15h14" /><path d="M9 5v14M15 5v14" />
+          </svg>
+          Drag mode — drag sections or columns to reorder · Press <kbd style={{ background: '#dbeafe', borderRadius: 3, padding: '1px 5px', fontFamily: 'monospace', fontSize: 10 }}>Esc</kbd> to exit
+        </div>
+      )}
+
       {/* Custom context menu */}
       <AnimatePresence>
         {ctxMenu.visible && (
@@ -498,6 +726,99 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               </svg>
               {ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined ? t('ctx.resetCell') : t('ctx.return')}
             </button>
+            {/* Delete button — enters selection mode */}
+            {ctxMenu.agentId && (
+              <>
+                <div style={{ margin: '3px 8px', borderTop: '1px solid #f1f5f9' }} />
+                <button
+                  onClick={() => {
+                    setDeleteMode(true);
+                    setSelectedForDelete(new Set());
+                    setCtxMenu(m => ({ ...m, visible: false }));
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    width: '100%', padding: '7px 12px',
+                    background: 'none', border: 'none', borderRadius: 7,
+                    color: '#dc2626', fontSize: 13, fontWeight: 500,
+                    cursor: 'pointer', textAlign: 'left',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#fff1f2'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                  </svg>
+                  {t('ctx.delete')}  
+                </button>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating delete action bar */}
+      <AnimatePresence>
+        {deleteMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 99998,
+              background: '#ffffff',
+              borderRadius: 12,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              border: '1px solid #fecaca',
+              padding: '10px 16px',
+              display: 'flex', alignItems: 'center', gap: 12,
+              minWidth: 360,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#dc2626"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
+              <span style={{ color: '#dc2626', fontWeight: 800 }}>{selectedForDelete.size}</span>
+              {' '}{t('ctx.deleteBar')}
+            </span>
+            <button
+              onClick={() => {
+                const all = (agents || []).map(a => a.id);
+                const allSelected = all.every(id => selectedForDelete.has(id));
+                setSelectedForDelete(allSelected ? new Set() : new Set(all));
+              }}
+              style={{
+                marginLeft: 'auto', padding: '5px 12px', borderRadius: 7,
+                border: '1px solid #e2e8f0', background: '#f8fafc',
+                color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              {(agents || []).every(a => selectedForDelete.has(a.id)) ? t('ctx.deselectAll') : t('ctx.selectAll')}
+            </button>
+            <button
+              onClick={exitDeleteMode}
+              style={{
+                padding: '5px 14px', borderRadius: 7, border: '1px solid #e2e8f0',
+                background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              {t('ctx.deleteCancel')}
+            </button>
+            <button
+              disabled={selectedForDelete.size === 0}
+              onClick={() => {
+                onDeleteAgents([...selectedForDelete]);
+                exitDeleteMode();
+              }}
+              style={{
+                padding: '5px 16px', borderRadius: 7, border: 'none',
+                background: selectedForDelete.size === 0 ? '#fca5a5' : '#dc2626',
+                color: '#ffffff', fontSize: 12, fontWeight: 700, cursor: selectedForDelete.size === 0 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {t('ctx.deleteConfirm')}{selectedForDelete.size > 0 ? ` (${selectedForDelete.size})` : ''}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -538,24 +859,50 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
         <thead>
           {/* Row 1 – group headers */}
           <tr>
-            {COL_GROUPS.map((g, gi) => {
+            {visibleGroups.map((g) => {
               const groupCols = visibleCols.filter(c => c.group === g.label);
               if (groupCols.length === 0) return null;
+              const isOver = dragOverGroup === g.label;
               return (
                 <th
                   key={g.label}
                   colSpan={groupCols.length}
+                  draggable={dragMode}
+                  onMouseDown={dragMode ? undefined : e => { if (e.button === 0) startHold(`grp:${g.label}`); }}
+                  onMouseUp={clearHold}
+                  onMouseLeave={clearHold}
+                  onDragStart={e => { e.dataTransfer.setData('dtype', 'group'); e.dataTransfer.setData('dkey', g.label); e.dataTransfer.effectAllowed = 'move'; }}
+                  onDragOver={e => { e.preventDefault(); setDragOverGroup(g.label); }}
+                  onDragLeave={() => setDragOverGroup(null)}
+                  onDrop={e => { e.preventDefault(); const from = e.dataTransfer.getData('dkey'); if (e.dataTransfer.getData('dtype') === 'group') moveGroup(from, g.label); setDragOverGroup(null); }}
                   style={{
-                    background: g.bg, color: g.color,
+                    background: isOver ? '#dbeafe' : g.bg,
+                    color: g.color,
                     borderBottom: `2px solid ${g.color}33`,
                     padding: '5px 6px',
                     textAlign: 'center', fontSize: 9,
                     fontWeight: 800, letterSpacing: '0.07em',
                     borderRight: '3px solid #94a3b8',
                     whiteSpace: 'nowrap',
+                    cursor: dragMode ? 'grab' : 'default',
+                    position: 'relative',
+                    outline: isOver ? '2px dashed #3b82f6' : undefined,
+                    transition: 'background 0.15s',
                   }}
                 >
+                  {dragMode && (
+                    <span style={{ marginRight: 4, opacity: 0.5, fontSize: 10 }}>&#8597;</span>
+                  )}
                   {t(g.labelKey)}
+                  {/* hold-progress bar */}
+                  {holdProgress.key === `grp:${g.label}` && holdProgress.pct > 0 && (
+                    <span style={{
+                      position: 'absolute', bottom: 0, left: 0,
+                      height: 2, background: '#6366f1',
+                      width: `${holdProgress.pct}%`,
+                      borderRadius: 2, transition: 'width 0.04s linear',
+                    }} />
+                  )}
                 </th>
               );
             })}
@@ -564,33 +911,51 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
           {/* Row 2 – individual column headers */}
           <tr style={{ background: '#fffffa' }}>
             {visibleCols.map((col, i) => {
-              const isGroupStart = i === 0 || visibleCols[i - 1].group !== col.group;
-              const isGroupEnd   = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
+              const isGroupEnd = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
+              const isOver = dragOverKey === col.key;
               return (
               <th
                 key={col.key}
                 className="sortable-th"
+                draggable={dragMode}
+                onMouseDown={dragMode ? undefined : e => { if (e.button === 0) startHold(col.key); }}
+                onMouseUp={clearHold}
+                onMouseLeave={clearHold}
+                onDragStart={e => { e.dataTransfer.setData('dtype', 'col'); e.dataTransfer.setData('dkey', col.key); e.dataTransfer.effectAllowed = 'move'; }}
+                onDragOver={e => { e.preventDefault(); setDragOverKey(col.key); }}
+                onDragLeave={() => setDragOverKey(null)}
+                onDrop={e => { e.preventDefault(); const from = e.dataTransfer.getData('dkey'); if (e.dataTransfer.getData('dtype') === 'col') moveCol(from, col.key); setDragOverKey(null); }}
                 style={{
                   textAlign: 'center',
                   verticalAlign: 'bottom',
                   padding: '5px 4px 6px',
-                  fontSize: 10, fontWeight: 700, color: '#374151',
-                  borderBottom: '2px solid #d1d5db',
+                  fontSize: 10, fontWeight: 700,
+                  color: isOver ? '#1d4ed8' : '#374151',
+                  background: isOver ? '#dbeafe' : undefined,
+                  borderBottom: isOver ? '2px solid #3b82f6' : '2px solid #d1d5db',
                   borderRight: isGroupEnd ? '3px solid #94a3b8' : '1px solid #e5e7eb',
-                  whiteSpace: 'normal',
-                  wordBreak: 'break-word',
-                  userSelect: 'none', cursor: 'pointer',
+                  whiteSpace: 'normal', wordBreak: 'break-word',
+                  userSelect: 'none',
+                  cursor: dragMode ? 'grab' : 'pointer',
                   lineHeight: 1.25,
+                  position: 'relative',
+                  transition: 'background 0.1s, color 0.1s',
+                  boxSizing: 'border-box',
                 }}
               >
                 <span className="inline-flex flex-col items-center gap-0.5">
+                  {dragMode && <span style={{ fontSize: 9, opacity: 0.45, letterSpacing: 0 }}>&#9776;</span>}
                   <span>{t(col.labelKey)}</span>
-                  <span className="sort-icon" style={{ color: '#94a3b8', opacity: 0 }}>
-                    <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
-                      <path d="M4 1v6M1.5 4.5 4 7l2.5-2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
                 </span>
+                {/* hold-progress bar */}
+                {holdProgress.key === col.key && holdProgress.pct > 0 && (
+                  <span style={{
+                    position: 'absolute', bottom: 0, left: 0,
+                    height: 2, background: '#6366f1',
+                    width: `${holdProgress.pct}%`,
+                    borderRadius: 2, transition: 'width 0.04s linear',
+                  }} />
+                )}
               </th>
               );
             })}
@@ -605,6 +970,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             : allAgents.map((agent, idx) => {
                 const isEven = idx % 2 === 1;
                 const rowClass = isEven ? 'row-even' : 'row-odd';
+                const isSelectedForDelete = selectedForDelete.has(agent.id);
 
                 return (
                   <motion.tr
@@ -615,6 +981,19 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     className={rowClass}
                     onMouseEnter={() => setHoveredRowId(agent.id)}
                     onMouseLeave={() => setHoveredRowId(null)}
+                    onContextMenu={e => handleContextMenu(e, agent.id)}
+                    onClick={deleteMode ? () => {
+                      setSelectedForDelete(prev => {
+                        const next = new Set(prev);
+                        if (next.has(agent.id)) next.delete(agent.id);
+                        else next.add(agent.id);
+                        return next;
+                      });
+                    } : undefined}
+                    style={{
+                      ...(isSelectedForDelete ? { background: '#fff1f2', outline: '2px solid #fca5a5', outlineOffset: '-1px', opacity: 0.75 } : {}),
+                      ...(deleteMode ? { cursor: 'pointer' } : {}),
+                    }}
                   >
                     {visibleCols.map((col, i) => {
                       const isRedCell = col.key === 'factScore' && agent[col.key] < 80;
@@ -627,25 +1006,18 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                         const b2IsHigher = b2Val > agent.b1;
                         const b2IsLower  = b2Val < agent.b1;
                         return (
-                          <td
+                          <B2CommentCell
                             key="b2"
+                            agent={agent}
+                            b2Override={b2Override}
+                            b2IsHigher={b2IsHigher}
+                            b2IsLower={b2IsLower}
+                            borderRight={borderRight}
+                            rowHovered={hoveredRowId === agent.id}
                             onContextMenu={e => handleContextMenu(e, agent.id)}
-                            style={{
-                            textAlign: 'center', padding: '5px 5px', fontSize: 11,
-                            borderBottom: '1px solid #e5e7eb', borderRight, whiteSpace: 'nowrap',
-                            background: b2IsHigher ? '#dcfce7' : b2IsLower ? '#fee2e2' : undefined,
-                            color: b2IsHigher ? '#15803d' : b2IsLower ? '#dc2626' : '#374151',
-                          }}>
-                            <B2Cell
-                              agentId={agent.id}
-                              b1Val={agent.b1}
-                              override={b2Override}
-                              onSave={(id, val) => {
-                                setB2Overrides(prev => ({ ...prev, [id]: val }));
-                              }}
-                              onActivate={() => {}}
-                            />
-                          </td>
+                            onSave={(id, val) => setB2Overrides(prev => ({ ...prev, [id]: val }))}
+                            b2Comments={b2Comments}
+                          />
                         );
                       }
 
@@ -674,70 +1046,54 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               })}
         </tbody>
 
-        {/* Totals footer */}
-        {!isLoading && (
-          <tfoot>
-            <motion.tr
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              transition={{ delay: 0.35, duration: 0.2 }}
-              style={{ background: '#fffffa' }}
-            >
-              {visibleCols.map((col, i) => {
-                if (col.key === 'name') return null;
+        {/* Footer: total shtat counts */}
+        {!isLoading && (() => {
+          const all = agents || [];
+          const shtatCounts = {};
+          all.forEach(a => { shtatCounts[a.shtat] = (shtatCounts[a.shtat] || 0) + 1; });
+          const shtatParts = Object.entries(shtatCounts).sort((a, b) => a[0].localeCompare(b[0]));
+          const hasName = visibleCols.some(c => c.key === 'name');
+          const totalColSpan = visibleCols.filter(c => c.key !== 'name').length + (hasName ? 1 : 0);
 
-                let content = null;
-                let colSpanVal = 1;
-
-                if (col.key === 'shtat') {
-                  const hasName = visibleCols.some(c => c.key === 'name');
-                  colSpanVal = 1 + (hasName ? 1 : 0);
-                  content = (
-                    <span className="font-black text-[10px] whitespace-nowrap" style={{ color: '#1e293b', letterSpacing: '0.02em' }}>
-                      {t('footer.totals')}{' '}
-                      <span style={{ color: '#0369a1', fontWeight: 700 }}>N={totalAll}</span>
+          return (
+            <tfoot>
+              <motion.tr
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                transition={{ delay: 0.35, duration: 0.2 }}
+                style={{ background: '#fffffa' }}
+              >
+                <td
+                  colSpan={totalColSpan}
+                  style={{
+                    textAlign: 'left',
+                    padding: '6px 10px',
+                    fontSize: 11,
+                    borderTop: '2px solid #94a3b8',
+                    borderRight: '3px solid #94a3b8',
+                    color: '#1e293b',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {shtatParts.map(([s, n]) => (
+                      <span key={s} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                        fontSize: 11, fontWeight: 700, color: '#475569',
+                      }}>
+                        <span style={{ color: '#0369a1' }}>{s}:</span>
+                        <span style={{ fontWeight: 900, color: '#1e293b' }}>{n}</span>
+                      </span>
+                    ))}
+                    <span style={{ color: '#94a3b8', fontSize: 10 }}>|</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
+                      N=<span style={{ fontWeight: 900, color: '#1e293b' }}>{all.length}</span>
                     </span>
-                  );
-                } else if (col.key === 'planCalls')  { content = <span className="font-bold">{fmtNum(totals.planCalls)}</span>; }
-                  else if (col.key === 'factCalls')  { content = <span className="font-bold">{fmtNum(totals.factCalls)}</span>; }
-                  else if (col.key === 'planTime')   { content = <span className="font-bold">{fmtTime(totals.planTime)}</span>; }
-                  else if (col.key === 'factTime')   { content = <span className="font-bold">{fmtTime(totals.factTime)}</span>; }
-                  else if (col.key === 'perfPct')    { content = <span className="font-bold">{totals.perfPct}% avg</span>; }
-                  else if (col.key === 'factScore')  { content = <span className="font-bold">{totals.factScore}</span>; }
-                  else if (col.key === K_ITOG)       { content = <span className="font-bold">{fmtNum(totals[K_ITOG]  / 1e6).replace(',', '.')}M</span>; }
-                  else if (col.key === K_NARUKI)     { content = <span className="font-bold">{fmtNum(totals[K_NARUKI] / 1e6).replace(',', '.')}M</span>; }
-                  else if (col.key === K_NAKARTU)    { content = <span className="font-bold">{fmtNum(totals[K_NAKARTU]/ 1e6).replace(',', '.')}M</span>; }
-                  else if (col.key === K_NALOG)      { content = <span className="font-bold">{fmtNum(totals[K_NALOG]  / 1e6).replace(',', '.')}M</span>; }
-                  else if (col.key === 'advance')    { content = <span className="font-bold">{fmtNum(totals.advance     / 1e6).replace(',', '.')}M</span>; }
-                  else if (col.key === 'baseSalary') { content = <span className="font-bold">{fmtNum(totals.baseSalary  / 1e6).replace(',', '.')}M</span>; }
-                  else if (col.key === 'nadbavka')   { content = <span className="font-bold">{fmtNum(totals.nadbavka    / 1e6).replace(',', '.')}M</span>; }
-                  else if (col.key === 'noch')       { content = totals.noch        ? <span className="font-bold">{fmtNum(totals.noch)}</span>        : null; }
-                  else if (col.key === 'vecher')     { content = totals.vecher      ? <span className="font-bold">{fmtNum(totals.vecher)}</span>      : null; }
-                  else if (col.key === 'prazdnichny'){ content = totals.prazdnichny ? <span className="font-bold">{fmtNum(totals.prazdnichny)}</span> : null; }
-                  else if (col.key === 'stoimostBiletov') { content = totals.stoimostBiletov ? <span className="font-bold">{fmtNum(totals.stoimostBiletov)}</span> : null; }
-                  else if (col.key === 'addBonus')   { content = totals.addBonus    ? <span className="font-bold">{fmtNum(totals.addBonus)}</span>    : null; }
-                  else if (col.key === 'vyslugaLet') { content = <span className="font-bold">{fmtNum(totals.vyslugaLet  / 1e6).replace(',', '.')}M</span>; }
-
-                return (
-                  <td
-                    key={col.key}
-                    colSpan={colSpanVal}
-                    style={{
-                      textAlign: col.key === 'shtat' ? 'left' : 'center',
-                      padding: '6px 6px',
-                      fontSize: 11,
-                      borderTop: '2px solid #94a3b8',
-                      borderRight: (i === visibleCols.length - 1 || visibleCols[i + 1]?.group !== col.group) ? '3px solid #94a3b8' : '1px solid #e5e7eb',
-                      color: '#1e293b',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {content}
-                  </td>
-                );
-              })}
-            </motion.tr>
-          </tfoot>
-        )}
+                  </span>
+                </td>
+              </motion.tr>
+            </tfoot>
+          );
+        })()}
       </table>
     </div>
   );

@@ -64,7 +64,7 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
                   border: '1.5px solid #e2e8f0',
                   borderRadius: 14,
                   boxShadow: '0 12px 40px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06)',
-                  minWidth: 196,
+                  minWidth: 196,  
                   transformOrigin: 'top right',
                 }}
               >

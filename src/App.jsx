@@ -3,7 +3,7 @@ import Header from './components/Header';
 import Toolbar from './components/Toolbar';
 import PayrollTable from './components/PayrollTable';
 import StatusBar from './components/StatusBar';
-import { mockAgents, TOTAL_AGENTS, GROUP_NAMES } from './data/mockData';
+import { mockAgents, TOTAL_AGENTS, GROUP_NAMES, B2_COMMENTS } from './data/mockData';
 import { processGroup, generateCSV } from './data/calculations';
 import { LangProvider } from './i18n/LangContext';
 
@@ -25,6 +25,7 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
   const [isLoading, setIsLoading] = useState(false);
+  const [deletedIds, setDeletedIds] = useState(new Set());
   const loadingTimer = useRef(null);
 
   // Clean up timer on unmount
@@ -38,10 +39,12 @@ export default function App() {
   }, [activeGroup]);
 
   const filteredAgents = useMemo(() => {
-    if (!searchQuery.trim()) return computedAgents;
+    let list = computedAgents;
+    if (deletedIds.size > 0) list = list.filter(a => !deletedIds.has(a.id));
+    if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
-    return computedAgents.filter(a => a.name.toLowerCase().includes(q));
-  }, [computedAgents, searchQuery]);
+    return list.filter(a => a.name.toLowerCase().includes(q));
+  }, [computedAgents, searchQuery, deletedIds]);
 
   const totalPages = Math.max(1, Math.ceil(filteredAgents.length / PER_PAGE));
 
@@ -67,6 +70,10 @@ export default function App() {
     generateCSV(filteredAgents, activeGroup);
   }, [filteredAgents, activeGroup]);
 
+  const handleDeleteAgents = useCallback((ids) => {
+    setDeletedIds(prev => new Set([...prev, ...ids]));
+  }, []);
+
   const handleRefresh = useCallback(() => {
     setSearchQuery('');
     setPage(1);
@@ -91,6 +98,8 @@ export default function App() {
           visibleColumns={visibleColumns}
           totalAll={TOTAL_AGENTS}
           isLoading={isLoading}
+          onDeleteAgents={handleDeleteAgents}
+          b2Comments={B2_COMMENTS}
         />
       </div>
       <StatusBar
