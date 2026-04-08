@@ -30,7 +30,7 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
     >
       {/* Search + Filters + Refresh on left */}
       <div className="flex items-center gap-2 flex-1 max-w-lg">
-        <SearchInput value={searchQuery} onChange={onSearchChange} />
+        <SearchInput value={searchQuery} onChange={onSearchChange} placeholder={t('toolbar.searchPlaceholder')} />
         <FiltersBtn />
         <RefreshBtn onClick={onRefresh} />
       </div>
@@ -87,10 +87,10 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
                       className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all duration-150"
                       style={{
                         background: visibleColumns[col]
-                          ? 'linear-gradient(135deg,#6366f1,#3b82f6)'
+                          ? '#0ea5e9'
                           : '#f1f5f9',
                         border: visibleColumns[col] ? 'none' : '1.5px solid #cbd5e1',
-                        boxShadow: visibleColumns[col] ? '0 0 8px rgba(99,102,241,0.35)' : 'none',
+                        boxShadow: visibleColumns[col] ? '0 0 6px rgba(14,165,233,0.3)' : 'none',
                       }}
                     >
                       {visibleColumns[col] && (
@@ -107,7 +107,7 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
                     />
                     <span
                       className="text-xs font-medium transition-colors duration-150"
-                      style={{ color: visibleColumns[col] ? '#4f46e5' : '#64748b' }}
+                      style={{ color: visibleColumns[col] ? '#0284c7' : '#64748b' }}
                     >
                       {t('group.' + col)}
                     </span>
@@ -125,13 +125,13 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
 }
 
 /* в”Ђв”Ђ Search Input в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
-function SearchInput({ value, onChange }) {
+function SearchInput({ value, onChange, placeholder }) {
   const [focused, setFocused] = useState(false);
   return (
     <div className="relative flex-1" style={{ minWidth: 220 }}>
       <motion.svg
         className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-        animate={{ color: focused ? '#6366f1' : '#94a3b8' }}
+        animate={{ color: focused ? '#0ea5e9' : '#94a3b8' }}
         transition={{ duration: 0.15 }}
         width="14" height="14" viewBox="0 0 14 14" fill="none"
       >
@@ -141,7 +141,7 @@ function SearchInput({ value, onChange }) {
 
       <motion.input
         type="text"
-        placeholder="Search by Agent Name (Р¤РРћ)..."
+        placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
@@ -149,12 +149,12 @@ function SearchInput({ value, onChange }) {
         className="w-full py-2 pl-9 pr-8 text-xs font-medium"
         animate={{
           boxShadow: focused
-            ? '0 0 0 3px rgba(99,102,241,0.15), 0 1px 6px rgba(0,0,0,0.06)'
+            ? '0 0 0 3px rgba(14,165,233,0.15), 0 1px 6px rgba(0,0,0,0.06)'
             : '0 1px 4px rgba(0,0,0,0.04)',
         }}
         style={{
           background: focused ? '#ffffff' : '#f8fafc',
-          border: `1.5px solid ${focused ? '#6366f1' : '#e2e8f0'}`,
+          border: `1.5px solid ${focused ? '#0ea5e9' : '#e2e8f0'}`,
           borderRadius: 10,
           outline: 'none',
           color: '#1e293b',
@@ -174,7 +174,7 @@ function SearchInput({ value, onChange }) {
               onClick={() => onChange('')}
               className="w-4 h-4 rounded-full flex items-center justify-center"
               style={{ background: '#94a3b8', border: 'none', cursor: 'pointer' }}
-              whileHover={{ background: '#6366f1', scale: 1.15 }}
+              whileHover={{ background: '#0ea5e9', scale: 1.15 }}
               whileTap={{ scale: 0.9 }}
             >
               <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
@@ -196,16 +196,16 @@ function ToolbarBtn({ children, onClick, active, icon }) {
       onClick={onClick}
       className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
       style={{
-        background: active ? '#eef2ff' : '#f8fafc',
-        border: `1.5px solid ${active ? '#6366f1' : '#e2e8f0'}`,
+        background: active ? '#e0f2fe' : '#f8fafc',
+        border: `1.5px solid ${active ? '#0ea5e9' : '#e2e8f0'}`,
         borderRadius: 9,
-        color: active ? '#4f46e5' : '#64748b',
+        color: active ? '#0284c7' : '#64748b',
         cursor: 'pointer',
       }}
       whileHover={{
-        background: '#eef2ff',
-        borderColor: '#6366f1',
-        color: '#4f46e5',
+        background: '#e0f2fe',
+        borderColor: '#0ea5e9',
+        color: '#0284c7',
         y: -1,
       }}
       whileTap={{ scale: 0.95 }}
@@ -225,13 +225,13 @@ function FiltersBtn() {
       onClick={() => setActive(a => !a)}
       className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
       style={{
-        background: active ? '#eef2ff' : '#f8fafc',
-        border: `1.5px solid ${active ? '#6366f1' : '#e2e8f0'}`,
+        background: active ? '#e0f2fe' : '#f8fafc',
+        border: `1.5px solid ${active ? '#0ea5e9' : '#e2e8f0'}`,
         borderRadius: 9,
-        color: active ? '#4f46e5' : '#64748b',
+        color: active ? '#0284c7' : '#64748b',
         cursor: 'pointer',
       }}
-      whileHover={{ background: '#eef2ff', borderColor: '#6366f1', color: '#4f46e5', y: -1 }}
+      whileHover={{ background: '#e0f2fe', borderColor: '#0ea5e9', color: '#0284c7', y: -1 }}
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.13 }}
     >
@@ -243,7 +243,7 @@ function FiltersBtn() {
       Filters
       <motion.span
         className="text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-black"
-        style={{ background: 'linear-gradient(135deg,#6366f1,#3b82f6)', color: '#fff' }}
+        style={{ background: '#0ea5e9', color: '#fff' }}
         whileHover={{ scale: 1.2 }}
       >
         3
@@ -271,7 +271,7 @@ function RefreshBtn({ onClick }) {
         color: '#64748b',
         cursor: 'pointer',
       }}
-      whileHover={{ background: '#eef2ff', borderColor: '#6366f1', color: '#4f46e5', y: -1 }}
+      whileHover={{ background: '#e0f2fe', borderColor: '#0ea5e9', color: '#0284c7', y: -1 }}
       whileTap={{ scale: 0.9 }}
       transition={{ duration: 0.13 }}
       title="Refresh"
@@ -295,15 +295,15 @@ function ExportBtn({ onClick }) {
       onClick={onClick}
       className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white"
       style={{
-        background: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+        background: '#0ea5e9',
         border: 'none',
         borderRadius: 9,
-        boxShadow: '0 2px 10px rgba(99,102,241,0.4)',
+        boxShadow: '0 2px 8px rgba(14,165,233,0.3)',
         cursor: 'pointer',
       }}
       whileHover={{
         y: -2,
-        boxShadow: '0 6px 20px rgba(99,102,241,0.55)',
+        boxShadow: '0 6px 16px rgba(14,165,233,0.45)',
       }}
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.15 }}

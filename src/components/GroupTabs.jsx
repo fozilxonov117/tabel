@@ -8,9 +8,9 @@ export default function GroupTabs({ activeGroup, onGroupChange }) {
       className="px-5 flex items-center gap-1"
       style={{
         height: 44,
-        background: 'linear-gradient(135deg, #1e293b 0%, #1e3a5f 100%)',
-        borderBottom: '1px solid rgba(99,102,241,0.2)',
-        boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
+        background: '#f0f9ff',
+        borderBottom: '1px solid #bae6fd',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
       }}
     >
       <span
@@ -46,7 +46,7 @@ function GroupTab({ group, active, onClick }) {
       whileTap={{ scale: 0.94 }}
       className="relative px-4 py-1.5 text-xs font-bold rounded-full select-none outline-none"
       style={{
-        color: active ? '#ffffff' : 'rgba(203,213,225,0.65)',
+        color: active ? '#ffffff' : '#64748b',
         minWidth: 52,
         cursor: 'pointer',
         border: 'none',
@@ -59,8 +59,8 @@ function GroupTab({ group, active, onClick }) {
           layoutId="branch-pill"
           className="absolute inset-0 rounded-full"
           style={{
-            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #3b82f6 100%)',
-            boxShadow: '0 0 18px rgba(99,102,241,0.65), 0 2px 8px rgba(0,0,0,0.3)',
+            background: '#0ea5e9',
+            boxShadow: '0 0 12px rgba(14,165,233,0.4)',
           }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         />
@@ -73,8 +73,8 @@ function GroupTab({ group, active, onClick }) {
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
           style={{
-            background: 'rgba(99,102,241,0.15)',
-            border: '1px solid rgba(99,102,241,0.3)',
+            background: 'rgba(14,165,233,0.12)',
+            border: '1px solid rgba(14,165,233,0.3)',
           }}
           transition={{ duration: 0.15 }}
         />

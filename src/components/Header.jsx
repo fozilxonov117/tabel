@@ -14,8 +14,9 @@ export default function Header({ activeGroup, onGroupChange }) {
       className="flex items-center justify-between px-5 gap-4"
       style={{
         height: 52,
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1e3a5f 100%)',
-        boxShadow: '0 2px 20px rgba(0,0,0,0.4)',
+        background: '#f8fafc',
+        borderBottom: '1px solid #e2e8f0',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
         zIndex: 50,
         position: 'relative',
         flexShrink: 0,
@@ -37,8 +38,8 @@ export default function Header({ activeGroup, onGroupChange }) {
       <div className="flex items-center gap-3" style={{ flexShrink: 0 }}>
         {/* Language toggle */}
         <div className="flex items-center gap-0.5" style={{
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: '#f1f5f9',
+          border: '1px solid #e2e8f0',
           borderRadius: 8,
           padding: '2px 3px',
         }}>
@@ -57,11 +58,9 @@ export default function Header({ activeGroup, onGroupChange }) {
                   borderRadius: 6,
                   border: 'none',
                   cursor: 'pointer',
-                  background: active
-                    ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
-                    : 'transparent',
-                  color: active ? '#ffffff' : 'rgba(148,163,184,0.7)',
-                  boxShadow: active ? '0 1px 6px rgba(14,165,233,0.45)' : 'none',
+                  background: active ? '#0ea5e9' : 'transparent',
+                  color: active ? '#ffffff' : '#64748b',
+                  boxShadow: active ? '0 1px 4px rgba(14,165,233,0.3)' : 'none',
                   transition: 'background 0.15s, color 0.15s',
                 }}
               >
@@ -75,11 +74,11 @@ export default function Header({ activeGroup, onGroupChange }) {
         <motion.div
           className="w-8 h-8 rounded-full flex items-center justify-center"
           style={{
-            background: 'linear-gradient(135deg, #475569, #334155)',
-            border: '2px solid rgba(14,165,233,0.5)',
-            boxShadow: '0 0 10px rgba(14,165,233,0.3)',
+            background: '#e0f2fe',
+            border: '2px solid #bae6fd',
+            boxShadow: 'none',
           }}
-          whileHover={{ scale: 1.08, boxShadow: '0 0 16px rgba(14,165,233,0.55)' }}
+          whileHover={{ scale: 1.08, boxShadow: '0 0 10px rgba(14,165,233,0.25)' }}
           transition={{ duration: 0.2 }}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -99,7 +98,7 @@ function BranchTab({ group, active, onClick }) {
       whileTap={{ scale: 0.94 }}
       className="relative px-4 py-1.5 text-xs font-bold rounded-full select-none outline-none"
       style={{
-        color: active ? '#ffffff' : 'rgba(203,213,225,0.65)',
+        color: active ? '#ffffff' : '#64748b',
         minWidth: 44,
         cursor: 'pointer',
         border: 'none',
@@ -111,8 +110,8 @@ function BranchTab({ group, active, onClick }) {
           layoutId="branch-pill"
           className="absolute inset-0 rounded-full"
           style={{
-            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-            boxShadow: '0 0 18px rgba(14,165,233,0.65), 0 2px 8px rgba(0,0,0,0.3)',
+            background: '#0ea5e9',
+            boxShadow: '0 0 10px rgba(14,165,233,0.35)',
           }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         />

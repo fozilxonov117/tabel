@@ -24,14 +24,14 @@ function PageBtn({ children, active, disabled, onClick }) {
       style={{
         ...BTN,
         background: active
-          ? 'linear-gradient(135deg,#6366f1,#3b82f6)'
+          ? '#0ea5e9'
           : '#f1f5f9',
         color: active ? '#ffffff' : '#64748b',
-        boxShadow: active ? '0 3px 10px rgba(99,102,241,0.45)' : 'none',
+        boxShadow: active ? '0 3px 8px rgba(14,165,233,0.35)' : 'none',
         opacity: disabled ? 0.35 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
       }}
-      whileHover={!disabled && !active ? { background: '#e0e7ff', color: '#4f46e5', y: -1 } : {}}
+      whileHover={!disabled && !active ? { background: '#e0f2fe', color: '#0284c7', y: -1 } : {}}
       whileTap={!disabled ? { scale: 0.9 } : {}}
       transition={{ duration: 0.13 }}
     >

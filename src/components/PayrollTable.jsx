@@ -28,14 +28,14 @@ const DYN_VAC_WIDTH  = Math.max(44, _maxVacTypeLen * 9 + 28);
 
 // ── Column group header definitions ──────────────────────────────────────────
 const COL_GROUPS = [
-  { label: 'BASIC INFO',         labelKey: 'group.BASIC INFO',         color: '#3730a3', bg: '#fffffa' },
-  { label: 'CALL METRICS',       labelKey: 'group.CALL METRICS',       color: '#1e40af', bg: '#fffffa' },
-  { label: 'EFFICIENCY',         labelKey: 'group.EFFICIENCY',         color: '#4c1d95', bg: '#fffffa' },
-  { label: 'INFO',               labelKey: 'group.INFO',               color: '#0369a1', bg: '#fffffa' },
-  { label: 'BONUS',              labelKey: 'group.BONUS',              color: '#14532d', bg: '#fffffa' },
-  { label: 'TABEL',              labelKey: 'group.TABEL',              color: '#0e7490', bg: '#ecfeff' },
-  { label: 'TOTALS (BI-BK)',     labelKey: 'group.TOTALS (BI-BK)',     color: '#78350f', bg: '#fffffa' },
-  { label: 'ALLOWANCES',         labelKey: 'group.ALLOWANCES',         color: '#5b21b6', bg: '#fffffa' },
+  { label: 'BASIC INFO',         labelKey: 'group.BASIC INFO',         color: '#60a5fa', bg: '#fffffa' },
+  { label: 'CALL METRICS',       labelKey: 'group.CALL METRICS',       color: '#38bdf8', bg: '#fffffa' },
+  { label: 'EFFICIENCY',         labelKey: 'group.EFFICIENCY',         color: '#34d399', bg: '#fffffa' },
+  { label: 'INFO',               labelKey: 'group.INFO',               color: '#38bdf8', bg: '#fffffa' },
+  { label: 'BONUS',              labelKey: 'group.BONUS',              color: '#4ade80', bg: '#fffffa' },
+  { label: 'TABEL',              labelKey: 'group.TABEL',              color: '#22d3ee', bg: '#ecfeff' },
+  { label: 'TOTALS (BI-BK)',     labelKey: 'group.TOTALS (BI-BK)',     color: '#fbbf24', bg: '#fffffa' },
+  { label: 'ALLOWANCES',         labelKey: 'group.ALLOWANCES',         color: '#7dd3fc', bg: '#fffffa' },
 ];
 
 // ── Individual column definitions ─────────────────────────────────────────────
@@ -219,7 +219,7 @@ const EXPL_META = {
     icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 4l4 4-4 4V9H3V7h14V4zM7 17h14v-2H7v-3l-4 4 4 4v-3z"/></svg>),
   },
   'Превышение блока': {
-    color: '#6d28d9', bg: '#ede9fe', border: '#c4b5fd',
+    color: '#0369a1', bg: '#e0f2fe', border: '#7dd3fc',
     icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>),
   },
   'Нарушение внутреннего порядка': {
@@ -331,11 +331,11 @@ const VAC_ICONS = {
 // ── Vacation type metadata ─────────────────────────────────────────────────
 const VACATION_META = {
   'ДДО 2':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.ChildFriendly },
-  'ДДО 3':   { color: '#4338ca', bg: '#e0e7ff',  border: '#a5b4fc', icon: VAC_ICONS.ChildFriendly },
+  'ДДО 3':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.ChildFriendly },
   'Уволен':  { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5' },
   'Б':       { color: '#1e40af', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.Thermometer },
   'О':       { color: '#d97706', bg: '#fef3c7',  border: '#fcd34d', icon: VAC_ICONS.BeachAccess },
-  'У':       { color: '#7c3aed', bg: '#ede9fe',  border: '#c4b5fd', icon: VAC_ICONS.Work },
+  'У':       { color: '#0369a1', bg: '#e0f2fe',  border: '#7dd3fc', icon: VAC_ICONS.Work },
   'ДДО Б':   { color: '#0f766e', bg: '#ccfbf1',  border: '#5eead4', icon: VAC_ICONS.PregnantWoman },
   'Н':       { color: '#9f1239', bg: '#fff1f2',  border: '#fecdd3' },
   'БС':      { color: '#b45309', bg: '#fffbeb',  border: '#fde68a' },
@@ -668,7 +668,7 @@ function CellValue({ colKey, agent, rowHovered }) {
     }
     case 'tabel_vecherHrs': {
       const v = Math.round((agent.vecher || 0) / 5000);
-      return <span style={{ color: v > 0 ? '#7c3aed' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
+      return <span style={{ color: v > 0 ? '#0369a1' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
     }
     case 'tabel_nochHrs': {
       const v = Math.round((agent.noch || 0) / 7500);
@@ -797,7 +797,7 @@ function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, 
           width: 0, height: 0,
           borderStyle: 'solid',
           borderWidth: '0 7px 7px 0',
-          borderColor: 'transparent #dc2626 transparent transparent',
+          borderColor: 'transparent #4ade80 transparent transparent',
           pointerEvents: 'none',
         }} />
       )}
@@ -1013,6 +1013,20 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   const exitDeleteMode = () => { setDeleteMode(false); setSelectedForDelete(new Set()); };
   const exitTransferMode = () => { setTransferMode(false); setSelectedForTransfer(new Set()); };
 
+  // ─ Sort state ───────────────────────────────────────────────
+  const [sortKey, setSortKey] = React.useState(null);
+  const [sortDir, setSortDir] = React.useState('asc');
+
+  function handleSortClick(key) {
+    if (sortKey === key) {
+      if (sortDir === 'asc') { setSortDir('desc'); }
+      else { setSortKey(null); setSortDir('asc'); }
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  }
+
   const handleContextMenu = (e, agentId = null) => {
     if (e.shiftKey) return; // Shift+right-click → browser default
     e.preventDefault();
@@ -1063,7 +1077,19 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   }
 
   const totals = computeTotals(agents || []);
-  const allAgents = agents || [];
+  const allAgents = React.useMemo(() => {
+    const base = agents || [];
+    if (!sortKey) return base;
+    return [...base].sort((a, b) => {
+      if (sortKey === 'name') {
+        const cmp = (a.name ?? '').localeCompare(b.name ?? '');
+        return sortDir === 'asc' ? cmp : -cmp;
+      }
+      const av = Number(a[sortKey]) || 0;
+      const bv = Number(b[sortKey]) || 0;
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+  }, [agents, sortKey, sortDir]);
 
   return (
     <div className="relative overflow-x-auto" onContextMenu={handleTableContextMenu}>
@@ -1072,7 +1098,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
         .hold-bar {
           position: absolute; bottom: 0; left: 0;
           height: 2px; width: 0; border-radius: 2px;
-          background: #6366f1; pointer-events: none;
+          background: #38bdf8; pointer-events: none;
         }
         .is-holding .hold-bar {
           animation: hold-grow 1s linear forwards;
@@ -1084,14 +1110,14 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
       {dragMode && (
         <div style={{
           position: 'sticky', top: 0, zIndex: 99997,
-          background: '#eff6ff', borderBottom: '2px solid #3b82f6',
+          background: '#f0f9ff',
           padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 8,
-          fontSize: 11, fontWeight: 700, color: '#1d4ed8',
+          fontSize: 11, fontWeight: 700, color: '#0284c7',
         }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 9h14M5 15h14" /><path d="M9 5v14M15 5v14" />
           </svg>
-          Drag mode — drag sections or columns to reorder · Press <kbd style={{ background: '#dbeafe', borderRadius: 3, padding: '1px 5px', fontFamily: 'monospace', fontSize: 10 }}>Esc</kbd> to exit
+          Drag mode — drag sections or columns to reorder · Press <kbd style={{ background: '#e0f2fe', borderRadius: 3, padding: '1px 5px', fontFamily: 'monospace', fontSize: 10 }}>Esc</kbd> to exit
         </div>
       )}
 
@@ -1402,10 +1428,11 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     background: isOver ? '#dbeafe' : isCollapsed ? `${g.color}18` : g.bg,
                     color: g.color,
                     borderBottom: `2px solid ${g.color}33`,
+                    borderTop: '3px solid #bae6fd',
                     padding: '5px 6px',
                     textAlign: 'center', fontSize: 9,
                     fontWeight: 800, letterSpacing: '0.07em',
-                    borderRight: '3px solid #94a3b8',
+                    borderRight: '3px solid #bae6fd',
                     whiteSpace: 'nowrap',
                     cursor: dragMode ? 'grab' : isCollapsible ? 'pointer' : 'default',
                     position: 'relative',
@@ -1447,15 +1474,16 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 onDragOver={e => { e.preventDefault(); setDragOverKey(col.key); }}
                 onDragLeave={() => setDragOverKey(null)}
                 onDrop={e => { e.preventDefault(); const from = e.dataTransfer.getData('dkey'); if (e.dataTransfer.getData('dtype') === 'col') moveCol(from, col.key); setDragOverKey(null); }}
+                onClick={dragMode ? undefined : () => handleSortClick(col.key)}
                 style={{
                   textAlign: 'center',
                   verticalAlign: 'bottom',
                   padding: '5px 4px 6px',
                   fontSize: 10, fontWeight: 700,
-                  color: isOver ? '#1d4ed8' : '#374151',
-                  background: isOver ? '#dbeafe' : undefined,
-                  borderBottom: isOver ? '2px solid #3b82f6' : '2px solid #d1d5db',
-                  borderRight: isGroupEnd ? '3px solid #94a3b8' : '1px solid #e5e7eb',
+                  color: isOver ? '#1d4ed8' : sortKey === col.key ? '#0284c7' : '#374151',
+                  background: isOver ? '#dbeafe' : sortKey === col.key ? '#e0f2fe' : undefined,
+                  borderBottom: isOver ? '2px solid #3b82f6' : sortKey === col.key ? '2px solid #0284c7' : '2px solid #d1d5db',
+                  borderRight: isGroupEnd ? '3px solid #bae6fd' : '1px solid #e5e7eb',
                   whiteSpace: 'normal', wordBreak: 'break-word',
                   userSelect: 'none',
                   cursor: dragMode ? 'grab' : 'pointer',
@@ -1468,6 +1496,11 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 <span className="inline-flex flex-col items-center gap-0.5">
                   {dragMode && <span style={{ fontSize: 9, opacity: 0.45, letterSpacing: 0 }}>&#9776;</span>}
                   <span>{t(col.labelKey)}</span>
+                  {sortKey === col.key && (
+                    <span style={{ fontSize: 8, color: '#0284c7', lineHeight: 1 }}>
+                      {sortDir === 'asc' ? '▲' : '▼'}
+                    </span>
+                  )}
                 </span>
                 <span className="hold-bar" />
               </th>
@@ -1521,7 +1554,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     {visibleCols.map((col, i) => {
                       const isRedCell = col.key === 'factScore' && agent[col.key] < 80;
                       const isGroupEnd = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
-                      const borderRight = isGroupEnd ? '3px solid #94a3b8' : '1px solid #f3f4f6';
+                      const borderRight = isGroupEnd ? '3px solid #bae6fd' : '1px solid #f3f4f6';
 
                       // Efficiency-collapsed indicator: coloured right stripe on factScore cell
                       const effCollapsed = collapsedGroups.has('EFFICIENCY');
@@ -1614,7 +1647,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             whiteSpace: 'nowrap',
                             
                             background: isRedCell ? '#fee2e2' : undefined,
-                            color: isRedCell ? '#dc2626' : col.key === 'name' ? '#4338ca' : '#374151',
+                            color: isRedCell ? '#dc2626' : col.key === 'name' ? '#0284c7' : '#374151',
                             fontWeight: isRedCell ? 700 : col.key === 'name' ? 600 : 600,
                           }}
                         >
@@ -1649,8 +1682,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     textAlign: 'left',
                     padding: '6px 10px',
                     fontSize: 11,
-                    borderTop: '2px solid #94a3b8',
-                    borderRight: '3px solid #94a3b8',
+                    borderTop: '2px solid #bae6fd',
+                    borderRight: '3px solid #bae6fd',
                     color: '#1e293b',
                     fontWeight: 700,
                   }}

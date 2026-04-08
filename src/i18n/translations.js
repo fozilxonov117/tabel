@@ -61,7 +61,7 @@ export const translations = {
     'toolbar.toggleColumns': 'TOGGLE COLUMNS',
     'toolbar.columns': 'Columns',
     'toolbar.export': 'Export CSV',
-    'toolbar.searchPlaceholder': 'Search by Agent Name...',
+    'toolbar.searchPlaceholder': 'Search by operator name...',
     // Context menu
     'ctx.return': 'Return',
     'ctx.actions': 'Actions',
@@ -137,7 +137,7 @@ export const translations = {
     'toolbar.toggleColumns': 'ПЕРЕКЛЮЧИТЬ СТОЛБЦЫ',
     'toolbar.columns': 'Столбцы',
     'toolbar.export': 'Экспорт CSV',
-    'toolbar.searchPlaceholder': 'Поиск по ФИО агента...',
+    'toolbar.searchPlaceholder': 'Поиск по имени оператора...',
     // Context menu
     'ctx.return': 'Назад',
     'ctx.actions': 'Действия',
@@ -213,7 +213,7 @@ export const translations = {
     'toolbar.toggleColumns': 'USTUNLARNI BOSHQARISH',
     'toolbar.columns': 'Ustunlar',
     'toolbar.export': 'CSV eksport',
-    'toolbar.searchPlaceholder': 'Agent nomi bo\'yicha qidirish...',
+    'toolbar.searchPlaceholder': 'Operator nomi bo\'yicha qidirish...',
     // Context menu
     'ctx.return': 'Qaytish',
     'ctx.actions': 'Amallar',
