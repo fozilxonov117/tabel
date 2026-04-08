@@ -2,6 +2,7 @@
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fmtTime, fmtNum, computeTotals } from '../data/calculations';
+import { mockAgents } from '../data/mockData';
 import { useLang } from '../i18n/LangContext';
 import { translations } from '../i18n/translations';
 
@@ -11,14 +12,27 @@ const K_NARUKI  = 'наРуки';
 const K_NAKARTU = 'наКарту';
 const K_NALOG   = 'налог';
 
+// ── Dynamic column widths computed from all agent data ─────────────────────
+const _allAgentsFlat = Object.values(mockAgents).flat();
+// Count unique explanation types per agent (duplicates become a ×N badge on one icon)
+const _maxExplUniqueTypes = Math.max(1, ..._allAgentsFlat.map(a => {
+  const v = a.explanation;
+  const arr = Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []);
+  return new Set(arr).size;
+}));
+const _maxVacTypeLen = Math.max(1, ..._allAgentsFlat.map(a => (a.vacation?.type?.length ?? 0)));
+// Icon button: 26 px wide + 3 px gap. N unique types: N×26 + (N−1)×3 = 29N−3. Cell padding 10 px.
+const DYN_EXPL_WIDTH = Math.max(36, _maxExplUniqueTypes * 29 - 3 + 10);
+// badge: ~9px per Cyrillic char + 28px (padding + borders + cell)
+const DYN_VAC_WIDTH  = Math.max(44, _maxVacTypeLen * 9 + 28);
+
 // ── Column group header definitions ──────────────────────────────────────────
 const COL_GROUPS = [
   { label: 'BASIC INFO',         labelKey: 'group.BASIC INFO',         color: '#3730a3', bg: '#fffffa' },
   { label: 'CALL METRICS',       labelKey: 'group.CALL METRICS',       color: '#1e40af', bg: '#fffffa' },
   { label: 'EFFICIENCY',         labelKey: 'group.EFFICIENCY',         color: '#4c1d95', bg: '#fffffa' },
-  { label: 'KPI',                labelKey: 'group.KPI',                color: '#b45309', bg: '#fffbeb' },
-  { label: 'BONUS', labelKey: 'group.BONUS', color: '#14532d', bg: '#fffffa' },
-  { label: 'LIMITS & GRADES',    labelKey: 'group.LIMITS & GRADES',    color: '#0f766e', bg: '#fffffa' },
+  { label: 'INFO',               labelKey: 'group.INFO',               color: '#0369a1', bg: '#fffffa' },
+  { label: 'BONUS',              labelKey: 'group.BONUS',              color: '#14532d', bg: '#fffffa' },
   { label: 'TABEL',              labelKey: 'group.TABEL',              color: '#0e7490', bg: '#ecfeff' },
   { label: 'TOTALS (BI-BK)',     labelKey: 'group.TOTALS (BI-BK)',     color: '#78350f', bg: '#fffffa' },
   { label: 'ALLOWANCES',         labelKey: 'group.ALLOWANCES',         color: '#5b21b6', bg: '#fffffa' },
@@ -38,16 +52,18 @@ const COLUMNS = [
   { key: 'factTime',        labelKey: 'col.factTime',         group: 'CALL METRICS',       width: 66  },
   { key: 'perfPct',         labelKey: 'col.perfPct',          group: 'CALL METRICS',       width: 62  },
   // EFFICIENCY
-  { key: 'explanation',     labelKey: 'col.explanation',      group: 'EFFICIENCY',         width: 150 },
-  { key: 'vacation',        labelKey: 'col.vacation',         group: 'EFFICIENCY',         width: 150 },
-  // KPI
-  { key: 'factScore',       labelKey: 'col.factScore',        group: 'KPI',                width: 66  },
-  // BONUS
-  { key: 'b2',              labelKey: 'col.b2',               group: 'BONUS', width: 90  },
-  { key: 'surcharge',       labelKey: 'col.surcharge',        group: 'BONUS', width: 60  },
-  // LIMITS & GRADES
-  { key: 'limit',           labelKey: 'col.limit',            group: 'LIMITS & GRADES',    width: 60  },
-  { key: 'razryad',         labelKey: 'col.razryad',          group: 'LIMITS & GRADES',    width: 62  },
+  { key: 'explanation',     labelKey: 'col.explanation',      group: 'EFFICIENCY',         width: DYN_EXPL_WIDTH },
+  { key: 'vacation',        labelKey: 'col.vacation',         group: 'EFFICIENCY',         width: DYN_VAC_WIDTH  },
+  { key: 'factScore',       labelKey: 'col.factScore',        group: 'EFFICIENCY',         width: 66  },
+  // INFO
+  { key: 'debtTime',        labelKey: 'col.debtTime',         group: 'INFO',               width: 80  },
+  { key: 'workTime',        labelKey: 'col.workTime',         group: 'INFO',               width: 80  },
+  { key: 'systemError',     labelKey: 'col.systemError',      group: 'INFO',               width: 80  },
+  // BONUS (merged with former LIMITS & GRADES)
+  { key: 'b2',              labelKey: 'col.b2',               group: 'BONUS',              width: 90  },
+  { key: 'surcharge',       labelKey: 'col.surcharge',        group: 'BONUS',              width: 66  },
+  { key: 'limit',           labelKey: 'col.limit',            group: 'BONUS',              width: 60  },
+  { key: 'razryad',         labelKey: 'col.razryad',          group: 'BONUS',              width: 62  },
   // TABEL — 4 summary cols (always visible) + 31 calendar day cols
   { key: 'tabel_worked',    labelKey: 'col.tabel_worked',     group: 'TABEL',              width: 48  },
   { key: 'tabel_prazdHrs',  labelKey: 'col.tabel_prazdHrs',  group: 'TABEL',              width: 54  },
@@ -84,10 +100,9 @@ const DASH_IF_ZERO = new Set(['profitFromOp', 'noch', 'vecher', 'prazdnichny', '
 const SECTION_ANCHORS = {
   'BASIC INFO':         new Set(['name']),
   'CALL METRICS':       new Set(['perfPct']),
-  'EFFICIENCY':         new Set(['explanation', 'vacation']),
-  'KPI':                new Set(['factScore']),
-  'BONUS': new Set(['b2']),
-  'LIMITS & GRADES':    new Set(['limit', 'razryad']),
+  'EFFICIENCY':         new Set(['factScore']),    // explanation+vacation hidden when collapsed; shown via hover panel
+  'INFO':               new Set(['debtTime']),
+  'BONUS':              new Set(['b2', 'limit', 'razryad']),
   'TABEL':              new Set(['tabel_worked', 'tabel_prazdHrs', 'tabel_vecherHrs', 'tabel_nochHrs']),
   'TOTALS (BI-BK)':     new Set([K_ITOG]),
   'ALLOWANCES':         new Set(['vyslugaLet']),
@@ -221,20 +236,112 @@ const EXPL_META = {
   },
 };
 
+// ── Vacation icon SVGs (inline) ───────────────────────────────────────────
+const VAC_ICONS = {
+  // Pregnant woman — paths from /public/pregnant.svg (text nodes removed, viewBox cropped)
+  PregnantWoman: (
+    <svg width="20" height="20" viewBox="-5 -10 110 110" fill="currentColor">
+      <circle cx="51.289" cy="18.77" r="6.6914"/>
+      <path fillRule="evenodd" d="m44.789 24.09-6.9688 9.3594c-2.6094 3.4883-4.0898 5.0508-3.8906 7.9414 0.17187 2.5117 2.9492 4.6016 7.6211 7.8516l4.8086 3.0781c0.39062 0.26172 0.51172 0.78125 0.26953 1.1797-0.23828 0.39062-0.73828 0.53125-1.1484 0.32031l-1.8906-1.0781c-1.0508 8.0312-1.6602 14.551-3.1602 20.719 0.12109 0.69141 0.73828 1.1914 1.4414 1.1914h3.1406 7.6992 9.0195c0.30078 0 0.51953-0.26953 0.46875-0.55859-1.4219-9.0117 4.9297-16.551 3.7617-24.25-1-6.5312-4.3086-10.27-8.1016-12.422-0.32031-0.17969-0.30078-0.33984 0-0.51953 4.2305-2.5 0.82031-5.6211-1.9609-9.0312-2.0508-2.5195-3.1797-4.0781-5.5586-5.1289-1.9609-0.80078-4.3984-0.19922-5.5508 1.3594zm-0.37891 20.18c0 0.19141-0.23828 0.28125-0.37109 0.14062l-2.2383-2.3984c-1.2383-1.0586-0.53125-1.7891 0.5-3.1406 0 0 0.96094-1.1797 0.96094-1.1914l0.80078-1.0195c0.19922-0.25 0.60156-0.12109 0.60938 0.19922l-0.25 7.3906z"/>
+      <path fillRule="evenodd" d="m47.398 76.641 0.60156 14.18c0 5.0508 6.6406 5.0508 6.6406 0 0 0 0.60156-10.609 0.60156-14.18z"/>
+    </svg>
+  ),
+  // Thermometer — glass tube + bulb (Material thermostat path)
+  Thermometer: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-3 7c-1.65 0-3-1.35-3-3 0-1.3.84-2.4 2-2.82V5c0-.55.45-1 1-1s1 .45 1 1v9.18A2.99 2.99 0 0 1 15 17c0 1.65-1.35 3-3 3z"/>
+    </svg>
+  ),
+  // Work — briefcase icon
+  Work: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20 6h-1V4c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM7 4h10v2H7V4zm13 15H4V8h16v11z"/>
+    </svg>
+  ),
+  // Baby stroller — side view with canopy, seat, handle and two wheels
+  ChildFriendly: (
+    <svg width="16" height="16" viewBox="0 0 100 100" fill="currentColor">
+      {/* canopy arc */}
+      <path d="M20 52 Q20 18 60 18 Q80 18 85 32 L20 52Z"/>
+      {/* seat / body of stroller */}
+      <rect x="20" y="52" width="60" height="14" rx="4"/>
+      {/* handle — tall bar on left */}
+      <rect x="15" y="26" width="6" height="28" rx="3"/>
+      {/* front wheel */}
+      <circle cx="74" cy="78" r="9" fill="none" stroke="currentColor" strokeWidth="5"/>
+      {/* back wheel */}
+      <circle cx="30" cy="78" r="9" fill="none" stroke="currentColor" strokeWidth="5"/>
+      {/* leg struts */}
+      <line x1="26" y1="66" x2="30" y2="69" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
+      <line x1="74" y1="66" x2="74" y2="69" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
+    </svg>
+  ),
+  // Umbrella — paths from /public/vacation.svg (text nodes removed, viewBox cropped)
+  BeachAccess: (
+    <svg width="16" height="16" viewBox="-5 -10 110 110" fill="currentColor">
+      <path d="m93.184 65.191h-36.426l7.3555-27.344 30.434 8.125c0.99609 0.27344 2.082-0.32422 2.3516-1.3594 5.3359-18.332-6.6133-38.867-25.148-43.402-18.941-5.0547-38.477 6.1836-43.555 25.055-0.28906 0.99219 0.35547 2.1094 1.3594 2.3594l30.84 8.2305-7.6211 28.336h-27.637l-12.703-30.262c-1.0117-2.4062-3.3477-3.9609-5.957-3.9609-4.4062-0.125-7.7344 4.75-6.0195 8.8086l12.094 31.027c1.9023 4.875 6.5078 8.0273 11.738 8.0273h4.6562l-4.0273 11.953c-1.2422 3.375 1.5938 7.2344 5.1836 7.0703 2.3008 0 4.3438-1.4648 5.0781-3.6484l5.1797-15.375h32.453l5.2539 17.355c0.6875 2.2773 2.75 3.8047 5.1289 3.8047 3.5547 0.21094 6.4375-3.5312 5.3047-6.9102l-4.3125-14.25h8.9922c3.7578 0 6.8164-3.0586 6.8164-6.8203 0.003906-3.7617-3.0547-6.8203-6.8125-6.8203zm-13.898-56.602c11.027 6.6172 17.141 20.562 14.344 33.156l-15.031-4.0117c1.2148-5.2266 4.1406-20.023 0.6875-29.145zm-46.816 16.832c4.2617-12.715 16.059-21.121 29.031-21.555-3.2539 2.7344-5.6484 6.168-8.3203 11.309-2.8633 5.6172-4.7969 11.391-5.6758 14.258zm24.156-8.5469c3.2266-6.3125 8.2969-13.508 14.133-11.949 10.633 4.207 5.1484 25.613 4.1133 31.812l-23.652-6.3125c0.86719-2.793 2.7344-8.3164 5.4062-13.551z"/>
+    </svg>
+  ),
+  // Soldier — military person with beret, face and uniform
+  Soldier: (
+    <svg width="18" height="18" viewBox="0 0 100 100" fill="currentColor">
+      {/* beret — wide flat cap slightly tilted */}
+      <ellipse cx="50" cy="20" rx="24" ry="9"/>
+      <rect x="28" y="20" width="44" height="5" rx="2"/>
+      {/* head */}
+      <ellipse cx="50" cy="34" rx="14" ry="15"/>
+      {/* neck */}
+      <rect x="44" y="47" width="12" height="7" rx="3"/>
+      {/* uniform body */}
+      <path d="M28 54 Q28 48 44 53 L44 80 L56 80 L56 53 Q72 48 72 54 L72 82 Q72 86 68 86 L32 86 Q28 86 28 82 Z"/>
+      {/* collar / epaulettes suggestion */}
+      <rect x="28" y="54" width="12" height="5" rx="2"/>
+      <rect x="60" y="54" width="12" height="5" rx="2"/>
+    </svg>
+  //     <svg
+  //   width="18"
+  //   height="18"
+  //   viewBox="0 0 100 100"
+  //   fill="currentColor"
+  //   xmlns="http://www.w3.org/2000/svg"
+  // >
+  //   {/* beret (more stylized + wider) */}
+  //   <path d="M24 24c8-10 44-10 52 0-6 8-46 8-52 0z" />
+  //   <rect x="32" y="24" width="36" height="5" rx="2.5" />
+
+  //   {/* head */}
+  //   <circle cx="50" cy="38" r="13.5" />
+
+  //   {/* neck */}
+  //   <rect x="44" y="50" width="12" height="6" rx="3" />
+
+  //   {/* body (wider + stronger silhouette) */}
+  //   <path d="M24 58c0-7 16-10 26-5 10-5 26-2 26 5v24c0 5-4 8-8 8H32c-4 0-8-3-8-8V58z" />
+
+  //   {/* chest detail (uniform depth) */}
+  //   <rect x="44" y="60" width="12" height="20" rx="3" opacity="0.9" />
+
+  //   {/* shoulders / epaulettes (more prominent) */}
+  //   <rect x="24" y="58" width="16" height="5" rx="2.5" />
+  //   <rect x="60" y="58" width="16" height="5" rx="2.5" />
+  // </svg>
+  ),
+};
+
 // ── Vacation type metadata ─────────────────────────────────────────────────
 const VACATION_META = {
-  'ДДО 2':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd' },
-  'ДДО 3':   { color: '#4338ca', bg: '#e0e7ff',  border: '#a5b4fc' },
+  'ДДО 2':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.ChildFriendly },
+  'ДДО 3':   { color: '#4338ca', bg: '#e0e7ff',  border: '#a5b4fc', icon: VAC_ICONS.ChildFriendly },
   'Уволен':  { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5' },
-  'Б':       { color: '#d97706', bg: '#fef3c7',  border: '#fcd34d' },
-  'О':       { color: '#15803d', bg: '#dcfce7',  border: '#86efac' },
-  'У':       { color: '#7c3aed', bg: '#ede9fe',  border: '#c4b5fd' },
-  'ДДО Б':   { color: '#0f766e', bg: '#ccfbf1',  border: '#5eead4' },
+  'Б':       { color: '#1e40af', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.Thermometer },
+  'О':       { color: '#d97706', bg: '#fef3c7',  border: '#fcd34d', icon: VAC_ICONS.BeachAccess },
+  'У':       { color: '#7c3aed', bg: '#ede9fe',  border: '#c4b5fd', icon: VAC_ICONS.Work },
+  'ДДО Б':   { color: '#0f766e', bg: '#ccfbf1',  border: '#5eead4', icon: VAC_ICONS.PregnantWoman },
   'Н':       { color: '#9f1239', bg: '#fff1f2',  border: '#fecdd3' },
   'БС':      { color: '#b45309', bg: '#fffbeb',  border: '#fde68a' },
   '7.0':     { color: '#475569', bg: '#f1f5f9',  border: '#cbd5e1' },
   'БО':      { color: '#0e7490', bg: '#ecfeff',  border: '#a5f3fc' },
-  'ГС':      { color: '#be185d', bg: '#fdf2f8',  border: '#f9a8d4' },
+  'ГС':      { color: '#166534', bg: '#dcfce7',  border: '#86efac', icon: VAC_ICONS.Soldier },
 };
 
 // Quadrant positions based on icon index (fans outward to avoid overlap)
@@ -330,7 +437,7 @@ function ExplanationIcons({ types, rowHovered }) {
   const counts = {};
   types.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
   return (
-    <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 3, alignItems: 'center', justifyContent: 'center' }}>
+    <span style={{ display: 'inline-flex', flexWrap: 'nowrap', gap: 3, alignItems: 'center', justifyContent: 'flex-start' }}>
       {Object.entries(counts).map(([type, count], index) => (
         <ExplanationIconItem key={type} type={type} count={count} rowHovered={rowHovered} index={index} />
       ))}
@@ -344,23 +451,43 @@ function VacationBadge({ v, rowHovered }) {
   const t = k => translations[lang]?.[k] ?? k;
   const vm = VACATION_META[v.type] || { color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' };
   const showTooltip = hovered || rowHovered;
+  // Show tooltip: for icon types always (since text is hidden), for text types only when dates exist
+  const shouldShowTooltip = showTooltip && (vm.icon || (v.from && v.to));
   return (
     <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-      <span
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          background: vm.bg, color: vm.color,
-          border: `1.5px solid ${vm.border}`,
-          padding: '2px 8px', borderRadius: 5,
-          fontSize: 11, fontWeight: 700, letterSpacing: '0.03em',
-          whiteSpace: 'nowrap', cursor: 'default',
-        }}
-      >
-        {v.type}
-      </span>
+      {vm.icon ? (
+        // Icon-style square badge (matches ExplanationIconItem appearance)
+        <span
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 26, height: 26, borderRadius: 7,
+            background: vm.bg, color: vm.color,
+            border: `1.5px solid ${vm.border}`,
+            cursor: 'default', boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
+          }}
+        >
+          {vm.icon}
+        </span>
+      ) : (
+        // Text pill badge (original style)
+        <span
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          style={{
+            background: vm.bg, color: vm.color,
+            border: `1.5px solid ${vm.border}`,
+            padding: '2px 8px', borderRadius: 5,
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.03em',
+            whiteSpace: 'nowrap', cursor: 'default',
+          }}
+        >
+          {v.type}
+        </span>
+      )}
       <AnimatePresence>
-        {showTooltip && v.from && v.to && (
+        {shouldShowTooltip && (
           <motion.div
             initial={{ opacity: 0, y: -4, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -378,7 +505,7 @@ function VacationBadge({ v, rowHovered }) {
               zIndex: 9999, pointerEvents: 'none',
             }}
           >
-            {v.type} · {t('vac.from')}: {v.from} — {t('vac.to')}: {v.to}
+            {v.type}{v.from && v.to ? ` · ${t('vac.from')}: ${v.from} — ${t('vac.to')}: ${v.to}` : ''}
             <span style={{
               position: 'absolute', bottom: '100%', left: '10px',
               borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
@@ -396,6 +523,97 @@ function VacationBadge({ v, rowHovered }) {
   );
 }
 
+/* ── Efficiency hover info panel (portal, shown when section is collapsed) ── */
+function EfficiencyHoverPanel({ agent, anchorEl }) {
+  const expl = Array.isArray(agent.explanation)
+    ? agent.explanation.filter(Boolean)
+    : (agent.explanation ? [agent.explanation] : []);
+  const vac = agent.vacation;
+  if (!expl.length && !vac) return null;
+
+  const rect = anchorEl?.getBoundingClientRect?.();
+  if (!rect) return null;
+
+  const counts = {};
+  expl.forEach(type => { counts[type] = (counts[type] || 0) + 1; });
+
+  const panelTop  = rect.bottom + 4;
+  const panelLeft = Math.max(8, Math.min(rect.left + 60, window.innerWidth - 440));
+
+  return ReactDOM.createPortal(
+    <motion.div
+      initial={{ opacity: 0, y: -5 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -5 }}
+      transition={{ duration: 0.13 }}
+      style={{
+        position: 'fixed',
+        top: panelTop,
+        left: panelLeft,
+        transform: 'none',
+        zIndex: 9990,
+        background: '#ffffff',
+        border: '1.5px solid #e2e8f0',
+        borderRadius: 10,
+        boxShadow: '0 6px 24px rgba(0,0,0,0.13)',
+        padding: '5px 10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {Object.entries(counts).map(([type, count]) => {
+        const meta = EXPL_META[type] || EXPL_META['Другое'];
+        return (
+          <span key={type} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            background: meta.bg, color: meta.color,
+            border: `1.5px solid ${meta.border}`,
+            padding: '3px 8px', borderRadius: 6,
+            fontSize: 11, fontWeight: 700,
+          }}>
+            {React.cloneElement(meta.icon, { width: 13, height: 13 })}
+            <span>{type}{count > 1 ? ` ×${count}` : ''}</span>
+          </span>
+        );
+      })}
+      {expl.length > 0 && vac && (
+        <span style={{ width: 1, height: 18, background: '#e2e8f0', flexShrink: 0, display: 'inline-block' }} />
+      )}
+      {vac && (() => {
+        const vm = VACATION_META[vac.type] || { color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' };
+        return (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            background: vm.bg, color: vm.color,
+            border: `1.5px solid ${vm.border}`,
+            padding: '3px 8px', borderRadius: 6,
+            fontSize: 11, fontWeight: 700,
+          }}>
+            <span>{vac.type}</span>
+            {vac.from && vac.to && (
+              <span style={{ fontSize: 10, opacity: 0.7 }}>{vac.from}–{vac.to}</span>
+            )}
+          </span>
+        );
+      })()}
+    </motion.div>,
+    document.body
+  );
+}
+
+/* ── hh:mm:ss formatter for INFO time columns ───────────────────────────── */
+function fmtHMS(sec) {
+  if (!sec && sec !== 0) return '–';
+  const s = Math.round(Math.abs(sec));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = s % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+}
+
 /* ── Cell value renderer ──────────────────────────────────────────────────── */
 function CellValue({ colKey, agent, rowHovered }) {
   const { lang } = useLang();
@@ -404,6 +622,11 @@ function CellValue({ colKey, agent, rowHovered }) {
     case 'planTime':
     case 'factTime':
       return <span>{fmtTime(agent[colKey])}</span>;
+
+    case 'debtTime':
+    case 'workTime':
+    case 'systemError':
+      return <span>{fmtHMS(agent[colKey])}</span>;
 
     case 'perfPct':
       return <span className="font-semibold">{agent[colKey]}%</span>;
@@ -781,6 +1004,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   const [ctxMenu, setCtxMenu] = React.useState({ visible: false, x: 0, y: 0, agentId: null });
   const [b2Overrides, setB2Overrides] = React.useState({});
   const [hoveredRowId, setHoveredRowId] = React.useState(null);
+  const hoveredTrRef = React.useRef(null);
   const [selectedForDelete, setSelectedForDelete] = React.useState(new Set());
   const [deleteMode, setDeleteMode] = React.useState(false);
   const [transferMode, setTransferMode] = React.useState(false);
@@ -1270,8 +1494,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: Math.min(idx * 0.018, 0.32), duration: 0.18, ease: 'easeOut' }}
                     className={rowClass}
-                    onMouseEnter={() => setHoveredRowId(agent.id)}
-                    onMouseLeave={() => setHoveredRowId(null)}
+                    onMouseEnter={e => { setHoveredRowId(agent.id); hoveredTrRef.current = e.currentTarget; }}
+                    onMouseLeave={() => { setHoveredRowId(null); hoveredTrRef.current = null; }}
                     onContextMenu={e => handleContextMenu(e, agent.id)}
                     onClick={(deleteMode || transferMode) ? () => {
                       if (deleteMode) {
@@ -1298,6 +1522,23 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                       const isRedCell = col.key === 'factScore' && agent[col.key] < 80;
                       const isGroupEnd = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
                       const borderRight = isGroupEnd ? '3px solid #94a3b8' : '1px solid #f3f4f6';
+
+                      // Efficiency-collapsed indicator: coloured right stripe on factScore cell
+                      const effCollapsed = collapsedGroups.has('EFFICIENCY');
+                      let effIndicatorBorder = borderRight;
+                      if (col.key === 'factScore' && effCollapsed) {
+                        const hasExplData = Array.isArray(agent.explanation)
+                          ? agent.explanation.filter(Boolean).length > 0
+                          : !!agent.explanation;
+                        const hasVacData = !!agent.vacation;
+                        if (hasExplData && hasVacData) {
+                          effIndicatorBorder = '3px solid #f59e0b'; // amber — both
+                        } else if (hasExplData) {
+                          effIndicatorBorder = '3px solid #f59e0b'; // amber — expl only
+                        } else if (hasVacData) {
+                          effIndicatorBorder = '3px solid #22c55e'; // green — vacation only
+                        }
+                      }
 
                       if (col.key === 'b2') {
                         const b2Override = b2Overrides[agent.id];
@@ -1329,6 +1570,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                         const vacStyle  = isSymbol
                           ? (VACATION_META[val] ?? { color: '#64748b', bg: '#f1f5f9' })
                           : null;
+                        const vacIcon = isSymbol ? (vacStyle?.icon ?? null) : null;
                         return (
                           <td
                             key={col.key}
@@ -1350,7 +1592,11 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            {isWeekend ? '' : val}
+                            {isWeekend ? '' : vacIcon
+                              ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                                  {React.cloneElement(vacIcon, { width: 13, height: 13 })}
+                                </span>
+                              : val}
                           </td>
                         );
                       }
@@ -1359,11 +1605,12 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                         <td
                           key={col.key}
                           style={{
-                            textAlign: 'center',
+                            textAlign: (col.key === 'explanation' || col.key === 'vacation') ? 'left' : 'center',
                             padding: '5px 5px',
+                            paddingLeft: (col.key === 'explanation' || col.key === 'vacation') ? 8 : 5,
                             fontSize: 11,
                             borderBottom: '1px solid #e5e7eb',
-                            borderRight,
+                            borderRight: effIndicatorBorder,
                             whiteSpace: 'nowrap',
                             
                             background: isRedCell ? '#fee2e2' : undefined,
@@ -1429,6 +1676,19 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
           );
         })()}
       </table>
+
+      {/* Efficiency hover panel — portal to body, shown when section is collapsed + row is hovered */}
+      <AnimatePresence>
+        {collapsedGroups.has('EFFICIENCY') && hoveredRowId && (() => {
+          const ha = allAgents.find(a => a.id === hoveredRowId);
+          if (!ha) return null;
+          const hasExpl = Array.isArray(ha.explanation)
+            ? ha.explanation.filter(Boolean).length > 0
+            : !!ha.explanation;
+          if (!hasExpl && !ha.vacation) return null;
+          return <EfficiencyHoverPanel key={hoveredRowId} agent={ha} anchorEl={hoveredTrRef.current} />;
+        })()}
+      </AnimatePresence>
     </div>
   );
 }

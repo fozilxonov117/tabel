@@ -67,7 +67,7 @@ body {
   transition: background 0.13s ease;
 }
 .row-threshold:hover td, .row-manual:hover td, .row-even:hover td, .row-odd:hover td {
-  background: #e0f2fe;
+  background: #e0f2fe !important;
 }
 
 /* ── Payroll table helpers ─────────────────────────────────────────── */
