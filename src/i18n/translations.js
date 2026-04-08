@@ -73,6 +73,17 @@ export const translations = {
     'ctx.deleteCancel': 'Cancel',
     'ctx.selectAll': 'Select All',
     'ctx.deselectAll': 'Deselect All',
+    // Filter UI
+    'filter.number': 'Number',
+    'filter.time': 'Time',
+    'filter.column': 'Column',
+    'filter.from': 'FROM',
+    'filter.to': 'TO',
+    'filter.clear': 'Clear',
+    'filter.value': 'value',
+    'filter.cmp.gt': '> Greater',
+    'filter.cmp.lt': '< Less',
+    'filter.cmp.between': '↔ Between',
   },
 
   ru: {
@@ -149,6 +160,17 @@ export const translations = {
     'ctx.deleteCancel': 'Отмена',
     'ctx.selectAll': 'Выбрать все',
     'ctx.deselectAll': 'Снять все',
+    // Filter UI
+    'filter.number': 'Число',
+    'filter.time': 'Время',
+    'filter.column': 'Столбец',
+    'filter.from': 'ОТ',
+    'filter.to': 'ДО',
+    'filter.clear': 'Сброс',
+    'filter.value': 'значение',
+    'filter.cmp.gt': '> Больше',
+    'filter.cmp.lt': '< Меньше',
+    'filter.cmp.between': '↔ Между',
   },
 
   uz: {
@@ -225,5 +247,16 @@ export const translations = {
     'ctx.deleteCancel': 'Bekor qilish',
     'ctx.selectAll': 'Hammasini tanlash',
     'ctx.deselectAll': 'Barchasini bekor qilish',
+    // Filter UI
+    'filter.number': 'Raqam',
+    'filter.time': 'Vaqt',
+    'filter.column': 'Ustun',
+    'filter.from': 'DAN',
+    'filter.to': 'GACHA',
+    'filter.clear': 'Tozalash',
+    'filter.value': 'qiymat',
+    'filter.cmp.gt': '> Katta',
+    'filter.cmp.lt': '< Kichik',
+    'filter.cmp.between': '↔ Oraligʻida',
   },
 };

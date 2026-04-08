@@ -1,9 +1,409 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLang } from '../i18n/LangContext';
 import { translations } from '../i18n/translations';
 
-export default function Toolbar({ searchQuery, onSearchChange, onExport, visibleColumns, onColumnToggle, onRefresh }) {
+const NUM_COLS = [
+  { key: 'planCalls',       labelKey: 'col.planCalls' },
+  { key: 'factCalls',       labelKey: 'col.factCalls' },
+  { key: 'perfPct',         labelKey: 'col.perfPct' },
+  { key: 'factScore',       labelKey: 'col.factScore' },
+  { key: 'b2',              labelKey: 'col.b2' },
+  { key: 'surcharge',       labelKey: 'col.surcharge' },
+  { key: 'limit',           labelKey: 'col.limit' },
+  { key: 'razryad',         labelKey: 'col.razryad' },
+  { key: 'tabel_worked',    labelKey: 'col.tabel_worked' },
+  { key: 'tabel_prazdHrs',  labelKey: 'col.tabel_prazdHrs' },
+  { key: 'tabel_vecherHrs', labelKey: 'col.tabel_vecherHrs' },
+  { key: 'tabel_nochHrs',   labelKey: 'col.tabel_nochHrs' },
+  { key: 'profitFromOp',    labelKey: 'col.profitFromOp' },
+  { key: '\u0438\u0442\u043e\u0433',   labelKey: 'col.\u0438\u0442\u043e\u0433' },
+  { key: '\u043d\u0430\u0420\u0443\u043a\u0438',  labelKey: 'col.\u043d\u0430\u0420\u0443\u043a\u0438' },
+  { key: '\u043d\u0430\u041a\u0430\u0440\u0442\u0443', labelKey: 'col.\u043d\u0430\u041a\u0430\u0440\u0442\u0443' },
+  { key: '\u043d\u0430\u043b\u043e\u0433',  labelKey: 'col.\u043d\u0430\u043b\u043e\u0433' },
+  { key: 'advance',         labelKey: 'col.advance' },
+  { key: 'baseSalary',      labelKey: 'col.baseSalary' },
+  { key: 'nadbavka',        labelKey: 'col.nadbavka' },
+  { key: 'noch',            labelKey: 'col.noch' },
+  { key: 'vecher',          labelKey: 'col.vecher' },
+  { key: 'prazdnichny',     labelKey: 'col.prazdnichny' },
+  { key: 'stoimostBiletov', labelKey: 'col.stoimostBiletov' },
+  { key: 'vyslugaLet',      labelKey: 'col.vyslugaLet' },
+];
+
+const TIME_COLS = [
+  { key: 'planTime',    labelKey: 'col.planTime',    unit: 'min' },
+  { key: 'factTime',    labelKey: 'col.factTime',    unit: 'min' },
+  { key: 'debtTime',    labelKey: 'col.debtTime',    unit: 'sec' },
+  { key: 'workTime',    labelKey: 'col.workTime',    unit: 'sec' },
+  { key: 'systemError', labelKey: 'col.systemError', unit: 'sec' },
+];
+
+const CMP_OPTS = [
+  { value: 'gt',      labelKey: 'filter.cmp.gt' },
+  { value: 'lt',      labelKey: 'filter.cmp.lt' },
+  { value: 'between', labelKey: 'filter.cmp.between' },
+];
+
+/* -- Styled select ------------------------------------------ */
+function Sel({ value, onChange, options, placeholder, width = 120, disabled }) {
+  return (
+    <div style={{ position: 'relative', width, flexShrink: 0 }}>
+      <select
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        style={{
+          width: '100%',
+          height: 28,
+          fontSize: 11,
+          fontWeight: 600,
+          paddingLeft: 9,
+          paddingRight: 22,
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          border: value ? '1.5px solid #7dd3fc' : '1.5px solid #e2e8f0',
+          borderRadius: 8,
+          background: value ? '#f0f9ff' : '#f8fafc',
+          color: value ? '#0284c7' : '#94a3b8',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          outline: 'none',
+          transition: 'border-color 0.15s, background 0.15s',
+          opacity: disabled ? 0.5 : 1,
+        }}
+      >
+        {placeholder && <option value="">{placeholder}</option>}
+        {options.map(o => (
+          <option key={o.value ?? o.key} value={o.value ?? o.key}>{o.label}</option>
+        ))}
+      </select>
+      {/* chevron */}
+      <svg
+        style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+        width="9" height="9" viewBox="0 0 9 9" fill="none"
+      >
+        <path d="M1.5 3L4.5 6L7.5 3" stroke={value ? '#0284c7' : '#94a3b8'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+/* -- Compact number input -------------------------------------- */
+function NumIn({ value: externalValue, onChange, placeholder, label }) {
+  const [focused, setFocused] = useState(false);
+  const [localValue, setLocalValue] = useState(externalValue);
+  const timerRef = useRef(null);
+
+  // Sync when parent resets the value (e.g. clear button)
+  useEffect(() => { setLocalValue(externalValue); }, [externalValue]);
+
+  const handleChange = e => {
+    const v = e.target.value;
+    setLocalValue(v);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onChange({ target: { value: v } }), 180);
+  };
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 1.5, flexShrink: 0 }}>
+      {label && (
+        <span style={{ fontSize: 8.5, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em', paddingLeft: 1 }}>
+          {label}
+        </span>
+      )}
+      <input
+        type="number"
+        value={localValue}
+        onChange={handleChange}
+        placeholder={placeholder}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: 68,
+          height: 28,
+          fontSize: 11,
+          fontWeight: 600,
+          padding: '0 8px',
+          border: focused ? '1.5px solid #38bdf8' : localValue !== '' ? '1.5px solid #7dd3fc' : '1.5px solid #e2e8f0',
+          borderRadius: 8,
+          background: localValue !== '' ? '#f0f9ff' : '#f8fafc',
+          color: '#0284c7',
+          outline: 'none',
+          transition: 'border-color 0.15s, background 0.15s',
+        }}
+      />
+    </div>
+  );
+}
+
+/* -- Custom column dropdown (replaces native <select> for Column picker) -- */
+function ColDrop({ value, onChange, options, placeholder, width = 128 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  const selected = options.find(o => (o.value ?? o.key) === value);
+
+  return (
+    <div ref={ref} style={{ position: 'relative', width, flexShrink: 0 }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', height: 28, fontSize: 11, fontWeight: 600,
+          paddingLeft: 9, paddingRight: 22,
+          border: value ? '1.5px solid #7dd3fc' : `1.5px solid ${open ? '#38bdf8' : '#e2e8f0'}`,
+          borderRadius: 8, background: value ? '#f0f9ff' : '#f8fafc',
+          color: value ? '#0284c7' : '#94a3b8',
+          cursor: 'pointer', outline: 'none', textAlign: 'left',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          transition: 'border-color 0.15s',
+        }}
+      >
+        {selected ? selected.label : placeholder}
+      </button>
+      <svg
+        style={{ position: 'absolute', right: 6, top: '50%', pointerEvents: 'none',
+          transform: `translateY(-50%) rotate(${open ? 180 : 0}deg)`, transition: 'transform 0.15s' }}
+        width="9" height="9" viewBox="0 0 9 9" fill="none"
+      >
+        <path d="M1.5 3L4.5 6L7.5 3" stroke={value ? '#0284c7' : '#94a3b8'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="cdr-scroll"
+            initial={{ opacity: 0, y: -4, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.96 }}
+            transition={{ duration: 0.13, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: 'absolute', top: 32, left: 0, zIndex: 9999,
+              background: '#ffffff',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: 10,
+              boxShadow: '0 8px 28px rgba(0,0,0,0.11), 0 1px 4px rgba(0,0,0,0.05)',
+              minWidth: Math.max(width, 152), maxHeight: 226,
+              overflowY: 'auto', scrollbarWidth: 'none',
+              padding: '5px',
+            }}
+          >
+            <style>{`.cdr-scroll::-webkit-scrollbar{display:none}.cdr-opt:hover{background:#f0f9ff !important;color:#0284c7 !important}`}</style>
+            {placeholder && (
+              <div
+                className="cdr-opt"
+                onClick={() => { onChange({ target: { value: '' } }); setOpen(false); }}
+                style={{ padding: '4px 9px', fontSize: 10.5, borderRadius: 7, cursor: 'pointer', color: '#94a3b8', fontWeight: 500, transition: 'background 0.1s' }}
+              >
+                {placeholder}
+              </div>
+            )}
+            {options.map(o => {
+              const v = o.value ?? o.key;
+              const active = v === value;
+              return (
+                <div
+                  key={v}
+                  className="cdr-opt"
+                  onClick={() => { onChange({ target: { value: v } }); setOpen(false); }}
+                  style={{
+                    padding: '5px 9px', fontSize: 11, fontWeight: active ? 700 : 500,
+                    borderRadius: 7, cursor: 'pointer',
+                    color: active ? '#0284c7' : '#374151',
+                    background: active ? '#eff6ff' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    transition: 'background 0.1s, color 0.1s',
+                  }}
+                >
+                  {o.label}
+                  {active && (
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" style={{ flexShrink: 0 }}>
+                      <polyline points="1.5,4.5 3.5,6.5 7.5,2.5" stroke="#0284c7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* -- Inline compact filter -------------------------------------- */
+function InlineFilter({ filterType, onFilterTypeChange, numberFilter, onNumberFilterChange, timeFilter, onTimeFilterChange, onReset, t }) {
+  const isNumActive  = !!(numberFilter.column && numberFilter.value !== '');
+  const isTimeActive = !!(timeFilter.column && (timeFilter.from !== '' || timeFilter.to !== ''));
+  const anyActive    = isNumActive || isTimeActive;
+
+  const colOptions = filterType === 'number'
+    ? NUM_COLS.map(c => ({ value: c.key, label: t(c.labelKey) }))
+    : TIME_COLS.map(c => ({ value: c.key, label: `${t(c.labelKey)} (${c.unit})` }));
+
+  const activeCol = filterType === 'number' ? numberFilter.column : timeFilter.column;
+
+  const handleColChange = e => {
+    if (filterType === 'number') onNumberFilterChange(f => ({ ...f, column: e.target.value }));
+    else onTimeFilterChange(f => ({ ...f, column: e.target.value }));
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+      {/* Divider */}
+      <div style={{ width: 1, height: 22, background: '#e2e8f0', flexShrink: 0, marginRight: 1 }} />
+
+      {/* 1. Filter type segmented toggle */}
+      <div style={{
+        display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 2,
+        border: '1.5px solid #e2e8f0', gap: 1, flexShrink: 0,
+      }}>
+        {[{ id: 'number', icon: '#', txtKey: 'filter.number' }, { id: 'time', icon: '⏱', txtKey: 'filter.time' }].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => onFilterTypeChange(tab.id)}
+            style={{
+              padding: '2px 9px', fontSize: 10, fontWeight: 700,
+              borderRadius: 6, border: 'none', cursor: 'pointer',
+              background: filterType === tab.id ? '#0ea5e9' : 'transparent',
+              color: filterType === tab.id ? '#ffffff' : '#64748b',
+              transition: 'background 0.15s, color 0.15s',
+              letterSpacing: '0.01em',
+              lineHeight: '20px',
+            }}
+          >
+            <span style={{ marginRight: 3, opacity: 0.85 }}>{tab.icon}</span>{t(tab.txtKey)}
+          </button>
+        ))}
+      </div>
+
+      {/* 2. Column selector */}
+      <ColDrop
+        value={activeCol}
+        onChange={handleColChange}
+        options={colOptions}
+        placeholder={t('filter.column')}
+        width={128}
+      />
+
+      {/* 3. Comparison type + value inputs */}
+      <AnimatePresence mode="wait">
+        {filterType === 'number' ? (
+          <motion.div
+            key="num"
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 6 }}
+            transition={{ duration: 0.14 }}
+            style={{ display: 'flex', alignItems: 'flex-end', gap: 5 }}
+          >
+            <ColDrop
+              value={numberFilter.type}
+              onChange={e => onNumberFilterChange(f => ({ ...f, type: e.target.value, value2: '' }))}
+              options={CMP_OPTS.map(o => ({ value: o.value, label: t(o.labelKey) }))}
+              width={108}
+            />
+            <NumIn
+              value={numberFilter.value}
+              onChange={e => onNumberFilterChange(f => ({ ...f, value: e.target.value }))}
+              placeholder={numberFilter.type === 'between' ? t('filter.from').toLowerCase() : t('filter.value')}
+            />
+            <AnimatePresence>
+              {numberFilter.type === 'between' && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.15 }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 2 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8' }}>{t('filter.to')}</span>
+                    <NumIn
+                      value={numberFilter.value2}
+                      onChange={e => onNumberFilterChange(f => ({ ...f, value2: e.target.value }))}
+                      placeholder={t('filter.to').toLowerCase()}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="time"
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 6 }}
+            transition={{ duration: 0.14 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+          >
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', flexShrink: 0 }}>{t('filter.from')}</span>
+            <NumIn
+              value={timeFilter.from}
+              onChange={e => onTimeFilterChange(f => ({ ...f, from: e.target.value }))}
+              placeholder="0"
+            />
+            <span style={{ fontSize: 12, color: '#cbd5e1', fontWeight: 600, flexShrink: 0 }}>–</span>
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', flexShrink: 0 }}>{t('filter.to')}</span>
+            <NumIn
+              value={timeFilter.to}
+              onChange={e => onTimeFilterChange(f => ({ ...f, to: e.target.value }))}
+              placeholder="∞"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clear all */}
+      <AnimatePresence>
+        {anyActive && (
+          <motion.button
+            key="clear"
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.7 }}
+            transition={{ duration: 0.14 }}
+            onClick={onReset}
+            style={{
+              height: 26, padding: '0 10px',
+              borderRadius: 7, border: '1.5px solid #fca5a5',
+              background: '#fff1f2', color: '#ef4444',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              cursor: 'pointer', flexShrink: 0, fontSize: 10.5, fontWeight: 700,
+              letterSpacing: '0.01em',
+            }}
+            whileHover={{ background: '#fee2e2', borderColor: '#f87171' }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg width="7" height="7" viewBox="0 0 7 7" fill="none">
+              <line x1="1" y1="1" x2="6" y2="6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="6" y1="1" x2="1" y2="6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            {t('filter.clear')}
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* -- Main Toolbar -------------------------------------------- */
+export default function Toolbar({
+  searchQuery, onSearchChange, onExport, visibleColumns, onColumnToggle, onRefresh,
+  filterType, onFilterTypeChange,
+  numberFilter, onNumberFilterChange,
+  timeFilter, onTimeFilterChange,
+  onFilterReset,
+}) {
   const { lang } = useLang();
   const t = k => translations[lang]?.[k] ?? k;
   const [columnsOpen, setColumnsOpen] = useState(false);
@@ -11,9 +411,7 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
 
   useEffect(() => {
     function handler(e) {
-      if (colRef.current && !colRef.current.contains(e.target)) {
-        setColumnsOpen(false);
-      }
+      if (colRef.current && !colRef.current.contains(e.target)) setColumnsOpen(false);
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -21,124 +419,143 @@ export default function Toolbar({ searchQuery, onSearchChange, onExport, visible
 
   return (
     <div
-      className="px-4 py-2.5 flex items-center justify-between gap-3"
+      className="px-4 py-2 flex items-center gap-2 flex-wrap"
       style={{
         background: '#ffffff',
         borderBottom: '1px solid #e8eaf0',
         boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
+        minHeight: 46,
       }}
     >
-      {/* Search + Filters + Refresh on left */}
-      <div className="flex items-center gap-2 flex-1 max-w-lg">
-        <SearchInput value={searchQuery} onChange={onSearchChange} placeholder={t('toolbar.searchPlaceholder')} />
-        <FiltersBtn />
-        <RefreshBtn onClick={onRefresh} />
-      </div>
+      {/* Search */}
+      <SearchInput value={searchQuery} onChange={onSearchChange} placeholder={t('toolbar.searchPlaceholder')} />
 
-      {/* в”Ђв”Ђ Columns + Export в”Ђв”Ђ */}
-      <div className="flex items-center gap-2">
-        <div className="relative" ref={colRef}>
-          <ToolbarBtn
-            active={columnsOpen}
-            onClick={() => setColumnsOpen(c => !c)}
-            icon={
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <rect x="1" y="1" width="4" height="11" rx="1" stroke="currentColor" strokeWidth="1.3" />
-                <rect x="8" y="1" width="4" height="11" rx="1" stroke="currentColor" strokeWidth="1.3" />
-              </svg>
-            }
-          >
-            {t('toolbar.columns')}
-          </ToolbarBtn>
+      {/* Inline filter chain */}
+      <InlineFilter
+        filterType={filterType}
+        onFilterTypeChange={onFilterTypeChange}
+        numberFilter={numberFilter}
+        onNumberFilterChange={onNumberFilterChange}
+        timeFilter={timeFilter}
+        onTimeFilterChange={onTimeFilterChange}
+        onReset={onFilterReset}
+        t={t}
+      />
 
-          <AnimatePresence>
-            {columnsOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.94, y: -8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: -8 }}
-                transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
-                className="absolute right-0 top-10 z-50 p-3.5"
-                style={{
-                  background: '#ffffff',
-                  border: '1.5px solid #e2e8f0',
-                  borderRadius: 14,
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06)',
-                  minWidth: 196,  
-                  transformOrigin: 'top right',
-                }}
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Right: Refresh + Columns + Export */}
+      <RefreshBtn onClick={onRefresh} />
+
+      <div className="relative" ref={colRef}>
+        <ToolbarBtn
+          active={columnsOpen}
+          onClick={() => setColumnsOpen(c => !c)}
+          icon={
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <rect x="1" y="1" width="4" height="11" rx="1" stroke="currentColor" strokeWidth="1.3" />
+              <rect x="8" y="1" width="4" height="11" rx="1" stroke="currentColor" strokeWidth="1.3" />
+            </svg>
+          }
+        >
+          {t('toolbar.columns')}
+        </ToolbarBtn>
+
+        <AnimatePresence>
+          {columnsOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: -8 }}
+              transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
+              className="absolute right-0 top-10 z-50"
+              style={{
+                background: '#ffffff',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: 14,
+                boxShadow: '0 16px 48px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.05)',
+                minWidth: 210,
+                padding: '10px 0 6px',
+                transformOrigin: 'top right',
+              }}
+            >
+              <style>{`
+                .col-dd-item { transition: background 0.1s; border-radius: 7px; }
+                .col-dd-item:hover { background: #f0f9ff; }
+                .col-dd-item:hover .col-dd-label { color: #0284c7 !important; }
+                .col-dd-scroll::-webkit-scrollbar { display: none; }
+              `}</style>
+              <p className="font-black uppercase tracking-widest" style={{ fontSize: 9, color: '#94a3b8', padding: '0 14px 8px', letterSpacing: '0.1em' }}>
+                {t('toolbar.toggleColumns')}
+              </p>
+              <div
+                className="col-dd-scroll"
+                style={{ maxHeight: 268, overflowY: 'auto', scrollbarWidth: 'none', padding: '0 6px' }}
               >
-                <p
-                  className="mb-2.5 font-black uppercase tracking-widest"
-                  style={{ fontSize: 9, color: '#94a3b8' }}
-                >
-                  {t('toolbar.toggleColumns')}
-                </p>
-                {Object.keys(visibleColumns).map((col, i) => (
-                  <motion.label
+                {Object.keys(visibleColumns).map(col => (
+                  <label
                     key={col}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="flex items-center gap-2.5 py-1 cursor-pointer group"
+                    className="col-dd-item flex items-center gap-2.5 cursor-pointer"
+                    style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 9 }}
+                    onClick={() => onColumnToggle(col)}
                   >
                     <span
-                      onClick={() => onColumnToggle(col)}
-                      className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all duration-150"
+                      className="flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: visibleColumns[col]
-                          ? '#0ea5e9'
-                          : '#f1f5f9',
+                        width: 16, height: 16, borderRadius: 5,
+                        background: visibleColumns[col] ? '#0ea5e9' : '#f1f5f9',
                         border: visibleColumns[col] ? 'none' : '1.5px solid #cbd5e1',
-                        boxShadow: visibleColumns[col] ? '0 0 6px rgba(14,165,233,0.3)' : 'none',
+                        boxShadow: visibleColumns[col] ? '0 0 0 3px rgba(14,165,233,0.15)' : 'none',
+                        transition: 'background 0.12s, border-color 0.12s, box-shadow 0.12s',
+                        flexShrink: 0,
                       }}
                     >
                       {visibleColumns[col] && (
                         <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                          <polyline points="1.5,4.5 3.5,6.5 7.5,2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <polyline points="1.5,4.5 3.5,6.5 7.5,2.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
                     </span>
-                    <input
-                      type="checkbox"
-                      checked={visibleColumns[col]}
-                      onChange={() => onColumnToggle(col)}
-                      className="sr-only"
-                    />
+                    <input type="checkbox" checked={visibleColumns[col]} onChange={() => onColumnToggle(col)} className="sr-only" />
                     <span
-                      className="text-xs font-medium transition-colors duration-150"
-                      style={{ color: visibleColumns[col] ? '#0284c7' : '#64748b' }}
+                      className="col-dd-label"
+                      style={{
+                        fontSize: 12, fontWeight: visibleColumns[col] ? 600 : 500,
+                        color: visibleColumns[col] ? '#0284c7' : '#475569',
+                        transition: 'color 0.1s',
+                        userSelect: 'none',
+                      }}
                     >
                       {t('group.' + col)}
                     </span>
-                  </motion.label>
+                  </label>
                 ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <ExportBtn onClick={onExport} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      <ExportBtn onClick={onExport} />
     </div>
   );
 }
 
-/* в”Ђв”Ђ Search Input в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* -- Search Input -------------------------------------------------- */
 function SearchInput({ value, onChange, placeholder }) {
   const [focused, setFocused] = useState(false);
   return (
-    <div className="relative flex-1" style={{ minWidth: 220 }}>
+    <div className="relative" style={{ width: 200, flexShrink: 0 }}>
       <motion.svg
         className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
         animate={{ color: focused ? '#0ea5e9' : '#94a3b8' }}
         transition={{ duration: 0.15 }}
-        width="14" height="14" viewBox="0 0 14 14" fill="none"
+        width="13" height="13" viewBox="0 0 14 14" fill="none"
       >
         <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.4" />
         <line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       </motion.svg>
-
       <motion.input
         type="text"
         placeholder={placeholder}
@@ -146,7 +563,7 @@ function SearchInput({ value, onChange, placeholder }) {
         onChange={e => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className="w-full py-2 pl-9 pr-8 text-xs font-medium"
+        className="w-full py-1.5 pl-8 pr-7 text-xs font-medium"
         animate={{
           boxShadow: focused
             ? '0 0 0 3px rgba(14,165,233,0.15), 0 1px 6px rgba(0,0,0,0.06)'
@@ -155,17 +572,16 @@ function SearchInput({ value, onChange, placeholder }) {
         style={{
           background: focused ? '#ffffff' : '#f8fafc',
           border: `1.5px solid ${focused ? '#0ea5e9' : '#e2e8f0'}`,
-          borderRadius: 10,
+          borderRadius: 8,
           outline: 'none',
           color: '#1e293b',
+          height: 28,
           transition: 'border-color 0.15s, background 0.15s',
         }}
       />
-
-      {/* Animated clear button */}
       <AnimatePresence>
         {value && (
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
             <motion.button
               initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -189,25 +605,20 @@ function SearchInput({ value, onChange, placeholder }) {
   );
 }
 
-/* в”Ђв”Ђ Shared ToolbarBtn в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* -- Shared ToolbarBtn -------------------------------------------- */
 function ToolbarBtn({ children, onClick, active, icon }) {
   return (
     <motion.button
       onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
       style={{
         background: active ? '#e0f2fe' : '#f8fafc',
         border: `1.5px solid ${active ? '#0ea5e9' : '#e2e8f0'}`,
-        borderRadius: 9,
+        borderRadius: 8,
         color: active ? '#0284c7' : '#64748b',
         cursor: 'pointer',
       }}
-      whileHover={{
-        background: '#e0f2fe',
-        borderColor: '#0ea5e9',
-        color: '#0284c7',
-        y: -1,
-      }}
+      whileHover={{ background: '#e0f2fe', borderColor: '#0ea5e9', color: '#0284c7', y: -1 }}
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.13 }}
     >
@@ -217,42 +628,7 @@ function ToolbarBtn({ children, onClick, active, icon }) {
   );
 }
 
-/* в”Ђв”Ђ Filters Button в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
-function FiltersBtn() {
-  const [active, setActive] = useState(false);
-  return (
-    <motion.button
-      onClick={() => setActive(a => !a)}
-      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
-      style={{
-        background: active ? '#e0f2fe' : '#f8fafc',
-        border: `1.5px solid ${active ? '#0ea5e9' : '#e2e8f0'}`,
-        borderRadius: 9,
-        color: active ? '#0284c7' : '#64748b',
-        cursor: 'pointer',
-      }}
-      whileHover={{ background: '#e0f2fe', borderColor: '#0ea5e9', color: '#0284c7', y: -1 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ duration: 0.13 }}
-    >
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-        <line x1="1" y1="3" x2="12" y2="3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        <line x1="3" y1="6.5" x2="10" y2="6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        <line x1="5" y1="10" x2="8" y2="10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      </svg>
-      Filters
-      <motion.span
-        className="text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-black"
-        style={{ background: '#0ea5e9', color: '#fff' }}
-        whileHover={{ scale: 1.2 }}
-      >
-        3
-      </motion.span>
-    </motion.button>
-  );
-}
-
-/* в”Ђв”Ђ Refresh Button в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* -- Refresh Button ----------------------------------------------- */
 function RefreshBtn({ onClick }) {
   const [spinning, setSpinning] = useState(false);
   const handleClick = () => {
@@ -263,11 +639,11 @@ function RefreshBtn({ onClick }) {
   return (
     <motion.button
       onClick={handleClick}
-      className="p-2"
+      className="p-1.5"
       style={{
         background: '#f8fafc',
         border: '1.5px solid #e2e8f0',
-        borderRadius: 9,
+        borderRadius: 8,
         color: '#64748b',
         cursor: 'pointer',
       }}
@@ -288,23 +664,20 @@ function RefreshBtn({ onClick }) {
   );
 }
 
-/* в”Ђв”Ђ Export CSV Button в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* -- Export CSV Button -------------------------------------------- */
 function ExportBtn({ onClick }) {
   return (
     <motion.button
       onClick={onClick}
-      className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white"
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white"
       style={{
         background: '#0ea5e9',
         border: 'none',
-        borderRadius: 9,
+        borderRadius: 8,
         boxShadow: '0 2px 8px rgba(14,165,233,0.3)',
         cursor: 'pointer',
       }}
-      whileHover={{
-        y: -2,
-        boxShadow: '0 6px 16px rgba(14,165,233,0.45)',
-      }}
+      whileHover={{ y: -2, boxShadow: '0 6px 16px rgba(14,165,233,0.45)' }}
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.15 }}
     >

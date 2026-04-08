@@ -240,7 +240,7 @@ const EXPL_META = {
 const VAC_ICONS = {
   // Pregnant woman — paths from /public/pregnant.svg (text nodes removed, viewBox cropped)
   PregnantWoman: (
-    <svg width="20" height="20" viewBox="-5 -10 110 110" fill="currentColor">
+    <svg width="26" height="26" viewBox="-5 -10 110 110" fill="currentColor">
       <circle cx="51.289" cy="18.77" r="6.6914"/>
       <path fillRule="evenodd" d="m44.789 24.09-6.9688 9.3594c-2.6094 3.4883-4.0898 5.0508-3.8906 7.9414 0.17187 2.5117 2.9492 4.6016 7.6211 7.8516l4.8086 3.0781c0.39062 0.26172 0.51172 0.78125 0.26953 1.1797-0.23828 0.39062-0.73828 0.53125-1.1484 0.32031l-1.8906-1.0781c-1.0508 8.0312-1.6602 14.551-3.1602 20.719 0.12109 0.69141 0.73828 1.1914 1.4414 1.1914h3.1406 7.6992 9.0195c0.30078 0 0.51953-0.26953 0.46875-0.55859-1.4219-9.0117 4.9297-16.551 3.7617-24.25-1-6.5312-4.3086-10.27-8.1016-12.422-0.32031-0.17969-0.30078-0.33984 0-0.51953 4.2305-2.5 0.82031-5.6211-1.9609-9.0312-2.0508-2.5195-3.1797-4.0781-5.5586-5.1289-1.9609-0.80078-4.3984-0.19922-5.5508 1.3594zm-0.37891 20.18c0 0.19141-0.23828 0.28125-0.37109 0.14062l-2.2383-2.3984c-1.2383-1.0586-0.53125-1.7891 0.5-3.1406 0 0 0.96094-1.1797 0.96094-1.1914l0.80078-1.0195c0.19922-0.25 0.60156-0.12109 0.60938 0.19922l-0.25 7.3906z"/>
       <path fillRule="evenodd" d="m47.398 76.641 0.60156 14.18c0 5.0508 6.6406 5.0508 6.6406 0 0 0 0.60156-10.609 0.60156-14.18z"/>
@@ -252,10 +252,17 @@ const VAC_ICONS = {
       <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-3 7c-1.65 0-3-1.35-3-3 0-1.3.84-2.4 2-2.82V5c0-.55.45-1 1-1s1 .45 1 1v9.18A2.99 2.99 0 0 1 15 17c0 1.65-1.35 3-3 3z"/>
     </svg>
   ),
-  // Work — briefcase icon
+  // Work — exit door icon (operator is out / off duty)
   Work: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M20 6h-1V4c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM7 4h10v2H7V4zm13 15H4V8h16v11z"/>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+      {/* door frame */}
+      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+      {/* door panel (right half) */}
+      <rect x="12" y="5" width="7" height="14" rx="0"/>
+      {/* arrow pointing left (exit direction) */}
+      <path d="M10.5 15.5L7 12l3.5-3.5 1.06 1.06L9.12 11.5H16v1.5H9.12l2.44 1.94z" fill="#ffffff"/>
+      {/* door knob */}
+      <circle cx="11.2" cy="12" r="0.9" fill="#ffffff"/>
     </svg>
   ),
   // Baby stroller — side view with canopy, seat, handle and two wheels
@@ -282,49 +289,20 @@ const VAC_ICONS = {
       <path d="m93.184 65.191h-36.426l7.3555-27.344 30.434 8.125c0.99609 0.27344 2.082-0.32422 2.3516-1.3594 5.3359-18.332-6.6133-38.867-25.148-43.402-18.941-5.0547-38.477 6.1836-43.555 25.055-0.28906 0.99219 0.35547 2.1094 1.3594 2.3594l30.84 8.2305-7.6211 28.336h-27.637l-12.703-30.262c-1.0117-2.4062-3.3477-3.9609-5.957-3.9609-4.4062-0.125-7.7344 4.75-6.0195 8.8086l12.094 31.027c1.9023 4.875 6.5078 8.0273 11.738 8.0273h4.6562l-4.0273 11.953c-1.2422 3.375 1.5938 7.2344 5.1836 7.0703 2.3008 0 4.3438-1.4648 5.0781-3.6484l5.1797-15.375h32.453l5.2539 17.355c0.6875 2.2773 2.75 3.8047 5.1289 3.8047 3.5547 0.21094 6.4375-3.5312 5.3047-6.9102l-4.3125-14.25h8.9922c3.7578 0 6.8164-3.0586 6.8164-6.8203 0.003906-3.7617-3.0547-6.8203-6.8125-6.8203zm-13.898-56.602c11.027 6.6172 17.141 20.562 14.344 33.156l-15.031-4.0117c1.2148-5.2266 4.1406-20.023 0.6875-29.145zm-46.816 16.832c4.2617-12.715 16.059-21.121 29.031-21.555-3.2539 2.7344-5.6484 6.168-8.3203 11.309-2.8633 5.6172-4.7969 11.391-5.6758 14.258zm24.156-8.5469c3.2266-6.3125 8.2969-13.508 14.133-11.949 10.633 4.207 5.1484 25.613 4.1133 31.812l-23.652-6.3125c0.86719-2.793 2.7344-8.3164 5.4062-13.551z"/>
     </svg>
   ),
-  // Soldier — military person with beret, face and uniform
+  // Military helmet icon
   Soldier: (
-    <svg width="18" height="18" viewBox="0 0 100 100" fill="currentColor">
-      {/* beret — wide flat cap slightly tilted */}
-      <ellipse cx="50" cy="20" rx="24" ry="9"/>
-      <rect x="28" y="20" width="44" height="5" rx="2"/>
-      {/* head */}
-      <ellipse cx="50" cy="34" rx="14" ry="15"/>
-      {/* neck */}
-      <rect x="44" y="47" width="12" height="7" rx="3"/>
-      {/* uniform body */}
-      <path d="M28 54 Q28 48 44 53 L44 80 L56 80 L56 53 Q72 48 72 54 L72 82 Q72 86 68 86 L32 86 Q28 86 28 82 Z"/>
-      {/* collar / epaulettes suggestion */}
-      <rect x="28" y="54" width="12" height="5" rx="2"/>
-      <rect x="60" y="54" width="12" height="5" rx="2"/>
+    <svg width="20" height="20" viewBox="0 0 100 100" fill="currentColor">
+      {/* helmet dome */}
+      <path d="M50 8 C28 8 16 24 16 40 L84 40 C84 24 72 8 50 8 Z"/>
+      {/* helmet rim / brim — wide flat band */}
+      <rect x="10" y="38" width="80" height="10" rx="5"/>
+      {/* chin strap left */}
+      <path d="M18 48 Q14 62 18 72 Q22 76 26 74 Q22 62 22 48 Z"/>
+      {/* chin strap right */}
+      <path d="M82 48 Q86 62 82 72 Q78 76 74 74 Q78 62 78 48 Z"/>
+      {/* centre ridge on dome */}
+      <rect x="46" y="10" width="8" height="28" rx="4"/>
     </svg>
-  //     <svg
-  //   width="18"
-  //   height="18"
-  //   viewBox="0 0 100 100"
-  //   fill="currentColor"
-  //   xmlns="http://www.w3.org/2000/svg"
-  // >
-  //   {/* beret (more stylized + wider) */}
-  //   <path d="M24 24c8-10 44-10 52 0-6 8-46 8-52 0z" />
-  //   <rect x="32" y="24" width="36" height="5" rx="2.5" />
-
-  //   {/* head */}
-  //   <circle cx="50" cy="38" r="13.5" />
-
-  //   {/* neck */}
-  //   <rect x="44" y="50" width="12" height="6" rx="3" />
-
-  //   {/* body (wider + stronger silhouette) */}
-  //   <path d="M24 58c0-7 16-10 26-5 10-5 26-2 26 5v24c0 5-4 8-8 8H32c-4 0-8-3-8-8V58z" />
-
-  //   {/* chest detail (uniform depth) */}
-  //   <rect x="44" y="60" width="12" height="20" rx="3" opacity="0.9" />
-
-  //   {/* shoulders / epaulettes (more prominent) */}
-  //   <rect x="24" y="58" width="16" height="5" rx="2.5" />
-  //   <rect x="60" y="58" width="16" height="5" rx="2.5" />
-  // </svg>
   ),
 };
 
@@ -433,13 +411,13 @@ function ExplanationIconItem({ type, count, rowHovered, index }) {
   );
 }
 
-function ExplanationIcons({ types, rowHovered }) {
+function ExplanationIcons({ types }) {
   const counts = {};
   types.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'nowrap', gap: 3, alignItems: 'center', justifyContent: 'flex-start' }}>
       {Object.entries(counts).map(([type, count], index) => (
-        <ExplanationIconItem key={type} type={type} count={count} rowHovered={rowHovered} index={index} />
+        <ExplanationIconItem key={type} type={type} count={count} index={index} />
       ))}
     </span>
   );
@@ -574,7 +552,7 @@ function EfficiencyHoverPanel({ agent, anchorEl }) {
             padding: '3px 8px', borderRadius: 6,
             fontSize: 11, fontWeight: 700,
           }}>
-            {React.cloneElement(meta.icon, { width: 13, height: 13 })}
+            {React.cloneElement(meta.icon, { width: 18, height: 18 })}
             <span>{type}{count > 1 ? ` ×${count}` : ''}</span>
           </span>
         );
@@ -615,7 +593,7 @@ function fmtHMS(sec) {
 }
 
 /* ── Cell value renderer ──────────────────────────────────────────────────── */
-function CellValue({ colKey, agent, rowHovered }) {
+function CellValue({ colKey, agent }) {
   const { lang } = useLang();
   const t = k => translations[lang]?.[k] ?? k;
   switch (colKey) {
@@ -634,13 +612,13 @@ function CellValue({ colKey, agent, rowHovered }) {
     case 'explanation': {
       const val = agent[colKey];
       const arr = Array.isArray(val) ? val.filter(Boolean) : (val ? [val] : []);
-      return arr.length > 0 ? <ExplanationIcons types={arr} rowHovered={rowHovered} /> : null;
+      return arr.length > 0 ? <ExplanationIcons types={arr} /> : null;
     }
 
     case 'vacation': {
       const v = agent[colKey];
       if (!v) return null;
-      return <VacationBadge v={v} rowHovered={rowHovered} />;
+      return <VacationBadge v={v} />;
     }
 
     case 'vetka':
@@ -755,34 +733,34 @@ function B2Cell({ agentId, b1Val, override, onSave, onActivate }) {
 }
 
 /* ── B2 cell with comment portal tooltip ─────────────────────────────────── */
-function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, rowHovered, onContextMenu, onSave, b2Comments }) {
+function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, onContextMenu, onSave, b2Comments }) {
   const tdRef = React.useRef(null);
   const comment = (b2Comments && b2Comments[agent.id]) || null;
   const [tooltipPos, setTooltipPos] = React.useState(null);
+  const [cellHovered, setCellHovered] = React.useState(false);
 
   React.useEffect(() => {
-    if (comment && rowHovered && tdRef.current) {
+    if (comment && cellHovered && tdRef.current) {
       const rect = tdRef.current.getBoundingClientRect();
-      // cellCenterX: where the arrow tip points (cell horizontal center)
-      // box left: clamp so tooltip doesn't overflow viewport on either side
       const cellCenterX = rect.left + rect.width / 2;
       const boxWidth = 260;
       const margin = 8;
       let boxLeft = cellCenterX - boxWidth / 2;
       if (boxLeft < margin) boxLeft = margin;
       if (boxLeft + boxWidth > window.innerWidth - margin) boxLeft = window.innerWidth - margin - boxWidth;
-      // arrowLeft: relative offset inside the box pointing at cellCenterX
       const arrowLeft = Math.max(12, Math.min(boxWidth - 12, cellCenterX - boxLeft));
       setTooltipPos({ bottom: window.innerHeight - rect.top + 8, boxLeft, arrowLeft });
     } else {
       setTooltipPos(null);
     }
-  }, [rowHovered, comment]);
+  }, [cellHovered, comment]);
 
   return (
     <td
       ref={tdRef}
       onContextMenu={onContextMenu}
+      onMouseEnter={() => setCellHovered(true)}
+      onMouseLeave={() => setCellHovered(false)}
       style={{
         position: 'relative',
         textAlign: 'center', padding: '5px 5px', fontSize: 11,
@@ -1027,6 +1005,21 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
     }
   }
 
+  // Must be before any early returns (Rules of Hooks)
+  const allAgents = React.useMemo(() => {
+    const base = agents || [];
+    if (!sortKey) return base;
+    return [...base].sort((a, b) => {
+      if (sortKey === 'name') {
+        const cmp = (a.name ?? '').localeCompare(b.name ?? '');
+        return sortDir === 'asc' ? cmp : -cmp;
+      }
+      const av = Number(a[sortKey]) || 0;
+      const bv = Number(b[sortKey]) || 0;
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+  }, [agents, sortKey, sortDir]);
+
   const handleContextMenu = (e, agentId = null) => {
     if (e.shiftKey) return; // Shift+right-click → browser default
     e.preventDefault();
@@ -1077,19 +1070,6 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   }
 
   const totals = computeTotals(agents || []);
-  const allAgents = React.useMemo(() => {
-    const base = agents || [];
-    if (!sortKey) return base;
-    return [...base].sort((a, b) => {
-      if (sortKey === 'name') {
-        const cmp = (a.name ?? '').localeCompare(b.name ?? '');
-        return sortDir === 'asc' ? cmp : -cmp;
-      }
-      const av = Number(a[sortKey]) || 0;
-      const bv = Number(b[sortKey]) || 0;
-      return sortDir === 'asc' ? av - bv : bv - av;
-    });
-  }, [agents, sortKey, sortDir]);
 
   return (
     <div className="relative overflow-x-auto" onContextMenu={handleTableContextMenu}>
@@ -1104,6 +1084,9 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
           animation: hold-grow 1s linear forwards;
         }
         @keyframes hold-grow { from { width: 0% } to { width: 100% } }
+        .row-odd:hover td, .row-even:hover td {
+          background: rgba(14, 165, 233, 0.04) !important;
+        }
       `}</style>
 
       {/* Drag-mode banner */}
@@ -1169,7 +1152,14 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#6366f1', flexShrink: 0 }}>
                 <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
               </svg>
-              {ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined ? t('ctx.resetCell') : t('ctx.return')}
+              {ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined ? (
+                <>
+                  {t('ctx.resetCell')}
+                  <span style={{ marginLeft: 5, opacity: 0.55, fontSize: 11, fontWeight: 400 }}>
+                    ({(() => { const ag = agents?.find(a => a.id === ctxMenu.agentId); return ag ? ag.b1 : ''; })()})
+                  </span>
+                </>
+              ) : t('ctx.return')}
             </button>
             {/* Delete + Transfer buttons — enter selection mode */}
             {ctxMenu.agentId && (
@@ -1480,8 +1470,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   verticalAlign: 'bottom',
                   padding: '5px 4px 6px',
                   fontSize: 10, fontWeight: 700,
-                  color: isOver ? '#1d4ed8' : sortKey === col.key ? '#0284c7' : '#374151',
-                  background: isOver ? '#dbeafe' : sortKey === col.key ? '#e0f2fe' : undefined,
+                  color: isOver ? '#1d4ed8' : sortKey === col.key ? '#0284c7' : col.day && TABEL_WEEKENDS.has(col.day) ? '#dc2626' : '#374151',
+                  background: isOver ? '#dbeafe' : sortKey === col.key ? '#e0f2fe' : col.day && TABEL_WEEKENDS.has(col.day) ? '#fee2e2' : undefined,
                   borderBottom: isOver ? '2px solid #3b82f6' : sortKey === col.key ? '2px solid #0284c7' : '2px solid #d1d5db',
                   borderRight: isGroupEnd ? '3px solid #bae6fd' : '1px solid #e5e7eb',
                   whiteSpace: 'normal', wordBreak: 'break-word',
@@ -1521,14 +1511,17 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 const isSelectedForTransfer = selectedForTransfer.has(agent.id);
 
                 return (
-                  <motion.tr
-                    key={`${agent.id}-${activeGroup}`}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: Math.min(idx * 0.018, 0.32), duration: 0.18, ease: 'easeOut' }}
+                  <tr
+                    key={agent.id}
                     className={rowClass}
-                    onMouseEnter={e => { setHoveredRowId(agent.id); hoveredTrRef.current = e.currentTarget; }}
-                    onMouseLeave={() => { setHoveredRowId(null); hoveredTrRef.current = null; }}
+                    onMouseEnter={e => {
+                      hoveredTrRef.current = e.currentTarget;
+                      if (collapsedGroups.has('EFFICIENCY')) setHoveredRowId(agent.id);
+                    }}
+                    onMouseLeave={() => {
+                      hoveredTrRef.current = null;
+                      if (collapsedGroups.has('EFFICIENCY')) setHoveredRowId(null);
+                    }}
                     onContextMenu={e => handleContextMenu(e, agent.id)}
                     onClick={(deleteMode || transferMode) ? () => {
                       if (deleteMode) {
@@ -1586,7 +1579,6 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             b2IsHigher={b2IsHigher}
                             b2IsLower={b2IsLower}
                             borderRight={borderRight}
-                            rowHovered={hoveredRowId === agent.id}
                             onContextMenu={e => handleContextMenu(e, agent.id)}
                             onSave={(id, val) => setB2Overrides(prev => ({ ...prev, [id]: val }))}
                             b2Comments={b2Comments}
@@ -1598,12 +1590,24 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                       if (col.day) {
                         const sched = getAgentSchedule(agent);
                         const val = sched[col.day];
-                        const isWeekend = val === null;
-                        const isSymbol  = typeof val === 'string';
-                        const vacStyle  = isSymbol
+                        const is11h    = ELEVEN_HOUR_AGENTS.has(agent.id);
+                        const isSatSun = TABEL_WEEKENDS.has(col.day);  // column is Sat or Sun
+                        const isEmpty  = val === null;
+                        const isSymbol = typeof val === 'string';
+                        const vacStyle = isSymbol
                           ? (VACATION_META[val] ?? { color: '#64748b', bg: '#f1f5f9' })
                           : null;
                         const vacIcon = isSymbol ? (vacStyle?.icon ?? null) : null;
+                        // background: Sat/Sun always red; 11h rest on weekday → white; else normal
+                        const bgColor = isSatSun              ? '#fee2e2'
+                                      : (isEmpty && is11h)    ? undefined
+                                      : isSymbol              ? vacStyle.bg
+                                      : (val === 11 && !is11h)? '#dbeafe'
+                                      : '#f0fdf4';
+                        const textColor = isEmpty              ? 'transparent'
+                                        : isSymbol             ? vacStyle.color
+                                        : (val === 11 && !is11h) ? '#1d4ed8'
+                                        : '#166534';
                         return (
                           <td
                             key={col.key}
@@ -1614,20 +1618,14 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                               fontWeight: isSymbol ? 700 : 600,
                               borderBottom: '1px solid #e5e7eb',
                               borderRight,
-                              background: isWeekend ? '#f8fafc'
-                                        : isSymbol  ? vacStyle.bg
-                                        : val === 11 ? '#dbeafe'
-                                        : '#f0fdf4',
-                              color: isWeekend  ? 'transparent'
-                                   : isSymbol   ? vacStyle.color
-                                   : val === 11 ? '#1d4ed8'
-                                   : '#166534',
+                              background: bgColor,
+                              color: textColor,
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            {isWeekend ? '' : vacIcon
+                            {isEmpty ? '' : vacIcon
                               ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                                  {React.cloneElement(vacIcon, { width: 13, height: 13 })}
+                                  {React.cloneElement(vacIcon, { width: 18, height: 18 })}
                                 </span>
                               : val}
                           </td>
@@ -1651,11 +1649,11 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             fontWeight: isRedCell ? 700 : col.key === 'name' ? 600 : 600,
                           }}
                         >
-                          <CellValue colKey={col.key} agent={agent} rowHovered={hoveredRowId === agent.id} />
+                          <CellValue colKey={col.key} agent={agent} />
                         </td>
                       );
                     })}
-                  </motion.tr>
+                  </tr>
                 );
               })}
         </tbody>
@@ -1671,11 +1669,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
 
           return (
             <tfoot>
-              <motion.tr
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                transition={{ delay: 0.35, duration: 0.2 }}
-                style={{ background: '#fffffa' }}
-              >
+              <tr style={{ background: '#fffffa' }}>
                 <td
                   colSpan={totalColSpan}
                   style={{
@@ -1704,7 +1698,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     </span>
                   </span>
                 </td>
-              </motion.tr>
+              </tr>
             </tfoot>
           );
         })()}

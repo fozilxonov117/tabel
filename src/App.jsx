@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect, useDeferredValue, startTransition } from 'react';
 import Header from './components/Header';
 import Toolbar from './components/Toolbar';
 import PayrollTable from './components/PayrollTable';
@@ -30,6 +30,16 @@ export default function App() {
   const [agentBranchOverrides, setAgentBranchOverrides] = useState({});
   const loadingTimer = useRef(null);
 
+  // ── Filter panel ──────────────────────────────────────────────────────
+  const [filterType,   setFilterType]   = useState('number'); // 'number' | 'time'
+  const [numberFilter, setNumberFilter] = useState({ column: '', type: 'gt', value: '', value2: '' });
+  const [timeFilter,   setTimeFilter]   = useState({ column: '', from: '', to: '' });
+
+  const handleFilterReset = useCallback(() => {
+    setNumberFilter({ column: '', type: 'gt', value: '', value2: '' });
+    setTimeFilter({ column: '', from: '', to: '' });
+  }, []);
+
   // Clean up timer on unmount
   useEffect(() => () => clearTimeout(loadingTimer.current), []);
 
@@ -57,12 +67,64 @@ export default function App() {
   const filteredAgents = useMemo(() => {
     let list = computedAgents;
     if (deletedIds.size > 0) list = list.filter(a => !deletedIds.has(a.id));
-    if (!searchQuery.trim()) return list;
-    const q = searchQuery.toLowerCase();
-    return list.filter(a => a.name.toLowerCase().includes(q));
-  }, [computedAgents, searchQuery, deletedIds]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredAgents.length / PER_PAGE));
+    // Name search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(a => a.name.toLowerCase().includes(q));
+    }
+
+    // Number filter
+    // Note: the 'b2' column displays agent.b1 (editable bonus base), so filter on b1 for that key
+    const COL_FIELD_MAP = { b2: 'b1' };
+    if (numberFilter.column && numberFilter.value !== '') {
+      const col = numberFilter.column;
+      const field = COL_FIELD_MAP[col] ?? col;
+      const v = Number(numberFilter.value);
+      if (!isNaN(v)) {
+        list = list.filter(a => {
+          const raw = a[field];
+          const val = raw !== undefined && raw !== null ? Number(raw) : NaN;
+          if (isNaN(val)) return false;
+          if (numberFilter.type === 'gt') return val > v;
+          if (numberFilter.type === 'lt') return val < v;
+          if (numberFilter.type === 'between') {
+            if (numberFilter.value2 === '') return val >= v;
+            const v2 = Number(numberFilter.value2);
+            return !isNaN(v2) ? val >= v && val <= v2 : val >= v;
+          }
+          return true;
+        });
+      }
+    }
+
+    // Time filter
+    if (timeFilter.column && (timeFilter.from !== '' || timeFilter.to !== '')) {
+      const from = timeFilter.from !== '' ? Number(timeFilter.from) : null;
+      const to   = timeFilter.to   !== '' ? Number(timeFilter.to)   : null;
+      list = list.filter(a => {
+        const val = Number(a[timeFilter.column]) || 0;
+        if (from !== null && to !== null) return val >= from && val <= to;
+        if (from !== null) return val >= from;
+        if (to   !== null) return val <= to;
+        return true;
+      });
+    }
+
+    return list;
+  }, [computedAgents, searchQuery, deletedIds, numberFilter, timeFilter]);
+
+  // useDeferredValue lets filter inputs respond immediately;
+  // the expensive PayrollTable re-render happens in a deferred pass
+  const deferredAgents = useDeferredValue(filteredAgents);
+
+  // Wrap filter setters in startTransition so they are low-priority updates
+  const handleNumberFilterChange = useCallback((updater) => {
+    startTransition(() => setNumberFilter(updater));
+  }, []);
+  const handleTimeFilterChange = useCallback((updater) => {
+    startTransition(() => setTimeFilter(updater));
+  }, []);
 
   const handleGroupChange = useCallback((group) => {
     setIsLoading(true);
@@ -114,10 +176,17 @@ export default function App() {
         visibleColumns={visibleColumns}
         onColumnToggle={handleColumnToggle}
         onRefresh={handleRefresh}
+        filterType={filterType}
+        onFilterTypeChange={setFilterType}
+        numberFilter={numberFilter}
+        onNumberFilterChange={handleNumberFilterChange}
+        timeFilter={timeFilter}
+        onTimeFilterChange={handleTimeFilterChange}
+        onFilterReset={handleFilterReset}
       />
       <div className="flex-1 overflow-auto relative" style={{ background: '#ffffff', boxShadow: '0 1px 10px rgba(0,0,0,0.07)' }}>
         <PayrollTable
-          agents={filteredAgents}
+        agents={deferredAgents}
           activeGroup={activeGroup}
           visibleColumns={visibleColumns}
           totalAll={TOTAL_AGENTS}
