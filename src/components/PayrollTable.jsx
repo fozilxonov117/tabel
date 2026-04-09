@@ -34,8 +34,8 @@ const COL_GROUPS = [
   { label: 'INFO',               labelKey: 'group.INFO',               color: '#38bdf8', bg: '#fffffa' },
   { label: 'BONUS',              labelKey: 'group.BONUS',              color: '#4ade80', bg: '#fffffa' },
   { label: 'TABEL',              labelKey: 'group.TABEL',              color: '#22d3ee', bg: '#ecfeff' },
-  { label: 'TOTALS (BI-BK)',     labelKey: 'group.TOTALS (BI-BK)',     color: '#fbbf24', bg: '#fffffa' },
-  { label: 'ALLOWANCES',         labelKey: 'group.ALLOWANCES',         color: '#7dd3fc', bg: '#fffffa' },
+  { label: 'PROFIT',             labelKey: 'group.PROFIT',             color: '#f97316', bg: '#fffffa' },
+  { label: 'ИТОГИ',              labelKey: 'group.ИТОГИ',              color: '#fbbf24', bg: '#fffffa' },
 ];
 
 // ── Individual column definitions ─────────────────────────────────────────────
@@ -76,21 +76,21 @@ const COLUMNS = [
     width: 26,
     day: i + 1,
   })),
-  // TOTALS (BI-BK) — profitFromOp + deductions + nadbavka
-  { key: 'profitFromOp',    labelKey: 'col.profitFromOp',     group: 'TOTALS (BI-BK)',     width: 100 },
-  { key: K_ITOG,            labelKey: 'col.итог',             group: 'TOTALS (BI-BK)',     width: 96  },
-  { key: K_NARUKI,          labelKey: 'col.наРуки',           group: 'TOTALS (BI-BK)',     width: 92  },
-  { key: K_NAKARTU,         labelKey: 'col.наКарту',          group: 'TOTALS (BI-BK)',     width: 92  },
-  { key: K_NALOG,           labelKey: 'col.налог',            group: 'TOTALS (BI-BK)',     width: 88  },
-  { key: 'advance',         labelKey: 'col.advance',          group: 'TOTALS (BI-BK)',     width: 88  },
-  { key: 'baseSalary',      labelKey: 'col.baseSalary',       group: 'TOTALS (BI-BK)',     width: 92  },
-  { key: 'nadbavka',        labelKey: 'col.nadbavka',         group: 'TOTALS (BI-BK)',     width: 92  },
-  // ALLOWANCES
-  { key: 'noch',            labelKey: 'col.noch',             group: 'ALLOWANCES',         width: 72  },
-  { key: 'vecher',          labelKey: 'col.vecher',           group: 'ALLOWANCES',         width: 72  },
-  { key: 'prazdnichny',     labelKey: 'col.prazdnichny',      group: 'ALLOWANCES',         width: 90  },
-  { key: 'stoimostBiletov', labelKey: 'col.stoimostBiletov',  group: 'ALLOWANCES',         width: 100 },
-  { key: 'vyslugaLet',      labelKey: 'col.vyslugaLet',       group: 'ALLOWANCES',         width: 90  },
+  // PROFIT — standalone profit column with own section
+  { key: 'profitFromOp',    labelKey: 'col.profitFromOp',     group: 'PROFIT',             width: 100 },
+  // ИТОГИ (merged former TOTALS + ALLOWANCES)
+  { key: K_ITOG,            labelKey: 'col.итог',             group: 'ИТОГИ',              width: 96  },
+  { key: K_NARUKI,          labelKey: 'col.наРуки',           group: 'ИТОГИ',              width: 92  },
+  { key: K_NAKARTU,         labelKey: 'col.наКарту',          group: 'ИТОГИ',              width: 92  },
+  { key: K_NALOG,           labelKey: 'col.налог',            group: 'ИТОГИ',              width: 88  },
+  { key: 'advance',         labelKey: 'col.advance',          group: 'ИТОГИ',              width: 88  },
+  { key: 'baseSalary',      labelKey: 'col.baseSalary',       group: 'ИТОГИ',              width: 92  },
+  { key: 'nadbavka',        labelKey: 'col.nadbavka',         group: 'ИТОГИ',              width: 92  },
+  { key: 'noch',            labelKey: 'col.noch',             group: 'ИТОГИ',              width: 72  },
+  { key: 'vecher',          labelKey: 'col.vecher',           group: 'ИТОГИ',              width: 72  },
+  { key: 'prazdnichny',     labelKey: 'col.prazdnichny',      group: 'ИТОГИ',              width: 90  },
+  { key: 'stoimostBiletov', labelKey: 'col.stoimostBiletov',  group: 'ИТОГИ',              width: 100 },
+  { key: 'vyslugaLet',      labelKey: 'col.vyslugaLet',       group: 'ИТОГИ',              width: 90  },
 ];
 
 // Keys whose zero value displays as '–' in cells
@@ -102,10 +102,10 @@ const SECTION_ANCHORS = {
   'CALL METRICS':       new Set(['perfPct']),
   'EFFICIENCY':         new Set(['factScore']),    // explanation+vacation hidden when collapsed; shown via hover panel
   'INFO':               new Set(['debtTime']),
-  'BONUS':              new Set(['b2', 'limit', 'razryad']),
-  'TABEL':              new Set(['tabel_worked', 'tabel_prazdHrs', 'tabel_vecherHrs', 'tabel_nochHrs']),
-  'TOTALS (BI-BK)':     new Set([K_ITOG]),
-  'ALLOWANCES':         new Set(['vyslugaLet']),
+  'BONUS':        new Set(['b2']),  // only Факт бонус visible when collapsed
+  'TABEL':        new Set(['tabel_worked', 'tabel_prazdHrs', 'tabel_vecherHrs', 'tabel_nochHrs']),
+  'PROFIT':       new Set(['profitFromOp']),
+  'ИТОГИ':        new Set([K_ITOG]),
 };
 
 // Precompute which groups actually have collapsible (non-anchor) columns
@@ -252,6 +252,12 @@ const VAC_ICONS = {
       <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-3 7c-1.65 0-3-1.35-3-3 0-1.3.84-2.4 2-2.82V5c0-.55.45-1 1-1s1 .45 1 1v9.18A2.99 2.99 0 0 1 15 17c0 1.65-1.35 3-3 3z"/>
     </svg>
   ),
+  // Graduation cap — student on study leave
+  Student: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm-1 12.99L6 13.26v4.01l5 2.77 5-2.77v-4.01l-5 2.73z"/>
+    </svg>
+  ),
   // Work — exit door icon (operator is out / off duty)
   Work: (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
@@ -311,9 +317,9 @@ const VACATION_META = {
   'ДДО 2':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.ChildFriendly },
   'ДДО 3':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.ChildFriendly },
   'Уволен':  { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5' },
-  'Б':       { color: '#1e40af', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.Thermometer },
-  'О':       { color: '#d97706', bg: '#fef3c7',  border: '#fcd34d', icon: VAC_ICONS.BeachAccess },
-  'У':       { color: '#0369a1', bg: '#e0f2fe',  border: '#7dd3fc', icon: VAC_ICONS.Work },
+  'Б':       { color: '#a16207', bg: '#fef9c3',  border: '#fde68a', icon: VAC_ICONS.Thermometer },
+  'О':       { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.BeachAccess },
+  'У':       { color: '#0369a1', bg: '#e0f2fe',  border: '#7dd3fc', icon: VAC_ICONS.Student },
   'ДДО Б':   { color: '#0f766e', bg: '#ccfbf1',  border: '#5eead4', icon: VAC_ICONS.PregnantWoman },
   'Н':       { color: '#9f1239', bg: '#fff1f2',  border: '#fecdd3' },
   'БС':      { color: '#b45309', bg: '#fffbeb',  border: '#fde68a' },
@@ -411,13 +417,13 @@ function ExplanationIconItem({ type, count, rowHovered, index }) {
   );
 }
 
-function ExplanationIcons({ types }) {
+function ExplanationIcons({ types, rowHovered }) {
   const counts = {};
   types.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'nowrap', gap: 3, alignItems: 'center', justifyContent: 'flex-start' }}>
       {Object.entries(counts).map(([type, count], index) => (
-        <ExplanationIconItem key={type} type={type} count={count} index={index} />
+        <ExplanationIconItem key={type} type={type} count={count} index={index} rowHovered={rowHovered} />
       ))}
     </span>
   );
@@ -593,7 +599,7 @@ function fmtHMS(sec) {
 }
 
 /* ── Cell value renderer ──────────────────────────────────────────────────── */
-function CellValue({ colKey, agent }) {
+function CellValue({ colKey, agent, rowHovered, b2Val }) {
   const { lang } = useLang();
   const t = k => translations[lang]?.[k] ?? k;
   switch (colKey) {
@@ -612,13 +618,13 @@ function CellValue({ colKey, agent }) {
     case 'explanation': {
       const val = agent[colKey];
       const arr = Array.isArray(val) ? val.filter(Boolean) : (val ? [val] : []);
-      return arr.length > 0 ? <ExplanationIcons types={arr} /> : null;
+      return arr.length > 0 ? <ExplanationIcons types={arr} rowHovered={rowHovered} /> : null;
     }
 
     case 'vacation': {
       const v = agent[colKey];
       if (!v) return null;
-      return <VacationBadge v={v} />;
+      return <VacationBadge v={v} rowHovered={rowHovered} />;
     }
 
     case 'vetka':
@@ -642,20 +648,28 @@ function CellValue({ colKey, agent }) {
       return <span style={{ fontWeight: 800, color: '#0369a1' }}>{agent.worked ?? 0}</span>;
     case 'tabel_prazdHrs': {
       const v = Math.round((agent.prazdnichny || 0) / 15000);
-      return <span style={{ color: v > 0 ? '#78350f' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
+      return <span style={{ color: v > 0 ? '#15803d' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
     }
     case 'tabel_vecherHrs': {
       const v = Math.round((agent.vecher || 0) / 5000);
-      return <span style={{ color: v > 0 ? '#0369a1' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
+      return <span style={{ color: v > 0 ? '#78350f' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
     }
     case 'tabel_nochHrs': {
       const v = Math.round((agent.noch || 0) / 7500);
       return <span style={{ color: v > 0 ? '#1d4ed8' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
     }
-    case 'limit':
-    case 'surcharge':
-    case 'razryad':
-      return <span>{agent[colKey] ?? '–'}</span>;
+    case 'limit': {
+      const lim = agent.limit;
+      if (lim == null) return <span style={{ color: '#94a3b8' }}>–</span>;
+      const factVal = b2Val !== undefined ? b2Val : agent.b1;
+      const diff = lim - (factVal ?? 0);
+      if (diff === 0) return <span style={{ color: '#94a3b8' }}>–</span>;
+      return (
+        <span style={{ fontWeight: 700, color: diff > 0 ? '#15803d' : '#dc2626' }}>
+          {diff > 0 ? `+${diff}` : diff}
+        </span>
+      );
+    }
 
     default: {
       const v = agent[colKey];
@@ -733,14 +747,14 @@ function B2Cell({ agentId, b1Val, override, onSave, onActivate }) {
 }
 
 /* ── B2 cell with comment portal tooltip ─────────────────────────────────── */
-function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, onContextMenu, onSave, b2Comments }) {
+function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, onContextMenu, onSave, b2Comments, rowHovered }) {
   const tdRef = React.useRef(null);
   const comment = (b2Comments && b2Comments[agent.id]) || null;
   const [tooltipPos, setTooltipPos] = React.useState(null);
   const [cellHovered, setCellHovered] = React.useState(false);
 
   React.useEffect(() => {
-    if (comment && cellHovered && tdRef.current) {
+    if (comment && (cellHovered || rowHovered) && tdRef.current) {
       const rect = tdRef.current.getBoundingClientRect();
       const cellCenterX = rect.left + rect.width / 2;
       const boxWidth = 260;
@@ -753,7 +767,7 @@ function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, 
     } else {
       setTooltipPos(null);
     }
-  }, [cellHovered, comment]);
+  }, [cellHovered, rowHovered, comment]);
 
   return (
     <td
@@ -786,6 +800,22 @@ function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, 
         onSave={onSave}
         onActivate={() => {}}
       />
+      {/* % diff arrow vs Ст бонус (surcharge) — right side */}
+      {(() => {
+        const b2Val = b2Override !== undefined ? b2Override : agent.b1;
+        const base = agent.surcharge ?? 0;
+        const diffPct = base > 0 ? Math.round((b2Val - base) / base * 100) : null;
+        return diffPct !== null && diffPct !== 0 ? (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 1,
+            fontSize: 9, fontWeight: 800, marginLeft: 3,
+            color: diffPct > 0 ? '#15803d' : '#dc2626',
+            opacity: 0.9,
+          }}>
+            {diffPct > 0 ? '↑' : '↓'}{Math.abs(diffPct)}%
+          </span>
+        ) : null;
+      })()}
       {comment && ReactDOM.createPortal(
         <AnimatePresence>
           {tooltipPos && (
@@ -1470,8 +1500,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   verticalAlign: 'bottom',
                   padding: '5px 4px 6px',
                   fontSize: 10, fontWeight: 700,
-                  color: isOver ? '#1d4ed8' : sortKey === col.key ? '#0284c7' : col.day && TABEL_WEEKENDS.has(col.day) ? '#dc2626' : '#374151',
-                  background: isOver ? '#dbeafe' : sortKey === col.key ? '#e0f2fe' : col.day && TABEL_WEEKENDS.has(col.day) ? '#fee2e2' : undefined,
+                  color: isOver ? '#1d4ed8' : sortKey === col.key ? '#0284c7' : col.day && TABEL_WEEKENDS.has(col.day) ? '#166534' : '#374151',
+                  background: isOver ? '#dbeafe' : sortKey === col.key ? '#e0f2fe' : col.day && TABEL_WEEKENDS.has(col.day) ? '#dcfce7' : undefined,
                   borderBottom: isOver ? '2px solid #3b82f6' : sortKey === col.key ? '2px solid #0284c7' : '2px solid #d1d5db',
                   borderRight: isGroupEnd ? '3px solid #bae6fd' : '1px solid #e5e7eb',
                   whiteSpace: 'normal', wordBreak: 'break-word',
@@ -1516,11 +1546,11 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     className={rowClass}
                     onMouseEnter={e => {
                       hoveredTrRef.current = e.currentTarget;
-                      if (collapsedGroups.has('EFFICIENCY')) setHoveredRowId(agent.id);
+                      setHoveredRowId(agent.id);
                     }}
                     onMouseLeave={() => {
                       hoveredTrRef.current = null;
-                      if (collapsedGroups.has('EFFICIENCY')) setHoveredRowId(null);
+                      setHoveredRowId(null);
                     }}
                     onContextMenu={e => handleContextMenu(e, agent.id)}
                     onClick={(deleteMode || transferMode) ? () => {
@@ -1562,15 +1592,16 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                         } else if (hasExplData) {
                           effIndicatorBorder = '3px solid #f59e0b'; // amber — expl only
                         } else if (hasVacData) {
-                          effIndicatorBorder = '3px solid #22c55e'; // green — vacation only
+                          effIndicatorBorder = '3px solid #f59e0b'; // amber — vacation only
                         }
                       }
 
                       if (col.key === 'b2') {
                         const b2Override = b2Overrides[agent.id];
                         const b2Val = b2Override !== undefined ? b2Override : agent.b1;
-                        const b2IsHigher = b2Val > agent.b1;
-                        const b2IsLower  = b2Val < agent.b1;
+                        const b2Base     = agent.b1;
+                        const b2IsHigher = b2Override !== undefined && b2Override > b2Base;
+                        const b2IsLower  = b2Override !== undefined && b2Override < b2Base;
                         return (
                           <B2CommentCell
                             key="b2"
@@ -1582,6 +1613,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             onContextMenu={e => handleContextMenu(e, agent.id)}
                             onSave={(id, val) => setB2Overrides(prev => ({ ...prev, [id]: val }))}
                             b2Comments={b2Comments}
+                            rowHovered={hoveredRowId === agent.id}
                           />
                         );
                       }
@@ -1598,12 +1630,13 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                           ? (VACATION_META[val] ?? { color: '#64748b', bg: '#f1f5f9' })
                           : null;
                         const vacIcon = isSymbol ? (vacStyle?.icon ?? null) : null;
-                        // background: Sat/Sun always red; 11h rest on weekday → white; else normal
-                        const bgColor = isSatSun              ? '#fee2e2'
+                        // background: symbol/vacation always uses own color; Sat/Sun → light green; worked → light green; rest → white
+                        const bgColor = isSymbol              ? vacStyle.bg
+                                      : isSatSun              ? '#dcfce7'
                                       : (isEmpty && is11h)    ? undefined
-                                      : isSymbol              ? vacStyle.bg
                                       : (val === 11 && !is11h)? '#dbeafe'
-                                      : '#f0fdf4';
+                                      : isEmpty               ? undefined
+                                      : '#fffffa';
                         const textColor = isEmpty              ? 'transparent'
                                         : isSymbol             ? vacStyle.color
                                         : (val === 11 && !is11h) ? '#1d4ed8'
@@ -1644,12 +1677,20 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             borderRight: effIndicatorBorder,
                             whiteSpace: 'nowrap',
                             
-                            background: isRedCell ? '#fee2e2' : undefined,
+                            background: isRedCell ? '#fee2e2'
+                                      : col.key === 'tabel_vecherHrs' ? '#fefce8'
+                                      : col.key === 'tabel_nochHrs'   ? '#eff6ff'
+                                      : undefined,
                             color: isRedCell ? '#dc2626' : col.key === 'name' ? '#0284c7' : '#374151',
                             fontWeight: isRedCell ? 700 : col.key === 'name' ? 600 : 600,
                           }}
                         >
-                          <CellValue colKey={col.key} agent={agent} />
+                          <CellValue
+                            colKey={col.key}
+                            agent={agent}
+                            rowHovered={hoveredRowId === agent.id}
+                            b2Val={b2Overrides[agent.id] !== undefined ? b2Overrides[agent.id] : agent.b1}
+                          />
                         </td>
                       );
                     })}

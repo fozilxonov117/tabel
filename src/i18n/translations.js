@@ -14,6 +14,8 @@ export const translations = {
     'group.TABEL':              'TABEL',
     'group.TOTALS (BI-BK)':     'TOTALS (BI-BK)',
     'group.ALLOWANCES':         'ALLOWANCES',
+    'group.PROFIT':             'PROFIT',
+    'group.ИТОГИ':             'TOTALS',
     // Columns
     'col.vetka':           'BRANCH',
     'col.shtat':           'TYPE',
@@ -101,6 +103,8 @@ export const translations = {
     'group.TABEL':              'ТАБЕЛЬ',
     'group.TOTALS (BI-BK)':     'ИТОГИ (BI-BK)',
     'group.ALLOWANCES':         'НАДБАВКИ',
+    'group.PROFIT':             'ПРИБЫЛЬ',
+    'group.ИТОГИ':             'ИТОГИ',
     // Columns
     'col.vetka':           'Ветка',
     'col.shtat':           'ШТАТ',
@@ -188,6 +192,8 @@ export const translations = {
     'group.TABEL':              'TABEL',
     'group.TOTALS (BI-BK)':     'YAKUNLAR (BI-BK)',
     'group.ALLOWANCES':         'QOʻSHIMCHALAR',
+    'group.PROFIT':             'FOYDA',
+    'group.ИТОГИ':             'YAKUNLAR',
     // Columns
     'col.vetka':           'Tarmoq',
     'col.shtat':           'SHTAT',
