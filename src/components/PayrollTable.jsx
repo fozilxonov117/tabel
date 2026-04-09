@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fmtTime, fmtNum, computeTotals } from '../data/calculations';
 import { mockAgents } from '../data/mockData';
 import { useLang } from '../i18n/LangContext';
+import { useTheme } from '../i18n/ThemeContext';
 import { translations } from '../i18n/translations';
 
 // ── Cyrillic key constants (must match mockData.js property names exactly) ────
@@ -212,29 +213,40 @@ function getAgentSchedule(agent) {
 const EXPL_META = {
   'Опоздание': {
     color: '#92400e', bg: '#fef3c7', border: '#fcd34d',
+    darkColor: '#fbbf24', darkBg: '#1a1400', darkBorder: '#3d3200',
     icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>),
   },
   'Отпрашивание': {
     color: '#1e40af', bg: '#dbeafe', border: '#93c5fd',
+    darkColor: '#60a5fa', darkBg: '#0c1a2e', darkBorder: '#1e3a5f',
     icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 4l4 4-4 4V9H3V7h14V4zM7 17h14v-2H7v-3l-4 4 4 4v-3z"/></svg>),
   },
   'Превышение блока': {
     color: '#0369a1', bg: '#e0f2fe', border: '#7dd3fc',
+    darkColor: '#38bdf8', darkBg: '#0a1520', darkBorder: '#164e63',
     icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>),
   },
   'Нарушение внутреннего порядка': {
     color: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
+    darkColor: '#f87171', darkBg: '#1f0808', darkBorder: '#4c1010',
     icon: (<svg width="20" height="20" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 5.5h6M5 8h4M5 10.5h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>),
   },
   'Телефон': {
     color: '#0891b2', bg: '#ecfeff', border: '#67e8f9',
+    darkColor: '#22d3ee', darkBg: '#071a1f', darkBorder: '#155e75',
     icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm-2 20h-4v-1h4v1zm3.25-3H6.75V4h10.5v14z"/></svg>),
   },
   'Другое': {
     color: '#475569', bg: '#f1f5f9', border: '#cbd5e1',
+    darkColor: '#94a3b8', darkBg: '#1c1c1c', darkBorder: '#333333',
     icon: (<svg width="20" height="20" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 6.5C6.5 5.67 7.17 5 8 5s1.5.67 1.5 1.5C9.5 8 8 8 8 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="8" cy="11.25" r="0.75" fill="currentColor"/></svg>),
   },
 };
+
+function getExplStyle(meta, isDark) {
+  if (!isDark) return { color: meta.color, bg: meta.bg, border: meta.border };
+  return { color: meta.darkColor, bg: meta.darkBg, border: meta.darkBorder };
+}
 
 // ── Vacation icon SVGs (inline) ───────────────────────────────────────────
 const VAC_ICONS = {
@@ -314,19 +326,25 @@ const VAC_ICONS = {
 
 // ── Vacation type metadata ─────────────────────────────────────────────────
 const VACATION_META = {
-  'ДДО 2':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.ChildFriendly },
-  'ДДО 3':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.ChildFriendly },
-  'Уволен':  { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5' },
-  'Б':       { color: '#a16207', bg: '#fef9c3',  border: '#fde68a', icon: VAC_ICONS.Thermometer },
-  'О':       { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', icon: VAC_ICONS.BeachAccess },
-  'У':       { color: '#0369a1', bg: '#e0f2fe',  border: '#7dd3fc', icon: VAC_ICONS.Student },
-  'ДДО Б':   { color: '#0f766e', bg: '#ccfbf1',  border: '#5eead4', icon: VAC_ICONS.PregnantWoman },
-  'Н':       { color: '#9f1239', bg: '#fff1f2',  border: '#fecdd3' },
-  'БС':      { color: '#b45309', bg: '#fffbeb',  border: '#fde68a' },
-  '7.0':     { color: '#475569', bg: '#f1f5f9',  border: '#cbd5e1' },
-  'БО':      { color: '#0e7490', bg: '#ecfeff',  border: '#a5f3fc' },
-  'ГС':      { color: '#166534', bg: '#dcfce7',  border: '#86efac', icon: VAC_ICONS.Soldier },
+  'ДДО 2':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', darkColor: '#60a5fa', darkBg: '#0c1a2e', darkBorder: '#1e3a5f', icon: VAC_ICONS.ChildFriendly },
+  'ДДО 3':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', darkColor: '#60a5fa', darkBg: '#0c1a2e', darkBorder: '#1e3a5f', icon: VAC_ICONS.ChildFriendly },
+  'Уволен':  { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5', darkColor: '#f87171', darkBg: '#1f0808', darkBorder: '#4c1010' },
+  'Б':       { color: '#a16207', bg: '#fef9c3',  border: '#fde68a', darkColor: '#facc15', darkBg: '#1a1400', darkBorder: '#3d3200', icon: VAC_ICONS.Thermometer },
+  'О':       { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', darkColor: '#60a5fa', darkBg: '#0c1a2e', darkBorder: '#1e3a5f', icon: VAC_ICONS.BeachAccess },
+  'У':       { color: '#0369a1', bg: '#e0f2fe',  border: '#7dd3fc', darkColor: '#38bdf8', darkBg: '#0a1520', darkBorder: '#164e63', icon: VAC_ICONS.Student },
+  'ДДО Б':   { color: '#0f766e', bg: '#ccfbf1',  border: '#5eead4', darkColor: '#2dd4bf', darkBg: '#071a17', darkBorder: '#134e4a', icon: VAC_ICONS.PregnantWoman },
+  'Н':       { color: '#9f1239', bg: '#fff1f2',  border: '#fecdd3', darkColor: '#fb7185', darkBg: '#1f0810', darkBorder: '#4c1025' },
+  'БС':      { color: '#b45309', bg: '#fffbeb',  border: '#fde68a', darkColor: '#f59e0b', darkBg: '#1a1400', darkBorder: '#3d3200' },
+  '7.0':     { color: '#475569', bg: '#f1f5f9',  border: '#cbd5e1', darkColor: '#94a3b8', darkBg: '#1c1c1c', darkBorder: '#333333' },
+  'БО':      { color: '#0e7490', bg: '#ecfeff',  border: '#a5f3fc', darkColor: '#22d3ee', darkBg: '#071a1f', darkBorder: '#155e75' },
+  'ГС':      { color: '#166534', bg: '#dcfce7',  border: '#86efac', darkColor: '#4ade80', darkBg: '#071a0c', darkBorder: '#14532d', icon: VAC_ICONS.Soldier },
 };
+
+function getVacStyle(meta, isDark) {
+  if (!meta) return isDark ? { color: '#888', bg: '#1c1c1c', border: '#333' } : { color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1' };
+  if (!isDark) return { color: meta.color, bg: meta.bg, border: meta.border };
+  return { color: meta.darkColor, bg: meta.darkBg, border: meta.darkBorder };
+}
 
 // Quadrant positions based on icon index (fans outward to avoid overlap)
 // Index 0 (left icon):  tooltip top-left  (extends leftward)
@@ -341,7 +359,9 @@ const EXPL_QUADRANTS = [
 
 function ExplanationIconItem({ type, count, rowHovered, index }) {
   const [hovered, setHovered] = React.useState(false);
+  const { dark } = useTheme();
   const meta = EXPL_META[type] || EXPL_META['Другое'];
+  const s = getExplStyle(meta, dark);
   const showTooltip = hovered || rowHovered;
   const q = EXPL_QUADRANTS[(index || 0) % 4];
 
@@ -359,8 +379,8 @@ function ExplanationIconItem({ type, count, rowHovered, index }) {
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 26, height: 26, borderRadius: 7,
-          background: meta.bg, color: meta.color,
-          border: `1.5px solid ${meta.border}`,
+          background: s.bg, color: s.color,
+          border: `1.5px solid ${s.border}`,
           cursor: 'default', boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
           position: 'relative',
         }}
@@ -390,24 +410,24 @@ function ExplanationIconItem({ type, count, rowHovered, index }) {
             style={{
               position: 'absolute',
               ...boxStyle,
-              background: '#ffffff', color: '#1e293b',
+              background: 'var(--surface)', color: 'var(--text-primary)',
               fontSize: 11, fontWeight: 600,
               whiteSpace: 'nowrap', padding: '4px 9px',
               borderRadius: 7, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--border)',
               zIndex: 9999, pointerEvents: 'none',
             }}
           >
             {count > 1 ? `${type} ×${count}` : type}
             {q.above ? (
               <>
-                <span style={{ position: 'absolute', top: '100%', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #e2e8f0' }} />
-                <span style={{ position: 'absolute', top: 'calc(100% - 1px)', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #ffffff' }} />
+                <span style={{ position: 'absolute', top: '100%', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid var(--border)' }} />
+                <span style={{ position: 'absolute', top: 'calc(100% - 1px)', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid var(--surface)' }} />
               </>
             ) : (
               <>
-                <span style={{ position: 'absolute', bottom: '100%', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderBottom: '4px solid #e2e8f0' }} />
-                <span style={{ position: 'absolute', bottom: 'calc(100% - 1px)', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderBottom: '4px solid #ffffff' }} />
+                <span style={{ position: 'absolute', bottom: '100%', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderBottom: '4px solid var(--border)' }} />
+                <span style={{ position: 'absolute', bottom: 'calc(100% - 1px)', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderBottom: '4px solid var(--surface)' }} />
               </>
             )}
           </motion.div>
@@ -432,8 +452,10 @@ function ExplanationIcons({ types, rowHovered }) {
 function VacationBadge({ v, rowHovered }) {
   const [hovered, setHovered] = React.useState(false);
   const { lang } = useLang();
+  const { dark } = useTheme();
   const t = k => translations[lang]?.[k] ?? k;
-  const vm = VACATION_META[v.type] || { color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' };
+  const rawVm = VACATION_META[v.type];
+  const vm = { ...rawVm, ...getVacStyle(rawVm, dark), icon: rawVm?.icon };
   const showTooltip = hovered || rowHovered;
   // Show tooltip: for icon types always (since text is hidden), for text types only when dates exist
   const shouldShowTooltip = showTooltip && (vm.icon || (v.from && v.to));
@@ -481,11 +503,11 @@ function VacationBadge({ v, rowHovered }) {
               position: 'absolute',
               top: 'calc(100% + 6px)',
               left: '0',
-              background: '#ffffff', color: '#1e293b',
+              background: 'var(--surface)', color: 'var(--text-primary)',
               fontSize: 11, fontWeight: 600,
               whiteSpace: 'nowrap', padding: '5px 10px',
               borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--border)',
               zIndex: 9999, pointerEvents: 'none',
             }}
           >
@@ -493,12 +515,12 @@ function VacationBadge({ v, rowHovered }) {
             <span style={{
               position: 'absolute', bottom: '100%', left: '10px',
               borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-              borderBottom: '5px solid #e2e8f0',
+              borderBottom: '5px solid var(--border)',
             }} />
             <span style={{
               position: 'absolute', bottom: 'calc(100% - 1px)', left: '10px',
               borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-              borderBottom: '5px solid #ffffff',
+              borderBottom: '5px solid var(--surface)',
             }} />
           </motion.div>
         )}
@@ -536,8 +558,8 @@ function EfficiencyHoverPanel({ agent, anchorEl }) {
         left: panelLeft,
         transform: 'none',
         zIndex: 9990,
-        background: '#ffffff',
-        border: '1.5px solid #e2e8f0',
+        background: 'var(--surface)',
+        border: '1.5px solid var(--border)',
         borderRadius: 10,
         boxShadow: '0 6px 24px rgba(0,0,0,0.13)',
         padding: '5px 10px',
@@ -550,11 +572,13 @@ function EfficiencyHoverPanel({ agent, anchorEl }) {
     >
       {Object.entries(counts).map(([type, count]) => {
         const meta = EXPL_META[type] || EXPL_META['Другое'];
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const s = getExplStyle(meta, isDark);
         return (
           <span key={type} style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: meta.bg, color: meta.color,
-            border: `1.5px solid ${meta.border}`,
+            background: s.bg, color: s.color,
+            border: `1.5px solid ${s.border}`,
             padding: '3px 8px', borderRadius: 6,
             fontSize: 11, fontWeight: 700,
           }}>
@@ -564,10 +588,12 @@ function EfficiencyHoverPanel({ agent, anchorEl }) {
         );
       })}
       {expl.length > 0 && vac && (
-        <span style={{ width: 1, height: 18, background: '#e2e8f0', flexShrink: 0, display: 'inline-block' }} />
+        <span style={{ width: 1, height: 18, background: 'var(--border)', flexShrink: 0, display: 'inline-block' }} />
       )}
       {vac && (() => {
-        const vm = VACATION_META[vac.type] || { color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' };
+        const rawVm = VACATION_META[vac.type];
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const vm = { ...rawVm, ...getVacStyle(rawVm, isDark) };
         return (
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -778,9 +804,9 @@ function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, 
       style={{
         position: 'relative',
         textAlign: 'center', padding: '5px 5px', fontSize: 11,
-        borderBottom: '1px solid #e5e7eb', borderRight, boxShadow: groupEndShadow, whiteSpace: 'nowrap',
-        background: b2IsHigher ? '#dcfce7' : b2IsLower ? '#fee2e2' : undefined,
-        color: b2IsHigher ? '#15803d' : b2IsLower ? '#dc2626' : '#374151',
+        borderBottom: '1px solid var(--border)', borderRight, boxShadow: groupEndShadow, whiteSpace: 'nowrap',
+        background: b2IsHigher ? 'var(--b2-up-bg)' : b2IsLower ? 'var(--b2-down-bg)' : undefined,
+        color: b2IsHigher ? '#22c55e' : b2IsLower ? '#f87171' : 'var(--cell-text)',
       }}
     >
       {comment && (
@@ -830,8 +856,8 @@ function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, 
                 left: tooltipPos.boxLeft,
                 width: 260,
                 zIndex: 99999,
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
                 borderRadius: 8,
                 boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
                 padding: '7px 11px',
@@ -839,7 +865,7 @@ function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, 
               }}
             >
               <p style={{
-                fontSize: 11, color: '#1e293b', fontWeight: 600,
+                fontSize: 11, color: 'var(--text-primary)', fontWeight: 600,
                 lineHeight: 1.55, margin: 0,
                 whiteSpace: 'pre-wrap', wordBreak: 'break-word',
               }}>
@@ -851,14 +877,14 @@ function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, 
                 left: tooltipPos.arrowLeft,
                 transform: 'translateX(-50%)',
                 borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
-                borderTop: '4px solid #e2e8f0',
+                borderTop: '4px solid var(--border)',
               }} />
               <span style={{
                 position: 'absolute', top: 'calc(100% - 1px)',
                 left: tooltipPos.arrowLeft,
                 transform: 'translateX(-50%)',
                 borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
-                borderTop: '4px solid #ffffff',
+                borderTop: '4px solid var(--surface)',
               }} />
             </motion.div>
           )}
@@ -885,6 +911,7 @@ function SkeletonRow({ colCount }) {
 /* ── Main component ───────────────────────────────────────────────────────── */
 export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading, onDeleteAgents, onTransferAgents, groupNames, b2Comments }) {
   const { lang } = useLang();
+  const { dark } = useTheme();
   const t = k => translations[lang]?.[k] ?? k;
 
   // ─ Column ordering (drag-to-reorder) ────────────────────────────
@@ -1103,34 +1130,18 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
 
   return (
     <div className="relative overflow-x-auto" onContextMenu={handleTableContextMenu}>
-      {/* CSS for hold animation — runs on GPU, zero JS re-renders */}
-      <style>{`
-        .hold-bar {
-          position: absolute; bottom: 0; left: 0;
-          height: 2px; width: 0; border-radius: 2px;
-          background: #38bdf8; pointer-events: none;
-        }
-        .is-holding .hold-bar {
-          animation: hold-grow 1s linear forwards;
-        }
-        @keyframes hold-grow { from { width: 0% } to { width: 100% } }
-        .row-odd:hover td, .row-even:hover td {
-          background: rgba(14, 165, 233, 0.04) !important;
-        }
-      `}</style>
-
       {/* Drag-mode banner */}
       {dragMode && (
         <div style={{
           position: 'sticky', top: 0, zIndex: 99997,
-          background: '#f0f9ff',
+          background: 'var(--surface-2)',
           padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 8,
-          fontSize: 11, fontWeight: 700, color: '#0284c7',
+          fontSize: 11, fontWeight: 700, color: '#38bdf8',
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 9h14M5 15h14" /><path d="M9 5v14M15 5v14" />
           </svg>
-          Drag mode — drag sections or columns to reorder · Press <kbd style={{ background: '#e0f2fe', borderRadius: 3, padding: '1px 5px', fontFamily: 'monospace', fontSize: 10 }}>Esc</kbd> to exit
+          Drag mode — drag sections or columns to reorder · Press <kbd style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 3, padding: '1px 5px', fontFamily: 'monospace', fontSize: 10 }}>Esc</kbd> to exit
         </div>
       )}
 
@@ -1148,16 +1159,16 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               top: ctxMenu.y,
               left: ctxMenu.x,
               zIndex: 99999,
-              background: '#ffffff',
+              background: 'var(--surface)',
               borderRadius: 10,
               boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 10px 30px rgba(0,0,0,0.15)',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--border)',
               padding: '4px',
               minWidth: 200,
             }}
           >
             {/* Header label */}
-            <div style={{ padding: '6px 12px 4px', fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.07em', textTransform: 'uppercase', borderBottom: '1px solid #f1f5f9', marginBottom: 3 }}>
+            <div style={{ padding: '6px 12px 4px', fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.07em', textTransform: 'uppercase', borderBottom: '1px solid var(--border)', marginBottom: 3 }}>
               {ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined ? t('ctx.b2cell') : t('ctx.actions')}
             </div>
             <button
@@ -1173,10 +1184,10 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 display: 'flex', alignItems: 'center', gap: 8,
                 width: '100%', padding: '7px 12px',
                 background: 'none', border: 'none', borderRadius: 7,
-                color: '#1e293b', fontSize: 13, fontWeight: 500,
+                color: 'var(--text-primary)', fontSize: 13, fontWeight: 500,
                 cursor: 'pointer', textAlign: 'left',
               }}
-              onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
               onMouseLeave={e => e.currentTarget.style.background = 'none'}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#6366f1', flexShrink: 0 }}>
@@ -1194,7 +1205,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             {/* Delete + Transfer buttons — enter selection mode */}
             {ctxMenu.agentId && (
               <>
-                <div style={{ margin: '3px 8px', borderTop: '1px solid #f1f5f9' }} />
+                <div style={{ margin: '3px 8px', borderTop: '1px solid var(--border)' }} />
                 {/* Transfer button — only available when viewing a specific branch */}
                 {activeGroup !== 'All' && (
                   <button
@@ -1259,7 +1270,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             style={{
               position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
               zIndex: 99998,
-              background: '#ffffff',
+              background: 'var(--surface)',
               borderRadius: 12,
               boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
               border: '1px solid #bae6fd',
@@ -1269,7 +1280,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="#0369a1"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
               <span style={{ color: '#0369a1', fontWeight: 800 }}>{selectedForTransfer.size}</span>
               {' '}выбрано · Перенести в:
             </span>
@@ -1304,8 +1315,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               }}
               style={{
                 marginLeft: 'auto', padding: '5px 12px', borderRadius: 7,
-                border: '1px solid #e2e8f0', background: '#f8fafc',
-                color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                border: '1px solid var(--border)', background: 'var(--surface-2)',
+                color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
             >
               {(agents || []).every(a => selectedForTransfer.has(a.id)) ? t('ctx.deselectAll') : t('ctx.selectAll')}
@@ -1313,8 +1324,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             <button
               onClick={exitTransferMode}
               style={{
-                padding: '5px 14px', borderRadius: 7, border: '1px solid #e2e8f0',
-                background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                padding: '5px 14px', borderRadius: 7, border: '1px solid var(--border)',
+                background: 'var(--surface-2)', color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
             >
               {t('ctx.deleteCancel')}
@@ -1334,7 +1345,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             style={{
               position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
               zIndex: 99998,
-              background: '#ffffff',
+              background: 'var(--surface)',
               borderRadius: 12,
               boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
               border: '1px solid #fecaca',
@@ -1344,7 +1355,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="#dc2626"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
               <span style={{ color: '#dc2626', fontWeight: 800 }}>{selectedForDelete.size}</span>
               {' '}{t('ctx.deleteBar')}
             </span>
@@ -1356,8 +1367,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               }}
               style={{
                 marginLeft: 'auto', padding: '5px 12px', borderRadius: 7,
-                border: '1px solid #e2e8f0', background: '#f8fafc',
-                color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                border: '1px solid var(--border)', background: 'var(--surface-2)',
+                color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
             >
               {(agents || []).every(a => selectedForDelete.has(a.id)) ? t('ctx.deselectAll') : t('ctx.selectAll')}
@@ -1365,8 +1376,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             <button
               onClick={exitDeleteMode}
               style={{
-                padding: '5px 14px', borderRadius: 7, border: '1px solid #e2e8f0',
-                background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                padding: '5px 14px', borderRadius: 7, border: '1px solid var(--border)',
+                background: 'var(--surface-2)', color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
             >
               {t('ctx.deleteCancel')}
@@ -1396,7 +1407,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             className="absolute inset-0 z-30 flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(3px)' }}
+            style={{ background: 'var(--loading-overlay)', backdropFilter: 'blur(3px)' }}
           >
             <div className="flex flex-col items-center gap-2.5">
               <div
@@ -1445,14 +1456,14 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   onDragLeave={() => setDragOverGroup(null)}
                   onDrop={e => { e.preventDefault(); const from = e.dataTransfer.getData('dkey'); if (e.dataTransfer.getData('dtype') === 'group') moveGroup(from, g.label); setDragOverGroup(null); }}
                   style={{
-                    background: isOver ? '#dbeafe' : isCollapsed ? `${g.color}18` : g.bg,
+                    background: isOver ? '#252525' : isCollapsed ? `${g.color}22` : 'var(--surface)',
                     color: g.color,
-                    borderBottom: `2px solid ${g.color}33`,
-                    borderTop: '1px solid #e8eaf0',
+                    borderBottom: `2px solid ${g.color}55`,
+                    borderTop: '1px solid var(--border)',
                     padding: '5px 6px',
                     textAlign: 'center', fontSize: 9,
                     fontWeight: 800, letterSpacing: '0.07em',
-                    borderRight: '1px solid #e8eaf0',
+                    borderRight: '1px solid var(--border)',
                     boxShadow: '3px 0 8px -2px rgba(0,0,0,0.10)',
                     whiteSpace: 'nowrap',
                     cursor: dragMode ? 'grab' : isCollapsible ? 'pointer' : 'default',
@@ -1479,7 +1490,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
           </tr>
 
           {/* Row 2 – individual column headers */}
-          <tr style={{ background: '#fffffa' }}>
+          <tr style={{ background: 'var(--surface)' }}>
             {visibleCols.map((col, i) => {
               const isGroupEnd = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
               const isOver = dragOverKey === col.key;
@@ -1501,10 +1512,10 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   verticalAlign: 'bottom',
                   padding: '5px 4px 6px',
                   fontSize: 10, fontWeight: 700,
-                  color: isOver ? '#1d4ed8' : sortKey === col.key ? '#0284c7' : col.day && TABEL_WEEKENDS.has(col.day) ? '#166534' : '#374151',
-                  background: isOver ? '#dbeafe' : sortKey === col.key ? '#e0f2fe' : col.day && TABEL_WEEKENDS.has(col.day) ? '#dcfce7' : undefined,
-                  borderBottom: isOver ? '2px solid #3b82f6' : sortKey === col.key ? '2px solid #0284c7' : '2px solid #d1d5db',
-                  borderRight: isGroupEnd ? '1px solid #d1d5db' : '1px solid #e5e7eb',
+                  color: isOver ? '#60a5fa' : sortKey === col.key ? '#0284c7' : col.day && TABEL_WEEKENDS.has(col.day) ? '#4ade80' : 'var(--cell-text)',
+                  background: isOver ? '#252525' : sortKey === col.key ? '#1a1a1a' : col.day && TABEL_WEEKENDS.has(col.day) ? 'var(--tabel-weekend-bg)' : 'var(--surface)',
+                  borderBottom: isOver ? '2px solid #3b82f6' : sortKey === col.key ? '2px solid #0284c7' : '2px solid var(--border)',
+                  borderRight: isGroupEnd ? '1px solid var(--border)' : '1px solid var(--border)',
                   boxShadow: isGroupEnd ? '3px 0 8px -2px rgba(0,0,0,0.10)' : undefined,
                   whiteSpace: 'normal', wordBreak: 'break-word',
                   userSelect: 'none',
@@ -1571,8 +1582,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                       }
                     } : undefined}
                     style={{
-                      ...(isSelectedForDelete ? { background: '#fff1f2', outline: '2px solid #fca5a5', outlineOffset: '-1px', opacity: 0.75 } : {}),
-                      ...(isSelectedForTransfer ? { background: '#e0f2fe', outline: '2px solid #38bdf8', outlineOffset: '-1px', opacity: 0.75 } : {}),
+                      ...(isSelectedForDelete ? { background: 'var(--cell-red-bg)', outline: '2px solid #f87171', outlineOffset: '-1px', opacity: 0.75 } : {}),
+                      ...(isSelectedForTransfer ? { background: 'var(--tabel-11h-bg)', outline: '2px solid #38bdf8', outlineOffset: '-1px', opacity: 0.75 } : {}),
                       ...((deleteMode || transferMode) ? { cursor: 'pointer' } : {}),
                     }}
                   >
@@ -1630,21 +1641,22 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                         const isSatSun = TABEL_WEEKENDS.has(col.day);  // column is Sat or Sun
                         const isEmpty  = val === null;
                         const isSymbol = typeof val === 'string';
+                        const vacMeta = isSymbol ? VACATION_META[val] : null;
                         const vacStyle = isSymbol
-                          ? (VACATION_META[val] ?? { color: '#64748b', bg: '#f1f5f9' })
+                          ? getVacStyle(vacMeta, dark)
                           : null;
-                        const vacIcon = isSymbol ? (vacStyle?.icon ?? null) : null;
+                        const vacIcon = vacMeta?.icon ?? null;
                         // background: symbol/vacation always uses own color; Sat/Sun → light green; worked → light green; rest → white
                         const bgColor = isSymbol              ? vacStyle.bg
-                                      : isSatSun              ? '#dcfce7'
+                                      : isSatSun              ? 'var(--tabel-weekend-bg)'
                                       : (isEmpty && is11h)    ? undefined
-                                      : (val === 11 && !is11h)? '#dbeafe'
+                                      : (val === 11 && !is11h)? 'var(--tabel-11h-bg)'
                                       : isEmpty               ? undefined
-                                      : '#fffffa';
+                                      : 'var(--row-bg)';
                         const textColor = isEmpty              ? 'transparent'
                                         : isSymbol             ? vacStyle.color
-                                        : (val === 11 && !is11h) ? '#1d4ed8'
-                                        : '#166534';
+                                        : (val === 11 && !is11h) ? '#60a5fa'
+                                        : '#4ade80';
                         return (
                           <td
                             key={col.key}
@@ -1653,7 +1665,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                               padding: '1px 0',
                               fontSize: 10,
                               fontWeight: isSymbol ? 700 : 600,
-                              borderBottom: '1px solid #e5e7eb',
+                              borderBottom: '1px solid var(--border)',
                               borderRight,
                               boxShadow: groupEndShadow,
                               background: bgColor,
@@ -1678,16 +1690,16 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             padding: '5px 5px',
                             paddingLeft: (col.key === 'explanation' || col.key === 'vacation') ? 8 : 5,
                             fontSize: 11,
-                            borderBottom: '1px solid #e5e7eb',
+                            borderBottom: '1px solid var(--border)',
                             borderRight: effIndicatorBorder,
                             boxShadow: effIndicatorBorder === borderRight ? groupEndShadow : undefined,
                             whiteSpace: 'nowrap',
                             
-                            background: isRedCell ? '#fee2e2'
-                                      : col.key === 'tabel_vecherHrs' ? '#fefce8'
-                                      : col.key === 'tabel_nochHrs'   ? '#eff6ff'
+                            background: isRedCell ? 'var(--cell-red-bg)'
+                                      : col.key === 'tabel_vecherHrs' ? 'var(--tabel-evening-bg)'
+                                      : col.key === 'tabel_nochHrs'   ? 'var(--tabel-night-bg)'
                                       : undefined,
-                            color: isRedCell ? '#dc2626' : col.key === 'name' ? '#0284c7' : '#374151',
+                            color: isRedCell ? '#f87171' : col.key === 'name' ? '#38bdf8' : 'var(--cell-text)',
                             fontWeight: isRedCell ? 700 : col.key === 'name' ? 600 : 600,
                           }}
                         >
@@ -1716,17 +1728,17 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
 
           return (
             <tfoot>
-              <tr style={{ background: '#fffffa' }}>
+              <tr style={{ background: 'var(--surface)' }}>
                 <td
                   colSpan={totalColSpan}
                   style={{
                     textAlign: 'left',
                     padding: '6px 10px',
                     fontSize: 11,
-                    borderTop: '1px solid #e8eaf0',
-                    borderRight: '1px solid #e8eaf0',
+                    borderTop: '1px solid var(--border)',
+                    borderRight: '1px solid var(--border)',
                     boxShadow: '3px 0 8px -2px rgba(0,0,0,0.10)',
-                    color: '#1e293b',
+                    color: 'var(--text-primary)',
                     fontWeight: 700,
                   }}
                 >
@@ -1734,15 +1746,15 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     {shtatParts.map(([s, n]) => (
                       <span key={s} style={{
                         display: 'inline-flex', alignItems: 'center', gap: 3,
-                        fontSize: 11, fontWeight: 700, color: '#475569',
+                        fontSize: 11, fontWeight: 700, color: 'var(--cell-text-muted)',
                       }}>
-                        <span style={{ color: '#0369a1' }}>{s}:</span>
-                        <span style={{ fontWeight: 900, color: '#1e293b' }}>{n}</span>
+                        <span style={{ color: '#38bdf8' }}>{s}:</span>
+                        <span style={{ fontWeight: 900, color: 'var(--text-primary)' }}>{n}</span>
                       </span>
                     ))}
                     <span style={{ color: '#94a3b8', fontSize: 10 }}>|</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
-                      N=<span style={{ fontWeight: 900, color: '#1e293b' }}>{all.length}</span>
+                      N=<span style={{ fontWeight: 900, color: 'var(--text-primary)' }}>{all.length}</span>
                     </span>
                   </span>
                 </td>

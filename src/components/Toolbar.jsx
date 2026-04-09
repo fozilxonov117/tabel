@@ -62,10 +62,10 @@ function Sel({ value, onChange, options, placeholder, width = 120, disabled }) {
           paddingRight: 22,
           appearance: 'none',
           WebkitAppearance: 'none',
-          border: value ? '1.5px solid #7dd3fc' : '1.5px solid #e2e8f0',
+          border: value ? '1.5px solid #7dd3fc' : '1.5px solid var(--border)',
           borderRadius: 8,
-          background: value ? '#f0f9ff' : '#f8fafc',
-          color: value ? '#0284c7' : '#94a3b8',
+          background: value ? 'var(--input-bg-active)' : 'var(--input-bg)',
+          color: value ? '#0284c7' : 'var(--text-muted)',
           cursor: disabled ? 'not-allowed' : 'pointer',
           outline: 'none',
           transition: 'border-color 0.15s, background 0.15s',
@@ -127,9 +127,9 @@ function NumIn({ value: externalValue, onChange, placeholder, label, type = 'num
           fontSize: 11,
           fontWeight: 600,
           padding: '0 8px',
-          border: focused ? '1.5px solid #38bdf8' : localValue !== '' ? '1.5px solid #7dd3fc' : '1.5px solid #e2e8f0',
+          border: focused ? '1.5px solid #38bdf8' : localValue !== '' ? '1.5px solid #7dd3fc' : '1.5px solid var(--border)',
           borderRadius: 8,
-          background: localValue !== '' ? '#f0f9ff' : '#f8fafc',
+          background: localValue !== '' ? 'var(--input-bg-active)' : 'var(--input-bg)',
           color: '#0284c7',
           outline: 'none',
           transition: 'border-color 0.15s, background 0.15s',
@@ -161,9 +161,9 @@ function ColDrop({ value, onChange, options, placeholder, width = 128 }) {
         style={{
           width: '100%', height: 28, fontSize: 11, fontWeight: 600,
           paddingLeft: 9, paddingRight: 22,
-          border: value ? '1.5px solid #7dd3fc' : `1.5px solid ${open ? '#38bdf8' : '#e2e8f0'}`,
-          borderRadius: 8, background: value ? '#f0f9ff' : '#f8fafc',
-          color: value ? '#0284c7' : '#94a3b8',
+          border: value ? '1.5px solid #7dd3fc' : `1.5px solid ${open ? '#38bdf8' : 'var(--border)'}`,
+          borderRadius: 8, background: value ? 'var(--input-bg-active)' : 'var(--input-bg)',
+          color: value ? '#0284c7' : 'var(--text-muted)',
           cursor: 'pointer', outline: 'none', textAlign: 'left',
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           transition: 'border-color 0.15s',
@@ -188,8 +188,8 @@ function ColDrop({ value, onChange, options, placeholder, width = 128 }) {
             transition={{ duration: 0.13, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: 'absolute', top: 32, left: 0, zIndex: 9999,
-              background: '#ffffff',
-              border: '1.5px solid #e2e8f0',
+              background: 'var(--surface)',
+              border: '1.5px solid var(--border)',
               borderRadius: 10,
               boxShadow: '0 8px 28px rgba(0,0,0,0.11), 0 1px 4px rgba(0,0,0,0.05)',
               minWidth: Math.max(width, 152), maxHeight: 226,
@@ -218,8 +218,8 @@ function ColDrop({ value, onChange, options, placeholder, width = 128 }) {
                   style={{
                     padding: '5px 9px', fontSize: 11, fontWeight: active ? 700 : 500,
                     borderRadius: 7, cursor: 'pointer',
-                    color: active ? '#0284c7' : '#374151',
-                    background: active ? '#eff6ff' : 'transparent',
+                    color: active ? '#0284c7' : 'var(--cell-text)',
+                    background: active ? 'var(--input-bg-active)' : 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     transition: 'background 0.1s, color 0.1s',
                   }}
@@ -260,12 +260,12 @@ function InlineFilter({ filterType, onFilterTypeChange, numberFilter, onNumberFi
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
       {/* Divider */}
-      <div style={{ width: 1, height: 22, background: '#e2e8f0', flexShrink: 0, marginRight: 1 }} />
+      <div style={{ width: 1, height: 22, background: 'var(--border)', flexShrink: 0, marginRight: 1 }} />
 
       {/* 1. Filter type segmented toggle */}
       <div style={{
-        display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 2,
-        border: '1.5px solid #e2e8f0', gap: 1, flexShrink: 0,
+        display: 'flex', background: 'var(--surface-2)', borderRadius: 8, padding: 2,
+        border: '1.5px solid var(--border)', gap: 1, flexShrink: 0,
       }}>
         {[{ id: 'number', icon: '#', txtKey: 'filter.number' }, { id: 'time', icon: '⏱', txtKey: 'filter.time' }].map(tab => (
           <button
@@ -381,7 +381,7 @@ function InlineFilter({ filterType, onFilterTypeChange, numberFilter, onNumberFi
             style={{
               height: 26, padding: '0 10px',
               borderRadius: 7, border: '1.5px solid #fca5a5',
-              background: '#fff1f2', color: '#ef4444',
+              background: 'var(--cell-red-bg)', color: '#ef4444',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
               cursor: 'pointer', flexShrink: 0, fontSize: 10.5, fontWeight: 700,
               letterSpacing: '0.01em',
@@ -426,8 +426,8 @@ export default function Toolbar({
     <div
       className="px-4 py-2 flex items-center gap-2 flex-wrap"
       style={{
-        background: '#ffffff',
-        borderBottom: '1px solid #e8eaf0',
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
         boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
         minHeight: 46,
       }}
@@ -476,8 +476,8 @@ export default function Toolbar({
               transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
               className="absolute right-0 top-10 z-50"
               style={{
-                background: '#ffffff',
-                border: '1.5px solid #e2e8f0',
+                background: 'var(--surface)',
+                border: '1.5px solid var(--border)',
                 borderRadius: 14,
                 boxShadow: '0 16px 48px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.05)',
                 minWidth: 210,
@@ -509,8 +509,8 @@ export default function Toolbar({
                       className="flex items-center justify-center flex-shrink-0"
                       style={{
                         width: 16, height: 16, borderRadius: 5,
-                        background: visibleColumns[col] ? '#0ea5e9' : '#f1f5f9',
-                        border: visibleColumns[col] ? 'none' : '1.5px solid #cbd5e1',
+                        background: visibleColumns[col] ? '#0ea5e9' : 'var(--surface-2)',
+                        border: visibleColumns[col] ? 'none' : '1.5px solid var(--border)',
                         boxShadow: visibleColumns[col] ? '0 0 0 3px rgba(14,165,233,0.15)' : 'none',
                         transition: 'background 0.12s, border-color 0.12s, box-shadow 0.12s',
                         flexShrink: 0,
@@ -527,7 +527,7 @@ export default function Toolbar({
                       className="col-dd-label"
                       style={{
                         fontSize: 12, fontWeight: visibleColumns[col] ? 600 : 500,
-                        color: visibleColumns[col] ? '#0284c7' : '#475569',
+                        color: visibleColumns[col] ? '#0284c7' : 'var(--cell-text-muted)',
                         transition: 'color 0.1s',
                         userSelect: 'none',
                       }}
@@ -575,11 +575,11 @@ function SearchInput({ value, onChange, placeholder }) {
             : '0 1px 4px rgba(0,0,0,0.04)',
         }}
         style={{
-          background: focused ? '#ffffff' : '#f8fafc',
-          border: `1.5px solid ${focused ? '#0ea5e9' : '#e2e8f0'}`,
+          background: focused ? 'var(--surface)' : 'var(--surface-2)',
+          border: `1.5px solid ${focused ? '#0ea5e9' : 'var(--border)'}`,
           borderRadius: 8,
           outline: 'none',
-          color: '#1e293b',
+          color: 'var(--text-primary)',
           height: 28,
           transition: 'border-color 0.15s, background 0.15s',
         }}
@@ -617,10 +617,10 @@ function ToolbarBtn({ children, onClick, active, icon }) {
       onClick={onClick}
       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
       style={{
-        background: active ? '#e0f2fe' : '#f8fafc',
-        border: `1.5px solid ${active ? '#0ea5e9' : '#e2e8f0'}`,
+        background: active ? '#e0f2fe' : 'var(--input-bg)',
+        border: `1.5px solid ${active ? '#0ea5e9' : 'var(--border)'}`,
         borderRadius: 8,
-        color: active ? '#0284c7' : '#64748b',
+        color: active ? '#0284c7' : 'var(--text-muted)',
         cursor: 'pointer',
       }}
       whileHover={{ background: '#e0f2fe', borderColor: '#0ea5e9', color: '#0284c7', y: -1 }}
@@ -646,10 +646,10 @@ function RefreshBtn({ onClick }) {
       onClick={handleClick}
       className="p-1.5"
       style={{
-        background: '#f8fafc',
-        border: '1.5px solid #e2e8f0',
+        background: 'var(--input-bg)',
+        border: '1.5px solid var(--border)',
         borderRadius: 8,
-        color: '#64748b',
+        color: 'var(--text-muted)',
         cursor: 'pointer',
       }}
       whileHover={{ background: '#e0f2fe', borderColor: '#0ea5e9', color: '#0284c7', y: -1 }}

@@ -43,8 +43,8 @@ export default function Header({ activeGroup, onGroupChange }) {
         <DarkModeToggle dark={dark} onToggle={toggleDark} />
         {/* Language toggle */}
         <div className="flex items-center gap-0.5" style={{
-          background: '#f1f5f9',
-          border: '1px solid #e2e8f0',
+          background: 'var(--surface-2)',
+          border: '1px solid var(--border)',
           borderRadius: 8,
           padding: '2px 3px',
         }}>

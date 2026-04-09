@@ -2,22 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── View Transition: circular reveal ─────────────────────────────── */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-@keyframes vt-clip-reveal {
-  from { clip-path: circle(0px      at var(--vt-x, 50%) var(--vt-y, 50%)); }
-  to   { clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%)); }
-}
-
-::view-transition-new(root) {
-  animation: vt-clip-reveal 380ms ease-in-out forwards;
-}
-
 /* ── Theme toggle button hover ─────────────────────────────────────── */
 .theme-toggle-btn:hover {
   box-shadow: 0 0 0 3px rgba(148,163,184,0.25);
@@ -25,32 +9,56 @@
 
 /* ── Theme CSS variables ───────────────────────────────────────────── */
 :root {
-  --app-bg:       #eef0f7;
-  --surface:      #f8fafc;
-  --surface-2:    #f1f5f9;
-  --surface-table:#ffffff;
-  --border:       #e2e8f0;
-  --text-primary: #111827;
-  --text-muted:   #64748b;
-  --row-bg:       #fffffa;
-  --row-hover:    #e0f2fe;
+  --app-bg:          #eef0f7;
+  --surface:         #f8fafc;
+  --surface-2:       #f1f5f9;
+  --surface-table:   #ffffff;
+  --border:          #e2e8f0;
+  --text-primary:    #111827;
+  --text-muted:      #64748b;
+  --row-bg:          #fffffa;
+  --row-hover:       #e0f2fe;
+  --input-bg:        #f8fafc;
+  --input-bg-active: #f0f9ff;
+  --cell-text:       #374151;
+  --cell-text-muted: #475569;
+  --tabel-weekend-bg:#dcfce7;
+  --tabel-11h-bg:    #dbeafe;
+  --tabel-evening-bg:#fefce8;
+  --tabel-night-bg:  #eff6ff;
+  --cell-red-bg:     #fee2e2;
+  --b2-up-bg:        #dcfce7;
+  --b2-down-bg:      #fee2e2;
+  --loading-overlay: rgba(255,255,255,0.82);
 }
 
 [data-theme="dark"] {
-  --app-bg:       #0d1117;
-  --surface:      #161b22;
-  --surface-2:    #21262d;
-  --surface-table:#0d1117;
-  --border:       #30363d;
-  --text-primary: #e6edf3;
-  --text-muted:   #8b949e;
-  --row-bg:       #161b22;
-  --row-hover:    #1b3555;
+  --app-bg:          #0a0a0a;
+  --surface:         #141414;
+  --surface-2:       #1c1c1c;
+  --surface-table:   #0a0a0a;
+  --border:          #2a2a2a;
+  --text-primary:    #e4e4e7;
+  --text-muted:      #8a8a8a;
+  --row-bg:          #111111;
+  --row-hover:       #1f1f1f;
+  --input-bg:        #141414;
+  --input-bg-active: #1a1a1a;
+  --cell-text:       #d0d0d0;
+  --cell-text-muted: #888888;
+  --tabel-weekend-bg:#0a1a0a;
+  --tabel-11h-bg:    #0a1520;
+  --tabel-evening-bg:#1a1500;
+  --tabel-night-bg:  #0f0f22;
+  --cell-red-bg:     #1f0808;
+  --b2-up-bg:        #0a1a0a;
+  --b2-down-bg:      #1f0808;
+  --loading-overlay: rgba(0,0,0,0.88);
 }
 
 [data-theme="dark"] body {
-  background: #0d1117;
-  color: #e6edf3;
+  background: #0a0a0a;
+  color: #e4e4e7;
 }
 
 /* ── Global resets ─────────────────────────────────────────────────── */
@@ -97,9 +105,9 @@ body {
 .skeleton-pulse {
   background: linear-gradient(
     90deg,
-    #f1f5f9 0%,
-    #e2e8f0 40%,
-    #f1f5f9 80%
+    var(--surface-2) 0%,
+    var(--border) 40%,
+    var(--surface-2) 80%
   );
   background-size: 600px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
@@ -112,31 +120,47 @@ body {
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-[data-theme="dark"] ::-webkit-scrollbar-track { background: #161b22; }
-[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #30363d; }
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+[data-theme="dark"] ::-webkit-scrollbar-track { background: #111111; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #333333; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #4a4a4a; }
 
 /* ── Table row colors + hover ──────────────────────────────────────── */
 .row-threshold td, .row-manual td, .row-even td, .row-odd td {
-  background: #fffffa;
-  transition: background 0.13s ease;
+  background: var(--row-bg);
 }
 .row-threshold:hover td, .row-manual:hover td, .row-even:hover td, .row-odd:hover td {
-  background: #e0f2fe !important;
+  background: var(--row-hover) !important;
 }
 
-[data-theme="dark"] .row-threshold td,
-[data-theme="dark"] .row-manual td,
-[data-theme="dark"] .row-even td,
-[data-theme="dark"] .row-odd td {
-  background: #161b22;
+/* ── Hold-to-drag progress bar ─────────────────────────────────────── */
+.hold-bar {
+  position: absolute; bottom: 0; left: 0;
+  height: 2px; width: 0; border-radius: 2px;
+  background: #38bdf8; pointer-events: none;
 }
-[data-theme="dark"] .row-threshold:hover td,
-[data-theme="dark"] .row-manual:hover td,
-[data-theme="dark"] .row-even:hover td,
-[data-theme="dark"] .row-odd:hover td {
-  background: #1b3555 !important;
+.is-holding .hold-bar {
+  animation: hold-grow 1s linear forwards;
 }
+@keyframes hold-grow { from { width: 0% } to { width: 100% } }
+
+/* ── Dark mode: table/toolbar structural overrides ──────────────────── */
+[data-theme="dark"] thead tr:first-child th {
+  background: #181818 !important;
+  border-color: #2a2a2a !important;
+}
+[data-theme="dark"] thead tr:last-child th {
+  background: #121212 !important;
+  border-color: #2a2a2a !important;
+  color: #8a8a8a !important;
+}
+[data-theme="dark"] tfoot td {
+  background: #121212 !important;
+  border-color: #2a2a2a !important;
+  color: #8a8a8a !important;
+}
+[data-theme="dark"] .cdr-opt:hover { background: #252525 !important; color: #e4e4e7 !important; }
+[data-theme="dark"] .col-dd-item:hover { background: #252525 !important; }
+[data-theme="dark"] .col-dd-item:hover .col-dd-label { color: #e4e4e7 !important; }
 
 /* ── Payroll table helpers ─────────────────────────────────────────── */
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import { flushSync } from 'react-dom';
 
 const SunIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeLinecap="round">
@@ -30,19 +29,27 @@ export default function DarkModeToggle({ dark, onToggle }) {
       Math.max(y, window.innerHeight - y),
     );
 
-    const root = document.documentElement;
-    root.style.setProperty('--vt-x', `${x}px`);
-    root.style.setProperty('--vt-y', `${y}px`);
-    root.style.setProperty('--vt-r', `${r}px`);
+    // Capture the OLD theme's background before toggling
+    const oldBg = dark ? '#0a0a0a' : '#eef0f7';
 
-    if (!document.startViewTransition) {
-      onToggle();
-      return;
-    }
+    // Toggle theme immediately — new colors are applied to the DOM right now
+    onToggle();
 
-    document.startViewTransition(() => {
-      flushSync(() => onToggle());
-    });
+    // Place an overlay of the OLD color covering the full screen
+    const overlay = document.createElement('div');
+    overlay.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:99999',
+      `background:${oldBg}`,
+      `clip-path:circle(${r}px at ${x}px ${y}px)`,
+      'pointer-events:none',
+    ].join(';');
+    document.body.appendChild(overlay);
+    overlay.getBoundingClientRect();
+
+    // Shrink the old-color overlay to zero — reveals the new theme underneath
+    overlay.style.transition = 'clip-path 350ms cubic-bezier(0.4,0,0.2,1)';
+    overlay.style.clipPath = `circle(0px at ${x}px ${y}px)`;
+    overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
   }
 
   return (
@@ -54,8 +61,8 @@ export default function DarkModeToggle({ dark, onToggle }) {
         width: 30,
         height: 30,
         borderRadius: '50%',
-        border: `1px solid ${dark ? '#475569' : '#cbd5e1'}`,
-        background: dark ? '#1e293b' : '#f1f5f9',
+        border: `1px solid ${dark ? '#333' : '#cbd5e1'}`,
+        background: dark ? '#1c1c1c' : '#f1f5f9',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',

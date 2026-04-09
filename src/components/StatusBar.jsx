@@ -13,8 +13,8 @@ export default function StatusBar({ totalFiltered, totalAll }) {
       className="px-4 py-2 flex items-center justify-between gap-4"
       style={{
         height: 46,
-        background: '#ffffff',
-        borderTop: '1px solid #e8eaf0',
+        background: 'var(--surface)',
+        borderTop: '1px solid var(--border)',
         boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
         flexShrink: 0,
       }}
@@ -42,9 +42,9 @@ export default function StatusBar({ totalFiltered, totalAll }) {
       {/* Right: total agent count */}
       <div className="flex items-center gap-3">
         <span style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap' }}>
-          <strong style={{ color: '#1e293b', fontWeight: 700 }}>{totalFiltered}</strong>
+          <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{totalFiltered}</strong>
           {totalFiltered !== totalAll && (
-            <span> of <strong style={{ color: '#1e293b', fontWeight: 700 }}>{totalAll}</strong></span>
+            <span> of <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{totalAll}</strong></span>
           )}
           {' '}Agents
         </span>
