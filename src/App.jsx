@@ -75,7 +75,7 @@ export default function App() {
     }
 
     // Number filter
-    // Note: the 'b2' column displays agent.b1 (editable bonus base), so filter on b1 for that key
+    // Note: 'b2' displays agent.b1; 'limit' displays (agent.limit - agent.b1) diff
     const COL_FIELD_MAP = { b2: 'b1' };
     if (numberFilter.column && numberFilter.value !== '') {
       const col = numberFilter.column;
@@ -83,8 +83,17 @@ export default function App() {
       const v = Number(numberFilter.value);
       if (!isNaN(v)) {
         list = list.filter(a => {
-          const raw = a[field];
-          const val = raw !== undefined && raw !== null ? Number(raw) : NaN;
+          let val;
+          if (col === 'limit') {
+            // displayed value is the remaining headroom: limit minus fact bonus
+            const lim = a.limit;
+            const fact = a.b1;
+            if (lim == null || fact == null) return false;
+            val = lim - fact;
+          } else {
+            const raw = a[field];
+            val = raw !== undefined && raw !== null ? Number(raw) : NaN;
+          }
           if (isNaN(val)) return false;
           if (numberFilter.type === 'gt') return val > v;
           if (numberFilter.type === 'lt') return val < v;
@@ -98,15 +107,26 @@ export default function App() {
       }
     }
 
-    // Time filter
+    // Time filter — FROM/TO stored as 'HH:MM:SS' strings
+    const TIME_COL_UNITS = { planTime: 'min', factTime: 'min', debtTime: 'sec', workTime: 'sec', systemError: 'sec' };
+    const parseHMS = str => {
+      if (!str) return null;
+      const parts = str.split(':').map(Number);
+      if (parts.some(isNaN)) return null;
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      if (parts.length === 2) return parts[0] * 3600 + parts[1] * 60;
+      return null;
+    };
     if (timeFilter.column && (timeFilter.from !== '' || timeFilter.to !== '')) {
-      const from = timeFilter.from !== '' ? Number(timeFilter.from) : null;
-      const to   = timeFilter.to   !== '' ? Number(timeFilter.to)   : null;
+      const unit = TIME_COL_UNITS[timeFilter.column] ?? 'sec';
+      const from = parseHMS(timeFilter.from);
+      const to   = parseHMS(timeFilter.to);
       list = list.filter(a => {
-        const val = Number(a[timeFilter.column]) || 0;
-        if (from !== null && to !== null) return val >= from && val <= to;
-        if (from !== null) return val >= from;
-        if (to   !== null) return val <= to;
+        const raw = Number(a[timeFilter.column]) || 0;
+        const valSec = unit === 'min' ? raw * 60 : raw;
+        if (from !== null && to !== null) return valSec >= from && valSec <= to;
+        if (from !== null) return valSec >= from;
+        if (to   !== null) return valSec <= to;
         return true;
       });
     }

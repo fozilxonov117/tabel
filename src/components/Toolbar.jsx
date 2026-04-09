@@ -89,7 +89,7 @@ function Sel({ value, onChange, options, placeholder, width = 120, disabled }) {
 }
 
 /* -- Compact number input -------------------------------------- */
-function NumIn({ value: externalValue, onChange, placeholder, label }) {
+function NumIn({ value: externalValue, onChange, placeholder, label, type = 'number', width = 68 }) {
   const [focused, setFocused] = useState(false);
   const [localValue, setLocalValue] = useState(externalValue);
   const timerRef = useRef(null);
@@ -114,14 +114,15 @@ function NumIn({ value: externalValue, onChange, placeholder, label }) {
         </span>
       )}
       <input
-        type="number"
+        type={type}
+        step={type === 'time' ? 1 : undefined}
         value={localValue}
         onChange={handleChange}
         placeholder={placeholder}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         style={{
-          width: 68,
+          width,
           height: 28,
           fontSize: 11,
           fontWeight: 600,
@@ -348,16 +349,20 @@ function InlineFilter({ filterType, onFilterTypeChange, numberFilter, onNumberFi
           >
             <span style={{ fontSize: 9.5, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', flexShrink: 0 }}>{t('filter.from')}</span>
             <NumIn
+              type="time"
+              width={106}
               value={timeFilter.from}
               onChange={e => onTimeFilterChange(f => ({ ...f, from: e.target.value }))}
-              placeholder="0"
+              placeholder="HH:MM:SS"
             />
             <span style={{ fontSize: 12, color: '#cbd5e1', fontWeight: 600, flexShrink: 0 }}>–</span>
             <span style={{ fontSize: 9.5, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', flexShrink: 0 }}>{t('filter.to')}</span>
             <NumIn
+              type="time"
+              width={106}
               value={timeFilter.to}
               onChange={e => onTimeFilterChange(f => ({ ...f, to: e.target.value }))}
-              placeholder="∞"
+              placeholder="HH:MM:SS"
             />
           </motion.div>
         )}

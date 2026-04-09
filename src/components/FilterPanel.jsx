@@ -222,13 +222,12 @@ export default function FilterPanel({ open, numberFilter, setNumberFilter, timeF
 
                 {/* From input */}
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={labelStyle}>
-                    FROM {timeCol ? `(${timeCol.unit})` : ''}
-                  </span>
+                  <span style={labelStyle}>FROM</span>
                   <input
-                    type="number"
-                    style={inputStyle}
-                    placeholder="0"
+                    type="text"
+                    style={{ ...inputStyle, width: 94 }}
+                    placeholder="HH:MM:SS"
+                    maxLength={8}
                     value={timeFilter.from}
                     onChange={e => setTimeFilter(f => ({ ...f, from: e.target.value }))}
                   />
@@ -236,13 +235,12 @@ export default function FilterPanel({ open, numberFilter, setNumberFilter, timeF
 
                 {/* To input */}
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={labelStyle}>
-                    TO {timeCol ? `(${timeCol.unit})` : ''}
-                  </span>
+                  <span style={labelStyle}>TO</span>
                   <input
-                    type="number"
-                    style={inputStyle}
-                    placeholder="9999"
+                    type="text"
+                    style={{ ...inputStyle, width: 94 }}
+                    placeholder="HH:MM:SS"
+                    maxLength={8}
                     value={timeFilter.to}
                     onChange={e => setTimeFilter(f => ({ ...f, to: e.target.value }))}
                   />

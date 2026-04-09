@@ -747,7 +747,7 @@ function B2Cell({ agentId, b1Val, override, onSave, onActivate }) {
 }
 
 /* ── B2 cell with comment portal tooltip ─────────────────────────────────── */
-function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, onContextMenu, onSave, b2Comments, rowHovered }) {
+function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, groupEndShadow, onContextMenu, onSave, b2Comments, rowHovered }) {
   const tdRef = React.useRef(null);
   const comment = (b2Comments && b2Comments[agent.id]) || null;
   const [tooltipPos, setTooltipPos] = React.useState(null);
@@ -778,7 +778,7 @@ function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, 
       style={{
         position: 'relative',
         textAlign: 'center', padding: '5px 5px', fontSize: 11,
-        borderBottom: '1px solid #e5e7eb', borderRight, whiteSpace: 'nowrap',
+        borderBottom: '1px solid #e5e7eb', borderRight, boxShadow: groupEndShadow, whiteSpace: 'nowrap',
         background: b2IsHigher ? '#dcfce7' : b2IsLower ? '#fee2e2' : undefined,
         color: b2IsHigher ? '#15803d' : b2IsLower ? '#dc2626' : '#374151',
       }}
@@ -1448,11 +1448,12 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     background: isOver ? '#dbeafe' : isCollapsed ? `${g.color}18` : g.bg,
                     color: g.color,
                     borderBottom: `2px solid ${g.color}33`,
-                    borderTop: '3px solid #bae6fd',
+                    borderTop: '1px solid #e8eaf0',
                     padding: '5px 6px',
                     textAlign: 'center', fontSize: 9,
                     fontWeight: 800, letterSpacing: '0.07em',
-                    borderRight: '3px solid #bae6fd',
+                    borderRight: '1px solid #e8eaf0',
+                    boxShadow: '3px 0 8px -2px rgba(0,0,0,0.10)',
                     whiteSpace: 'nowrap',
                     cursor: dragMode ? 'grab' : isCollapsible ? 'pointer' : 'default',
                     position: 'relative',
@@ -1503,7 +1504,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   color: isOver ? '#1d4ed8' : sortKey === col.key ? '#0284c7' : col.day && TABEL_WEEKENDS.has(col.day) ? '#166534' : '#374151',
                   background: isOver ? '#dbeafe' : sortKey === col.key ? '#e0f2fe' : col.day && TABEL_WEEKENDS.has(col.day) ? '#dcfce7' : undefined,
                   borderBottom: isOver ? '2px solid #3b82f6' : sortKey === col.key ? '2px solid #0284c7' : '2px solid #d1d5db',
-                  borderRight: isGroupEnd ? '3px solid #bae6fd' : '1px solid #e5e7eb',
+                  borderRight: isGroupEnd ? '1px solid #d1d5db' : '1px solid #e5e7eb',
+                  boxShadow: isGroupEnd ? '3px 0 8px -2px rgba(0,0,0,0.10)' : undefined,
                   whiteSpace: 'normal', wordBreak: 'break-word',
                   userSelect: 'none',
                   cursor: dragMode ? 'grab' : 'pointer',
@@ -1577,7 +1579,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     {visibleCols.map((col, i) => {
                       const isRedCell = col.key === 'factScore' && agent[col.key] < 80;
                       const isGroupEnd = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
-                      const borderRight = isGroupEnd ? '3px solid #bae6fd' : '1px solid #f3f4f6';
+                      const borderRight = isGroupEnd ? '1px solid #d1d5db' : '1px solid #f3f4f6';
+                      const groupEndShadow = isGroupEnd ? '3px 0 8px -2px rgba(0,0,0,0.09)' : undefined;
 
                       // Efficiency-collapsed indicator: coloured right stripe on factScore cell
                       const effCollapsed = collapsedGroups.has('EFFICIENCY');
@@ -1610,6 +1613,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             b2IsHigher={b2IsHigher}
                             b2IsLower={b2IsLower}
                             borderRight={borderRight}
+                            groupEndShadow={groupEndShadow}
                             onContextMenu={e => handleContextMenu(e, agent.id)}
                             onSave={(id, val) => setB2Overrides(prev => ({ ...prev, [id]: val }))}
                             b2Comments={b2Comments}
@@ -1651,6 +1655,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                               fontWeight: isSymbol ? 700 : 600,
                               borderBottom: '1px solid #e5e7eb',
                               borderRight,
+                              boxShadow: groupEndShadow,
                               background: bgColor,
                               color: textColor,
                               whiteSpace: 'nowrap',
@@ -1675,6 +1680,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             fontSize: 11,
                             borderBottom: '1px solid #e5e7eb',
                             borderRight: effIndicatorBorder,
+                            boxShadow: effIndicatorBorder === borderRight ? groupEndShadow : undefined,
                             whiteSpace: 'nowrap',
                             
                             background: isRedCell ? '#fee2e2'
@@ -1717,8 +1723,9 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     textAlign: 'left',
                     padding: '6px 10px',
                     fontSize: 11,
-                    borderTop: '2px solid #bae6fd',
-                    borderRight: '3px solid #bae6fd',
+                    borderTop: '1px solid #e8eaf0',
+                    borderRight: '1px solid #e8eaf0',
+                    boxShadow: '3px 0 8px -2px rgba(0,0,0,0.10)',
                     color: '#1e293b',
                     fontWeight: 700,
                   }}
