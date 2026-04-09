@@ -1463,7 +1463,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     padding: '5px 6px',
                     textAlign: 'center', fontSize: 9,
                     fontWeight: 800, letterSpacing: '0.07em',
-                    borderRight: '1px solid var(--border)',
+                    borderRight: '1px solid var(--section-border)',
                     boxShadow: '3px 0 8px -2px rgba(0,0,0,0.10)',
                     whiteSpace: 'nowrap',
                     cursor: dragMode ? 'grab' : isCollapsible ? 'pointer' : 'default',
@@ -1515,7 +1515,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                   color: isOver ? '#60a5fa' : sortKey === col.key ? '#0284c7' : col.day && TABEL_WEEKENDS.has(col.day) ? '#4ade80' : 'var(--cell-text)',
                   background: isOver ? '#252525' : sortKey === col.key ? '#1a1a1a' : col.day && TABEL_WEEKENDS.has(col.day) ? 'var(--tabel-weekend-bg)' : 'var(--surface)',
                   borderBottom: isOver ? '2px solid #3b82f6' : sortKey === col.key ? '2px solid #0284c7' : '2px solid var(--border)',
-                  borderRight: isGroupEnd ? '1px solid var(--border)' : '1px solid var(--border)',
+                  borderRight: isGroupEnd ? '1px solid var(--section-border)' : '1px solid var(--col-border)',
                   boxShadow: isGroupEnd ? '3px 0 8px -2px rgba(0,0,0,0.10)' : undefined,
                   whiteSpace: 'normal', wordBreak: 'break-word',
                   userSelect: 'none',
@@ -1590,7 +1590,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                     {visibleCols.map((col, i) => {
                       const isRedCell = col.key === 'factScore' && agent[col.key] < 80;
                       const isGroupEnd = i === visibleCols.length - 1 || visibleCols[i + 1].group !== col.group;
-                      const borderRight = isGroupEnd ? '1px solid #d1d5db' : '1px solid #f3f4f6';
+                      const borderRight = isGroupEnd ? '1px solid var(--section-border)' : '1px solid var(--col-border)';
                       const groupEndShadow = isGroupEnd ? '3px 0 8px -2px rgba(0,0,0,0.09)' : undefined;
 
                       // Efficiency-collapsed indicator: coloured right stripe on factScore cell
