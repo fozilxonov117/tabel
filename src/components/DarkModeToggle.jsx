@@ -1,0 +1,72 @@
+import React from 'react';
+import { flushSync } from 'react-dom';
+
+const SunIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeLinecap="round">
+    <circle cx="12" cy="12" r="4" fill="#f59e0b" />
+    <line x1="12" y1="2"    x2="12" y2="5"    stroke="#f59e0b" strokeWidth="2" />
+    <line x1="12" y1="19"   x2="12" y2="22"   stroke="#f59e0b" strokeWidth="2" />
+    <line x1="2"  y1="12"   x2="5"  y2="12"   stroke="#f59e0b" strokeWidth="2" />
+    <line x1="19" y1="12"   x2="22" y2="12"   stroke="#f59e0b" strokeWidth="2" />
+    <line x1="4.22"  y1="4.22"  x2="6.34"  y2="6.34"  stroke="#f59e0b" strokeWidth="2" />
+    <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" stroke="#f59e0b" strokeWidth="2" />
+    <line x1="19.78" y1="4.22"  x2="17.66" y2="6.34"  stroke="#f59e0b" strokeWidth="2" />
+    <line x1="6.34"  y1="17.66" x2="4.22"  y2="19.78" stroke="#f59e0b" strokeWidth="2" />
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="#94a3b8">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+
+export default function DarkModeToggle({ dark, onToggle }) {
+  function handleClick(e) {
+    const x = e.clientX;
+    const y = e.clientY;
+    const r = Math.hypot(
+      Math.max(x, window.innerWidth  - x),
+      Math.max(y, window.innerHeight - y),
+    );
+
+    const root = document.documentElement;
+    root.style.setProperty('--vt-x', `${x}px`);
+    root.style.setProperty('--vt-y', `${y}px`);
+    root.style.setProperty('--vt-r', `${r}px`);
+
+    if (!document.startViewTransition) {
+      onToggle();
+      return;
+    }
+
+    document.startViewTransition(() => {
+      flushSync(() => onToggle());
+    });
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="theme-toggle-btn"
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: '50%',
+        border: `1px solid ${dark ? '#475569' : '#cbd5e1'}`,
+        background: dark ? '#1e293b' : '#f1f5f9',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        outline: 'none',
+        padding: 0,
+        transition: 'background 0.2s, border-color 0.2s, box-shadow 0.2s',
+      }}
+    >
+      {dark ? <SunIcon /> : <MoonIcon />}
+    </button>
+  );
+}

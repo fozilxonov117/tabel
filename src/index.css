@@ -2,6 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── View Transition: circular reveal ─────────────────────────────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@keyframes vt-clip-reveal {
+  from { clip-path: circle(0px      at var(--vt-x, 50%) var(--vt-y, 50%)); }
+  to   { clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%)); }
+}
+
+::view-transition-new(root) {
+  animation: vt-clip-reveal 380ms ease-in-out forwards;
+}
+
+/* ── Theme toggle button hover ─────────────────────────────────────── */
+.theme-toggle-btn:hover {
+  box-shadow: 0 0 0 3px rgba(148,163,184,0.25);
+}
+
+/* ── Theme CSS variables ───────────────────────────────────────────── */
+:root {
+  --app-bg:       #eef0f7;
+  --surface:      #f8fafc;
+  --surface-2:    #f1f5f9;
+  --surface-table:#ffffff;
+  --border:       #e2e8f0;
+  --text-primary: #111827;
+  --text-muted:   #64748b;
+  --row-bg:       #fffffa;
+  --row-hover:    #e0f2fe;
+}
+
+[data-theme="dark"] {
+  --app-bg:       #0d1117;
+  --surface:      #161b22;
+  --surface-2:    #21262d;
+  --surface-table:#0d1117;
+  --border:       #30363d;
+  --text-primary: #e6edf3;
+  --text-muted:   #8b949e;
+  --row-bg:       #161b22;
+  --row-hover:    #1b3555;
+}
+
+[data-theme="dark"] body {
+  background: #0d1117;
+  color: #e6edf3;
+}
+
 /* ── Global resets ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -61,6 +112,10 @@ body {
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+[data-theme="dark"] ::-webkit-scrollbar-track { background: #161b22; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #30363d; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
 /* ── Table row colors + hover ──────────────────────────────────────── */
 .row-threshold td, .row-manual td, .row-even td, .row-odd td {
   background: #fffffa;
@@ -68,6 +123,19 @@ body {
 }
 .row-threshold:hover td, .row-manual:hover td, .row-even:hover td, .row-odd:hover td {
   background: #e0f2fe !important;
+}
+
+[data-theme="dark"] .row-threshold td,
+[data-theme="dark"] .row-manual td,
+[data-theme="dark"] .row-even td,
+[data-theme="dark"] .row-odd td {
+  background: #161b22;
+}
+[data-theme="dark"] .row-threshold:hover td,
+[data-theme="dark"] .row-manual:hover td,
+[data-theme="dark"] .row-even:hover td,
+[data-theme="dark"] .row-odd:hover td {
+  background: #1b3555 !important;
 }
 
 /* ── Payroll table helpers ─────────────────────────────────────────── */

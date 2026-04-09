@@ -6,6 +6,7 @@ import StatusBar from './components/StatusBar';
 import { mockAgents, TOTAL_AGENTS, GROUP_NAMES, B2_COMMENTS } from './data/mockData';
 import { processGroup, generateCSV } from './data/calculations';
 import { LangProvider } from './i18n/LangContext';
+import { ThemeProvider } from './i18n/ThemeContext';
 
 const PER_PAGE = 23;
 
@@ -186,8 +187,9 @@ export default function App() {
   }, []);
 
   return (
+    <ThemeProvider>
     <LangProvider>
-    <div className="h-screen flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#eef0f7' }}>
+    <div className="h-screen flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'var(--app-bg)' }}>
       <Header activeGroup={activeGroup} onGroupChange={handleGroupChange} />
       <Toolbar
         searchQuery={searchQuery}
@@ -204,7 +206,7 @@ export default function App() {
         onTimeFilterChange={handleTimeFilterChange}
         onFilterReset={handleFilterReset}
       />
-      <div className="flex-1 overflow-auto relative" style={{ background: '#ffffff', boxShadow: '0 1px 10px rgba(0,0,0,0.07)' }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: 'var(--surface-table)', boxShadow: '0 1px 10px rgba(0,0,0,0.07)' }}>
         <PayrollTable
         agents={deferredAgents}
           activeGroup={activeGroup}
@@ -223,5 +225,6 @@ export default function App() {
       />
     </div>
     </LangProvider>
+    </ThemeProvider>
   );
 }

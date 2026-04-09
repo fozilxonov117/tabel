@@ -2,20 +2,24 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { GROUP_NAMES } from '../data/mockData';
 import { useLang } from '../i18n/LangContext';
+import { useTheme } from '../i18n/ThemeContext';
+import DarkModeToggle from './DarkModeToggle';
 
 const ALL_BRANCHES = ['All', ...GROUP_NAMES];
 const LANGS = ['EN', 'RU', 'UZ'];
 
 export default function Header({ activeGroup, onGroupChange }) {
   const { lang, setLang } = useLang();
+  const { dark, toggleDark } = useTheme();
 
   return (
     <header
       className="flex items-center justify-between px-5 gap-4"
       style={{
         height: 52,
-        background: '#f8fafc',
-        borderBottom: '1px solid #e2e8f0',
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
+        color: 'var(--text-primary)',
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
         zIndex: 50,
         position: 'relative',
@@ -34,8 +38,9 @@ export default function Header({ activeGroup, onGroupChange }) {
         ))}
       </div>
 
-      {/* Right: Language toggle + Avatar */}
+      {/* Right: Dark toggle + Language toggle + Avatar */}
       <div className="flex items-center gap-3" style={{ flexShrink: 0 }}>
+        <DarkModeToggle dark={dark} onToggle={toggleDark} />
         {/* Language toggle */}
         <div className="flex items-center gap-0.5" style={{
           background: '#f1f5f9',
