@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect, useDeferredValue, startTransition } from 'react';
+import LoginPage from './components/LoginPage';
 import Header from './components/Header';
 import Toolbar from './components/Toolbar';
 import PayrollTable from './components/PayrollTable';
@@ -22,6 +23,9 @@ const DEFAULT_VISIBLE_COLUMNS = {
 };
 
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    try { return sessionStorage.getItem('auth') === '1'; } catch { return false; }
+  });
   const [activeGroup, setActiveGroup] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -190,11 +194,24 @@ export default function App() {
     setPage(1);
   }, []);
 
+  const handleLogout = useCallback(() => {
+    try { sessionStorage.removeItem('auth'); } catch {}
+    setIsLoggedIn(false);
+  }, []);
+
+  if (!isLoggedIn) {
+    return (
+      <ThemeProvider>
+        <LoginPage onLogin={() => setIsLoggedIn(true)} />
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
     <LangProvider>
     <div className="h-screen flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'var(--app-bg)' }}>
-      <Header activeGroup={activeGroup} onGroupChange={handleGroupChange} />
+      <Header activeGroup={activeGroup} onGroupChange={handleGroupChange} onLogout={handleLogout} />
       <Toolbar
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}

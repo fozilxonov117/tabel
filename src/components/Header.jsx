@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GROUP_NAMES } from '../data/mockData';
 import { useLang } from '../i18n/LangContext';
 import { useTheme } from '../i18n/ThemeContext';
@@ -8,9 +8,19 @@ import DarkModeToggle from './DarkModeToggle';
 const ALL_BRANCHES = ['All', ...GROUP_NAMES];
 const LANGS = ['EN', 'RU', 'UZ'];
 
-export default function Header({ activeGroup, onGroupChange }) {
+export default function Header({ activeGroup, onGroupChange, onLogout }) {
   const { lang, setLang } = useLang();
   const { dark, toggleDark } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handler(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    }
+    if (menuOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
 
   return (
     <header
@@ -75,22 +85,108 @@ export default function Header({ activeGroup, onGroupChange }) {
           })}
         </div>
 
-        {/* Avatar */}
-        <motion.div
-          className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{
-            background: '#e0f2fe',
-            border: '2px solid #bae6fd',
-            boxShadow: 'none',
-          }}
-          whileHover={{ scale: 1.08, boxShadow: '0 0 10px rgba(14,165,233,0.25)' }}
-          transition={{ duration: 0.2 }}
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="8" r="4" fill="#94a3b8" />
-            <ellipse cx="10" cy="17" rx="7" ry="4" fill="#94a3b8" />
-          </svg>
-        </motion.div>
+        {/* Avatar + user dropdown */}
+        <div ref={menuRef} style={{ position: 'relative' }}>
+          <motion.div
+            onClick={() => setMenuOpen(v => !v)}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{
+              background: menuOpen
+                ? (dark ? '#0c2a3a' : '#e0f2fe')
+                : (dark ? '#1c1c1c' : '#e0f2fe'),
+              border: menuOpen
+                ? `2px solid #0ea5e9`
+                : `2px solid ${dark ? '#2a2a2a' : '#bae6fd'}`,
+              cursor: 'pointer',
+              boxShadow: menuOpen ? '0 0 0 3px rgba(14,165,233,0.18)' : 'none',
+              transition: 'background 0.18s, border-color 0.18s, box-shadow 0.18s',
+            }}
+            whileHover={{ scale: 1.08, boxShadow: '0 0 10px rgba(14,165,233,0.25)' }}
+            transition={{ duration: 0.2 }}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="8" r="4" fill={menuOpen ? (dark ? '#38bdf8' : '#0ea5e9') : '#94a3b8'} />
+              <ellipse cx="10" cy="17" rx="7" ry="4" fill={menuOpen ? (dark ? '#38bdf8' : '#0ea5e9') : '#94a3b8'} />
+            </svg>
+          </motion.div>
+
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                key="user-menu"
+                initial={{ opacity: 0, scale: 0.93, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.93, y: -6 }}
+                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                  width: 200,
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 13,
+                  boxShadow: dark
+                    ? '0 8px 32px rgba(0,0,0,0.55)'
+                    : '0 8px 28px rgba(0,0,0,0.10)',
+                  overflow: 'hidden',
+                  zIndex: 9999,
+                  transformOrigin: 'top right',
+                }}
+              >
+                {/* User info */}
+                <div style={{
+                  padding: '14px 14px 10px',
+                  borderBottom: '1px solid var(--border)',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                    background: dark ? '#0c2a3a' : '#e0f2fe',
+                    border: `1.5px solid ${dark ? '#1e4a6a' : '#bae6fd'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                      <circle cx="10" cy="8" r="4" fill={dark ? '#38bdf8' : '#0ea5e9'} />
+                      <ellipse cx="10" cy="17" rx="7" ry="4" fill={dark ? '#38bdf8' : '#0ea5e9'} />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>admin</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>Администратор</div>
+                  </div>
+                </div>
+
+                {/* Logout button */}
+                <div style={{ padding: '6px 6px' }}>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onLogout?.();
+                    }}
+                    style={{
+                      width: '100%', padding: '8px 10px',
+                      display: 'flex', alignItems: 'center', gap: 9,
+                      background: 'none', border: 'none', borderRadius: 8,
+                      cursor: 'pointer', textAlign: 'left',
+                      fontSize: 12, fontWeight: 600,
+                      color: dark ? '#f87171' : '#dc2626',
+                      transition: 'background 0.12s',
+                      fontFamily: "'Inter', system-ui, sans-serif",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = dark ? '#2a0a0a' : '#fef2f2'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                      <polyline points="16 17 21 12 16 7"/>
+                      <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Выйти из системы
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </header>
   );
