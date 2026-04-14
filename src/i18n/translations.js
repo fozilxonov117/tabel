@@ -80,6 +80,10 @@ export const translations = {
     'log.decreased': 'decreased',
     'log.reset': 'reset',
     'log.deleted': 'deleted',
+    'log.filterName': 'Filter by name...',
+    'log.filterCreator': 'Filter by editor...',
+    'log.filterAll': 'All',
+    'log.noMatch': 'No matching entries',
     'ctx.selectAll': 'Select All',
     'ctx.deselectAll': 'Deselect All',
     // Filter UI
@@ -176,6 +180,10 @@ export const translations = {
     'log.decreased': 'уменьшено',
     'log.reset': 'сброс',
     'log.deleted': 'удалено',
+    'log.filterName': 'Фильтр по имени...',
+    'log.filterCreator': 'Фильтр по редактору...',
+    'log.filterAll': 'Все',
+    'log.noMatch': 'Ничего не найдено',
     'ctx.selectAll': 'Выбрать все',
     'ctx.deselectAll': 'Снять все',
     // Filter UI
@@ -272,6 +280,10 @@ export const translations = {
     'log.decreased': 'kamaytirildi',
     'log.reset': 'tiklandi',
     'log.deleted': "o'chirildi",
+    'log.filterName': 'Ism bo\'yicha filtrlash...',
+    'log.filterCreator': 'Tahririyatchi bo\'yicha...',
+    'log.filterAll': 'Hammasi',
+    'log.noMatch': 'Mos yozuvlar topilmadi',
     'ctx.selectAll': 'Hammasini tanlash',
     'ctx.deselectAll': 'Barchasini bekor qilish',
     // Filter UI

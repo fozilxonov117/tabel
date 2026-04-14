@@ -1215,118 +1215,12 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 background: 'rgba(0,0,0,0.18)',
               }}
             />
-          <motion.div
-            initial={{ x: 360, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 360, opacity: 0 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            style={{
-              position: 'fixed', top: 0, right: 0, bottom: 0,
-              width: 350, zIndex: 99997,
-              background: 'var(--surface)',
-              borderLeft: '1px solid var(--border)',
-              boxShadow: '-8px 0 32px rgba(0,0,0,0.15)',
-              display: 'flex', flexDirection: 'column',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Panel header */}
-            <div style={{
-              padding: '14px 16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              borderBottom: '1px solid var(--border)',
-            }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
-                </svg>
-                {t('log.title') || 'Changelog'}
-              </span>
-              <span style={{ display: 'flex', gap: 6 }}>
-                {b2ChangeLog.length > 0 && (
-                  <button
-                    onClick={() => { setB2ChangeLog([]); localStorage.removeItem('b2ChangeLog'); }}
-                    style={{
-                      padding: '3px 8px', borderRadius: 5, border: '1px solid #fca5a5',
-                      background: '#fee2e2', color: '#dc2626', fontSize: 10, fontWeight: 700, cursor: 'pointer',
-                    }}
-                  >
-                    {t('log.clear') || 'Clear'}
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowChangeLog(false)}
-                  style={{
-                    width: 26, height: 26, borderRadius: 6,
-                    border: '1px solid var(--border)', background: 'var(--surface-2)',
-                    color: 'var(--text-muted)', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >✕</button>
-              </span>
-            </div>
-
-            {/* Log entries */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-              {b2ChangeLog.length === 0 ? (
-                <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
-                  {t('log.empty') || 'No changes yet'}
-                </div>
-              ) : (
-                b2ChangeLog.map((entry, i) => {
-                  const d = new Date(entry.date);
-                  const dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                  const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                  const act = entry.action || 'increased';
-                  const STATUS_STYLES = {
-                    increased: { color: '#22c55e', bg: '#22c55e15', label: t('log.increased') || 'increased' },
-                    decreased: { color: '#f59e0b', bg: '#fef3c720', label: t('log.decreased') || 'decreased' },
-                    reset:     { color: '#6366f1', bg: '#6366f115', label: t('log.reset') || 'reset' },
-                    deleted:   { color: '#ef4444', bg: '#ef444415', label: t('log.deleted') || 'deleted' },
-                  };
-                  const st = STATUS_STYLES[act] || STATUS_STYLES.increased;
-                  return (
-                    <div key={entry.date + i} style={{
-                      padding: '8px 16px',
-                      borderBottom: '1px solid var(--border)',
-                      fontSize: 12,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-                        <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 12 }}>
-                          {entry.agentName}
-                        </span>
-                        <span style={{
-                          fontSize: 9, fontWeight: 600,
-                          color: st.color,
-                          background: st.bg,
-                          padding: '1px 6px', borderRadius: 4,
-                          textTransform: 'uppercase', letterSpacing: '0.05em',
-                        }}>
-                          {st.label}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 13 }}>{entry.oldVal ?? '–'}</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                        <span style={{ color: act === 'deleted' ? '#ef4444' : '#22c55e', fontWeight: 700, fontSize: 13 }}>{entry.newVal ?? '–'}</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>
-                        <span>{dateStr} · {timeStr}</span>
-                        {entry.editedBy && (
-                          <>
-                            <span style={{ color: 'var(--border)' }}>·</span>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                              <svg width="10" height="10" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="8" r="3.5" fill="currentColor"/><ellipse cx="10" cy="16.5" rx="6" ry="3.5" fill="currentColor"/></svg>
-                              {entry.editedBy}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </motion.div>
+          <ChangeLogPanel
+            b2ChangeLog={b2ChangeLog}
+            showChangeLog={showChangeLog}
+            setShowChangeLog={setShowChangeLog}
+            t={t}
+          />
           </>
         )}
       </AnimatePresence>
@@ -2021,10 +1915,198 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   );
 }
 
+/* ── Changelog slide-out panel (extracted for local filter state) ───────── */
+const STATUS_KEYS = ['increased', 'decreased', 'reset', 'deleted'];
 
+function ChangeLogPanel({ b2ChangeLog, showChangeLog, setShowChangeLog, t }) {
+  const [nameFilter, setNameFilter] = React.useState('');
+  const [creatorFilter, setCreatorFilter] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState(''); // '' = all
 
+  const STATUS_STYLES = {
+    increased: { color: '#22c55e', bg: '#22c55e15', label: t('log.increased') || 'increased' },
+    decreased: { color: '#f59e0b', bg: '#fef3c720', label: t('log.decreased') || 'decreased' },
+    reset:     { color: '#6366f1', bg: '#6366f115', label: t('log.reset') || 'reset' },
+    deleted:   { color: '#ef4444', bg: '#ef444415', label: t('log.deleted') || 'deleted' },
+  };
 
+  const filtered = React.useMemo(() => {
+    const nl = nameFilter.toLowerCase();
+    const cl = creatorFilter.toLowerCase();
+    return b2ChangeLog.filter(e => {
+      if (nl && !(e.agentName || '').toLowerCase().includes(nl)) return false;
+      if (cl && !(e.editedBy || '').toLowerCase().includes(cl)) return false;
+      if (statusFilter && e.action !== statusFilter) return false;
+      return true;
+    });
+  }, [b2ChangeLog, nameFilter, creatorFilter, statusFilter]);
 
+  const inputStyle = {
+    width: '100%', padding: '5px 8px 5px 28px', borderRadius: 6,
+    border: '1px solid var(--border)', background: 'var(--surface-2)',
+    color: 'var(--text-primary)', fontSize: 11, fontWeight: 500,
+    outline: 'none', fontFamily: "'Inter', system-ui, sans-serif",
+  };
+
+  return (
+    <motion.div
+      initial={{ x: 360, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 360, opacity: 0 }}
+      transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+      style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0,
+        width: 350, zIndex: 99997,
+        background: 'var(--surface)',
+        borderLeft: '1px solid var(--border)',
+        boxShadow: '-8px 0 32px rgba(0,0,0,0.15)',
+        display: 'flex', flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Panel header */}
+      <div style={{
+        padding: '14px 16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
+          </svg>
+          {t('log.title') || 'Changelog'}
+        </span>
+        <button
+          onClick={() => setShowChangeLog(false)}
+          style={{
+            width: 26, height: 26, borderRadius: 6,
+            border: '1px solid var(--border)', background: 'var(--surface-2)',
+            color: 'var(--text-muted)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >✕</button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ padding: '10px 14px 6px', display: 'flex', flexDirection: 'column', gap: 6, borderBottom: '1px solid var(--border)' }}>
+        {/* Name search */}
+        <div style={{ position: 'relative' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }}>
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input
+            type="text"
+            value={nameFilter}
+            onChange={e => setNameFilter(e.target.value)}
+            placeholder={t('log.filterName') || 'Filter by name...'}
+            style={inputStyle}
+          />
+        </div>
+        {/* Creator search */}
+        <div style={{ position: 'relative' }}>
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="var(--text-muted)" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }}>
+            <circle cx="10" cy="7" r="3.5"/><ellipse cx="10" cy="16" rx="6.5" ry="3.5"/>
+          </svg>
+          <input
+            type="text"
+            value={creatorFilter}
+            onChange={e => setCreatorFilter(e.target.value)}
+            placeholder={t('log.filterCreator') || 'Filter by editor...'}
+            style={inputStyle}
+          />
+        </div>
+        {/* Status pills */}
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setStatusFilter('')}
+            style={{
+              padding: '3px 8px', borderRadius: 5, border: '1px solid var(--border)',
+              background: statusFilter === '' ? '#0ea5e9' : 'var(--surface-2)',
+              color: statusFilter === '' ? '#fff' : 'var(--text-muted)',
+              fontSize: 10, fontWeight: 700, cursor: 'pointer',
+              transition: 'background 0.12s, color 0.12s',
+            }}
+          >{t('log.filterAll') || 'All'}</button>
+          {STATUS_KEYS.map(key => {
+            const s = STATUS_STYLES[key];
+            const active = statusFilter === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setStatusFilter(active ? '' : key)}
+                style={{
+                  padding: '3px 8px', borderRadius: 5,
+                  border: `1px solid ${active ? s.color : 'var(--border)'}`,
+                  background: active ? s.bg : 'var(--surface-2)',
+                  color: active ? s.color : 'var(--text-muted)',
+                  fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                  transition: 'background 0.12s, color 0.12s, border-color 0.12s',
+                }}
+              >{s.label}</button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Log entries */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+        {filtered.length === 0 ? (
+          <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+            {(nameFilter || creatorFilter || statusFilter)
+              ? (t('log.noMatch') || 'No matching entries')
+              : (t('log.empty') || 'No changes yet')}
+          </div>
+        ) : (
+          filtered.map((entry, i) => {
+            const d = new Date(entry.date);
+            const dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            const act = entry.action || 'increased';
+            const st = STATUS_STYLES[act] || STATUS_STYLES.increased;
+            return (
+              <div key={entry.date + i} style={{
+                padding: '8px 16px',
+                borderBottom: '1px solid var(--border)',
+                fontSize: 12,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 12 }}>
+                    {entry.agentName}
+                  </span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 600,
+                    color: st.color,
+                    background: st.bg,
+                    padding: '1px 6px', borderRadius: 4,
+                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                  }}>
+                    {st.label}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 13 }}>{entry.oldVal ?? '–'}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  <span style={{ color: act === 'deleted' ? '#ef4444' : '#22c55e', fontWeight: 700, fontSize: 13 }}>{entry.newVal ?? '–'}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>
+                  <span>{dateStr} · {timeStr}</span>
+                  {entry.editedBy && (
+                    <>
+                      <span style={{ color: 'var(--border)' }}>·</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                        <svg width="10" height="10" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="8" r="3.5" fill="currentColor"/><ellipse cx="10" cy="16.5" rx="6" ry="3.5" fill="currentColor"/></svg>
+                        {entry.editedBy}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 
 
