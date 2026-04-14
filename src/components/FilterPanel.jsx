@@ -211,7 +211,7 @@ export default function FilterPanel({ open, numberFilter, setNumberFilter, timeF
                   <select
                     style={{ ...selStyle, minWidth: 140 }}
                     value={timeFilter.column}
-                    onChange={e => setTimeFilter(f => ({ ...f, column: e.target.value }))}
+                    onChange={e => setTimeFilter(f => ({ ...f, column: e.target.value }))}  
                   >
                     <option value="">— select column —</option>
                     {TIME_COLS.map(c => (

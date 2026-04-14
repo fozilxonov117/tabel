@@ -909,7 +909,7 @@ function SkeletonRow({ colCount }) {
 }
 
 /* ── Main component ───────────────────────────────────────────────────────── */
-export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading, onDeleteAgents, onTransferAgents, groupNames, b2Comments }) {
+export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading, onDeleteAgents, onTransferAgents, groupNames, b2Comments, showChangeLog, setShowChangeLog, onChangeLogCountChange }) {
   const { lang } = useLang();
   const { dark } = useTheme();
   const t = k => translations[lang]?.[k] ?? k;
@@ -1044,9 +1044,55 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   const [deleteMode, setDeleteMode] = React.useState(false);
   const [transferMode, setTransferMode] = React.useState(false);
   const [selectedForTransfer, setSelectedForTransfer] = React.useState(new Set());
+  const [transferExpandedSection, setTransferExpandedSection] = React.useState(null);
+
+  // ─ B2 change log (persisted to localStorage) ───────────────
+  const [b2ChangeLog, setB2ChangeLog] = React.useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('b2ChangeLog') || '[]');
+      if (stored.length > 0) return stored;
+    } catch { /* ignore */ }
+    // Seed with mock data when empty
+    const now = Date.now();
+    const mockEntries = [
+      { date: new Date(now - 86400000 * 3 - 3600000 * 2).toISOString(), agentId: '1242-1',  agentName: 'Iskandarova Dilorom Jalol qizi',   oldVal: 95,  newVal: 110, action: 'edit' },
+      { date: new Date(now - 86400000 * 3 - 3600000).toISOString(),     agentId: '1242-7',  agentName: 'Tashmatova Dilsora Rixsimurat qizi', oldVal: 105, newVal: 98,  action: 'edit' },
+      { date: new Date(now - 86400000 * 2 - 7200000).toISOString(),     agentId: '1242-13', agentName: 'Tursunov Sanjar Baxtiyor ogli',     oldVal: 100, newVal: 112, action: 'edit' },
+      { date: new Date(now - 86400000 * 2 - 1800000).toISOString(),     agentId: '1242-3',  agentName: 'Kabirov Sherzod Murodjon ogli',     oldVal: 90,  newVal: 85,  action: 'edit' },
+      { date: new Date(now - 86400000 * 2).toISOString(),               agentId: '1242-3',  agentName: 'Kabirov Sherzod Murodjon ogli',     oldVal: 85,  newVal: 90,  action: 'reset' },
+      { date: new Date(now - 86400000 - 5400000).toISOString(),         agentId: '1242-10', agentName: 'Yusupova Barno Akbar qizi',          oldVal: 100, newVal: 115, action: 'edit' },
+      { date: new Date(now - 86400000 - 3600000).toISOString(),         agentId: '1242-16', agentName: 'Qoraboyeva Zilola Nozim qizi',       oldVal: 98,  newVal: 108, action: 'edit' },
+      { date: new Date(now - 86400000).toISOString(),                   agentId: '1242-7',  agentName: 'Tashmatova Dilsora Rixsimurat qizi', oldVal: 98,  newVal: 95,  action: 'reset' },
+      { date: new Date(now - 7200000).toISOString(),                    agentId: '1000-6',  agentName: 'Nazarova Maftuna Shavkat qizi',      oldVal: 92,  newVal: 100, action: 'edit' },
+      { date: new Date(now - 1800000).toISOString(),                    agentId: '1242-11', agentName: 'Sotvoldiyev Jasur Hamid ogli',        oldVal: 95,  newVal: 105, action: 'edit' },
+    ];
+    localStorage.setItem('b2ChangeLog', JSON.stringify(mockEntries));
+    return mockEntries;
+  });
+  React.useEffect(() => { onChangeLogCountChange?.(b2ChangeLog.length); }, [b2ChangeLog.length, onChangeLogCountChange]);
+  const addLogEntry = React.useCallback((agentId, agentName, oldVal, newVal, action) => {
+    setB2ChangeLog(prev => {
+      const entry = { date: new Date().toISOString(), agentId, agentName, oldVal, newVal, action };
+      const next = [entry, ...prev].slice(0, 200);
+      localStorage.setItem('b2ChangeLog', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+  const handleB2Save = React.useCallback((id, val) => {
+    const ag = agents?.find(a => a.id === id);
+    const oldVal = b2Overrides[id] !== undefined ? b2Overrides[id] : ag?.b1;
+    if (oldVal !== val) addLogEntry(id, ag?.name || id, oldVal, val, 'edit');
+    setB2Overrides(prev => ({ ...prev, [id]: val }));
+  }, [agents, b2Overrides, addLogEntry]);
+  const handleB2Reset = React.useCallback((id) => {
+    const ag = agents?.find(a => a.id === id);
+    const oldVal = b2Overrides[id];
+    if (oldVal !== undefined) addLogEntry(id, ag?.name || id, oldVal, ag?.b1, 'reset');
+    setB2Overrides(prev => { const n = { ...prev }; delete n[id]; return n; });
+  }, [agents, b2Overrides, addLogEntry]);
 
   const exitDeleteMode = () => { setDeleteMode(false); setSelectedForDelete(new Set()); };
-  const exitTransferMode = () => { setTransferMode(false); setSelectedForTransfer(new Set()); };
+  const exitTransferMode = () => { setTransferMode(false); setSelectedForTransfer(new Set()); setTransferExpandedSection(null); };
 
   // ─ Sort state ───────────────────────────────────────────────
   const [sortKey, setSortKey] = React.useState(null);
@@ -1145,6 +1191,108 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
         </div>
       )}
 
+      {/* Changelog slide-out panel */}
+      <AnimatePresence>
+        {showChangeLog && (
+          <motion.div
+            initial={{ x: 360, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 360, opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            style={{
+              position: 'fixed', top: 0, right: 0, bottom: 0,
+              width: 350, zIndex: 99997,
+              background: 'var(--surface)',
+              borderLeft: '1px solid var(--border)',
+              boxShadow: '-8px 0 32px rgba(0,0,0,0.15)',
+              display: 'flex', flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Panel header */}
+            <div style={{
+              padding: '14px 16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
+                </svg>
+                {t('log.title') || 'Changelog'}
+              </span>
+              <span style={{ display: 'flex', gap: 6 }}>
+                {b2ChangeLog.length > 0 && (
+                  <button
+                    onClick={() => { setB2ChangeLog([]); localStorage.removeItem('b2ChangeLog'); }}
+                    style={{
+                      padding: '3px 8px', borderRadius: 5, border: '1px solid #fca5a5',
+                      background: '#fee2e2', color: '#dc2626', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                    }}
+                  >
+                    {t('log.clear') || 'Clear'}
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowChangeLog(false)}
+                  style={{
+                    width: 26, height: 26, borderRadius: 6,
+                    border: '1px solid var(--border)', background: 'var(--surface-2)',
+                    color: 'var(--text-muted)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >✕</button>
+              </span>
+            </div>
+
+            {/* Log entries */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+              {b2ChangeLog.length === 0 ? (
+                <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+                  {t('log.empty') || 'No changes yet'}
+                </div>
+              ) : (
+                b2ChangeLog.map((entry, i) => {
+                  const d = new Date(entry.date);
+                  const dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                  const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                  const isReset = entry.action === 'reset';
+                  return (
+                    <div key={entry.date + i} style={{
+                      padding: '8px 16px',
+                      borderBottom: '1px solid var(--border)',
+                      fontSize: 12,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 12 }}>
+                          {entry.agentName}
+                        </span>
+                        <span style={{
+                          fontSize: 9, fontWeight: 600,
+                          color: isReset ? '#f59e0b' : '#22c55e',
+                          background: isReset ? '#fef3c720' : '#22c55e15',
+                          padding: '1px 6px', borderRadius: 4,
+                          textTransform: 'uppercase', letterSpacing: '0.05em',
+                        }}>
+                          {isReset ? (t('log.reset') || 'reset') : (t('log.edited') || 'edited')}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 13 }}>{entry.oldVal ?? '–'}</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        <span style={{ color: '#22c55e', fontWeight: 700, fontSize: 13 }}>{entry.newVal ?? '–'}</span>
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
+                        {dateStr} · {timeStr}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Custom context menu */}
       <AnimatePresence>
         {ctxMenu.visible && (
@@ -1174,7 +1322,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             <button
               onClick={() => {
                 if (ctxMenu.agentId && b2Overrides[ctxMenu.agentId] !== undefined) {
-                  setB2Overrides(prev => { const n = { ...prev }; delete n[ctxMenu.agentId]; return n; });
+                  handleB2Reset(ctxMenu.agentId);
                 } else {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
@@ -1261,7 +1409,40 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
 
       {/* Floating transfer action bar */}
       <AnimatePresence>
-        {transferMode && (
+        {transferMode && (() => {
+          const TRANSFER_SECTIONS = [
+            { label: '112', targets: ['112'] },
+            { label: '255', targets: ['1000', '1009', '1170', '1242'] },
+            { label: 'Region', targets: [
+              'Андижан', 'Бухара', 'Джизак', 'Кашкадарья', 'Навои', 'Наманган',
+              'Самарканд', 'Сурхандарья', 'Сырдарья', 'Ташкент', 'Фергана', 'Хорезм',
+            ]},
+          ];
+          const disabled = selectedForTransfer.size === 0;
+          const mkBtn = (branch) => (
+            <button
+              key={branch}
+              disabled={disabled}
+              onClick={() => {
+                if (disabled) return;
+                onTransferAgents([...selectedForTransfer], branch);
+                exitTransferMode();
+              }}
+              style={{
+                padding: '4px 12px', borderRadius: 6, border: '1px solid #bae6fd',
+                background: disabled ? '#f0f9ff' : '#0369a1',
+                color: disabled ? '#94a3b8' : '#ffffff',
+                fontSize: 11, fontWeight: 700,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                transition: 'background 0.12s',
+              }}
+              onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#075985'; }}
+              onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = '#0369a1'; }}
+            >
+              {branch}
+            </button>
+          );
+          return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1275,8 +1456,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
               border: '1px solid #bae6fd',
               padding: '10px 16px',
-              display: 'flex', alignItems: 'center', gap: 12,
-              minWidth: 380,
+              display: 'flex', alignItems: 'center', gap: 10,
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="#0369a1"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
@@ -1284,29 +1464,56 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               <span style={{ color: '#0369a1', fontWeight: 800 }}>{selectedForTransfer.size}</span>
               {' '}выбрано · Перенести в:
             </span>
-            {(groupNames || []).filter(g => g !== activeGroup).map(branch => (
-              <button
-                key={branch}
-                disabled={selectedForTransfer.size === 0}
-                onClick={() => {
-                  if (selectedForTransfer.size === 0) return;
-                  onTransferAgents([...selectedForTransfer], branch);
-                  exitTransferMode();
-                }}
-                style={{
-                  padding: '5px 14px', borderRadius: 7, border: '1px solid #bae6fd',
-                  background: selectedForTransfer.size === 0 ? '#f0f9ff' : '#0369a1',
-                  color: selectedForTransfer.size === 0 ? '#94a3b8' : '#ffffff',
-                  fontSize: 12, fontWeight: 700,
-                  cursor: selectedForTransfer.size === 0 ? 'not-allowed' : 'pointer',
-                  transition: 'background 0.12s',
-                }}
-                onMouseEnter={e => { if (selectedForTransfer.size > 0) e.currentTarget.style.background = '#075985'; }}
-                onMouseLeave={e => { if (selectedForTransfer.size > 0) e.currentTarget.style.background = '#0369a1'; }}
-              >
-                {branch}
-              </button>
-            ))}
+
+            {TRANSFER_SECTIONS.map(sec => {
+              const isExpandable = sec.targets.length > 4;
+              const isOpen = transferExpandedSection === sec.label;
+              return (
+                <span key={sec.label} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--surface-2)', borderRadius: 8, padding: '4px 6px', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.04em', marginRight: 2, whiteSpace: 'nowrap' }}>{sec.label}</span>
+                  {!isExpandable && sec.targets.map(branch => mkBtn(branch))}
+                  {isExpandable && (
+                    <>
+                      <button
+                        onClick={() => setTransferExpandedSection(isOpen ? null : sec.label)}
+                        style={{
+                          padding: '4px 12px', borderRadius: 6, border: '1px solid #bae6fd',
+                          background: isOpen ? '#075985' : '#0e7490',
+                          color: '#ffffff', fontSize: 11, fontWeight: 700,
+                          cursor: 'pointer', transition: 'background 0.12s',
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#075985'; }}
+                        onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = '#0e7490'; }}
+                      >
+                        {sec.targets.length} {sec.label === 'Region' ? 'регионов' : ''}
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}><path d="M2 6.5L5 3.5L8 6.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
+                      </button>
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            style={{
+                              position: 'absolute', bottom: 'calc(100% + 8px)', left: 0,
+                              background: 'var(--surface)', border: '1px solid var(--border)',
+                              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
+                              padding: 8, display: 'flex', flexWrap: 'wrap', gap: 4,
+                              width: 320, zIndex: 99999,
+                            }}
+                          >
+                            {sec.targets.map(branch => mkBtn(branch))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
+                </span>
+              );
+            })}
+
             <button
               onClick={() => {
                 const all = (agents || []).map(a => a.id);
@@ -1331,7 +1538,8 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               {t('ctx.deleteCancel')}
             </button>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
       {/* Floating delete action bar */}
@@ -1389,7 +1597,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 exitDeleteMode();
               }}
               style={{
-                padding: '5px 16px', borderRadius: 7, border: 'none',
+                padding: '5px 16px', borderRadius: 7, border: 'none', 
                 background: selectedForDelete.size === 0 ? '#fca5a5' : '#dc2626',
                 color: '#ffffff', fontSize: 12, fontWeight: 700, cursor: selectedForDelete.size === 0 ? 'not-allowed' : 'pointer',
               }}
@@ -1626,7 +1834,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                             borderRight={borderRight}
                             groupEndShadow={groupEndShadow}
                             onContextMenu={e => handleContextMenu(e, agent.id)}
-                            onSave={(id, val) => setB2Overrides(prev => ({ ...prev, [id]: val }))}
+                            onSave={handleB2Save}
                             b2Comments={b2Comments}
                             rowHovered={hoveredRowId === agent.id}
                           />

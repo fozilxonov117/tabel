@@ -31,6 +31,10 @@ export default function App() {
   const [agentBranchOverrides, setAgentBranchOverrides] = useState({});
   const loadingTimer = useRef(null);
 
+  // ── Changelog state (shared between Toolbar button & PayrollTable panel) ──
+  const [showChangeLog, setShowChangeLog] = useState(false);
+  const [changeLogCount, setChangeLogCount] = useState(0);
+
   // ── Filter panel ──────────────────────────────────────────────────────
   const [filterType,   setFilterType]   = useState('number'); // 'number' | 'time'
   const [numberFilter, setNumberFilter] = useState({ column: '', type: 'gt', value: '', value2: '' });
@@ -205,6 +209,9 @@ export default function App() {
         timeFilter={timeFilter}
         onTimeFilterChange={handleTimeFilterChange}
         onFilterReset={handleFilterReset}
+        showChangeLog={showChangeLog}
+        onToggleChangeLog={() => setShowChangeLog(v => !v)}
+        changeLogCount={changeLogCount}
       />
       <div className="flex-1 overflow-auto relative" style={{ background: 'var(--surface-table)', boxShadow: '0 1px 10px rgba(0,0,0,0.07)' }}>
         <PayrollTable
@@ -217,6 +224,9 @@ export default function App() {
           onTransferAgents={handleTransferAgents}
           groupNames={GROUP_NAMES}
           b2Comments={B2_COMMENTS}
+          showChangeLog={showChangeLog}
+          setShowChangeLog={setShowChangeLog}
+          onChangeLogCountChange={setChangeLogCount}
         />
       </div>
       <StatusBar

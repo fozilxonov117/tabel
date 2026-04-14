@@ -408,6 +408,7 @@ export default function Toolbar({
   numberFilter, onNumberFilterChange,
   timeFilter, onTimeFilterChange,
   onFilterReset,
+  showChangeLog, onToggleChangeLog, changeLogCount,
 }) {
   const { lang } = useLang();
   const t = k => translations[lang]?.[k] ?? k;
@@ -541,6 +542,31 @@ export default function Toolbar({
           )}
         </AnimatePresence>
       </div>
+
+      {/* History / Changelog toggle */}
+      <ToolbarBtn
+        active={showChangeLog}
+        onClick={onToggleChangeLog}
+        icon={
+          <span style={{ position: 'relative', display: 'inline-flex' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
+            </svg>
+            {changeLogCount > 0 && !showChangeLog && (
+              <span style={{
+                position: 'absolute', top: -6, right: -8,
+                background: '#ef4444', color: '#fff', fontSize: 7, fontWeight: 800,
+                minWidth: 12, height: 12, borderRadius: 6,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1.5px solid var(--surface)',
+                lineHeight: 1,
+              }}>{changeLogCount > 99 ? '99+' : changeLogCount}</span>
+            )}
+          </span>
+        }
+      >
+        {t('log.title') || 'History'}
+      </ToolbarBtn>
 
       <ExportBtn onClick={onExport} />
     </div>
