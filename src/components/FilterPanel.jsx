@@ -36,9 +36,12 @@ const NUM_COLS = [
 const TIME_COLS = [
   { key: 'planTime',    labelKey: 'col.planTime',    unit: 'min' },
   { key: 'factTime',    labelKey: 'col.factTime',    unit: 'min' },
-  { key: 'debtTime',    labelKey: 'col.debtTime',    unit: 'sec' },
-  { key: 'workTime',    labelKey: 'col.workTime',    unit: 'sec' },
-  { key: 'systemError', labelKey: 'col.systemError', unit: 'sec' },
+  { key: 'totalDebt',    labelKey: 'col.totalDebt',    unit: 'sec' },
+  { key: 'sysBreak',     labelKey: 'col.sysBreak',     unit: 'sec' },
+  { key: 'netDebt',      labelKey: 'col.netDebt',      unit: 'sec' },
+  { key: 'compensated',  labelKey: 'col.compensated',  unit: 'sec' },
+  { key: 'notCompensated', labelKey: 'col.notCompensated', unit: 'sec' },
+  { key: 'remainingDebt', labelKey: 'col.remainingDebt', unit: 'sec' },
 ];
 
 const TYPE_OPTS = [

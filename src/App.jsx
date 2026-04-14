@@ -4,12 +4,11 @@ import Header from './components/Header';
 import Toolbar from './components/Toolbar';
 import PayrollTable from './components/PayrollTable';
 import StatusBar from './components/StatusBar';
-import { mockAgents, TOTAL_AGENTS, GROUP_NAMES, B2_COMMENTS } from './data/mockData';
+import { GROUP_NAMES, B2_COMMENTS } from './data/mockData';
 import { processGroup, generateCSV } from './data/calculations';
+import { fetchAgentReport } from './data/api';
 import { LangProvider } from './i18n/LangContext';
 import { ThemeProvider } from './i18n/ThemeContext';
-
-const PER_PAGE = 23;
 
 const DEFAULT_VISIBLE_COLUMNS = {
   'BASIC INFO': true,
@@ -28,12 +27,16 @@ export default function App() {
   });
   const [activeGroup, setActiveGroup] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [page, setPage] = useState(1);
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [deletedIds, setDeletedIds] = useState(new Set());
   const [agentBranchOverrides, setAgentBranchOverrides] = useState({});
   const loadingTimer = useRef(null);
+
+  // ── API data ─────────────────────────────────────────────────────────────
+  const [apiAgents, setApiAgents] = useState({});       // keyed by group name
+  const [totalAgents, setTotalAgents] = useState(0);
+  const [apiError, setApiError] = useState(null);
 
   // ── Changelog state (shared between Toolbar button & PayrollTable panel) ──
   const [showChangeLog, setShowChangeLog] = useState(false);
@@ -52,26 +55,47 @@ export default function App() {
   // Clean up timer on unmount
   useEffect(() => () => clearTimeout(loadingTimer.current), []);
 
+  // ── Fetch API data on mount ──────────────────────────────────────────────
+  useEffect(() => {
+    fetchAgentReport()
+      .then(({ agentsByGroup, totalAgents: total }) => {
+        setApiAgents(agentsByGroup);
+        setTotalAgents(total);
+      })
+      .catch(err => {
+        console.error('API fetch failed:', err);
+        setApiError(err.message);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  // Merge static GROUP_NAMES with any new groups from API
+  const groupNames = useMemo(() => {
+    const set = new Set(GROUP_NAMES);
+    Object.keys(apiAgents).forEach(g => set.add(g));
+    return [...set];
+  }, [apiAgents]);
+
   const computedAgents = useMemo(() => {
     if (activeGroup === 'All') {
-      return GROUP_NAMES.flatMap(g => {
-        const base = (mockAgents[g] || []).filter(a => !agentBranchOverrides[a.id] || agentBranchOverrides[a.id] === g);
-        const incoming = GROUP_NAMES.filter(src => src !== g).flatMap(src =>
-          (mockAgents[src] || []).filter(a => agentBranchOverrides[a.id] === g)
+      return groupNames.flatMap(g => {
+        const base = (apiAgents[g] || []).filter(a => !agentBranchOverrides[a.id] || agentBranchOverrides[a.id] === g);
+        const incoming = groupNames.filter(src => src !== g).flatMap(src =>
+          (apiAgents[src] || []).filter(a => agentBranchOverrides[a.id] === g)
         );
         return processGroup([...base, ...incoming].map(a =>
           agentBranchOverrides[a.id] ? { ...a, vetka: agentBranchOverrides[a.id] } : a
         ));
       });
     }
-    const base = (mockAgents[activeGroup] || []).filter(a => !agentBranchOverrides[a.id] || agentBranchOverrides[a.id] === activeGroup);
-    const incoming = GROUP_NAMES.filter(g => g !== activeGroup).flatMap(g =>
-      (mockAgents[g] || []).filter(a => agentBranchOverrides[a.id] === activeGroup)
+    const base = (apiAgents[activeGroup] || []).filter(a => !agentBranchOverrides[a.id] || agentBranchOverrides[a.id] === activeGroup);
+    const incoming = groupNames.filter(g => g !== activeGroup).flatMap(g =>
+      (apiAgents[g] || []).filter(a => agentBranchOverrides[a.id] === activeGroup)
     );
     return processGroup([...base, ...incoming].map(a =>
       agentBranchOverrides[a.id] ? { ...a, vetka: agentBranchOverrides[a.id] } : a
     ));
-  }, [activeGroup, agentBranchOverrides]);
+  }, [activeGroup, agentBranchOverrides, apiAgents, groupNames]);
 
   const filteredAgents = useMemo(() => {
     let list = computedAgents;
@@ -117,7 +141,7 @@ export default function App() {
     }
 
     // Time filter — FROM/TO stored as 'HH:MM:SS' strings
-    const TIME_COL_UNITS = { planTime: 'min', factTime: 'min', debtTime: 'sec', workTime: 'sec', systemError: 'sec' };
+    const TIME_COL_UNITS = { planTime: 'min', factTime: 'min', totalDebt: 'sec', sysBreak: 'sec', netDebt: 'sec', compensated: 'sec', notCompensated: 'sec', remainingDebt: 'sec' };
     const parseHMS = str => {
       if (!str) return null;
       const parts = str.split(':').map(Number);
@@ -158,7 +182,6 @@ export default function App() {
   const handleGroupChange = useCallback((group) => {
     setIsLoading(true);
     setActiveGroup(group);
-    setPage(1);
     setSearchQuery('');
     clearTimeout(loadingTimer.current);
     loadingTimer.current = setTimeout(() => setIsLoading(false), 380);
@@ -166,7 +189,6 @@ export default function App() {
 
   const handleSearchChange = useCallback((q) => {
     setSearchQuery(q);
-    setPage(1);
   }, []);
 
   const handleColumnToggle = useCallback((colGroup) => {
@@ -191,7 +213,6 @@ export default function App() {
 
   const handleRefresh = useCallback(() => {
     setSearchQuery('');
-    setPage(1);
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -235,11 +256,11 @@ export default function App() {
         agents={deferredAgents}
           activeGroup={activeGroup}
           visibleColumns={visibleColumns}
-          totalAll={TOTAL_AGENTS}
+          totalAll={totalAgents}
           isLoading={isLoading}
           onDeleteAgents={handleDeleteAgents}
           onTransferAgents={handleTransferAgents}
-          groupNames={GROUP_NAMES}
+          groupNames={groupNames}
           b2Comments={B2_COMMENTS}
           showChangeLog={showChangeLog}
           setShowChangeLog={setShowChangeLog}
@@ -248,7 +269,7 @@ export default function App() {
       </div>
       <StatusBar
         totalFiltered={filteredAgents.length}
-        totalAll={TOTAL_AGENTS}
+        totalAll={totalAgents}
       />
     </div>
     </LangProvider>

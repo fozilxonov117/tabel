@@ -98,11 +98,11 @@ export function computeAgent(agent) {
   const surchargeAdj = agent.surcharge / 100;
   const bonus = Math.round(baseSalary * bonusMultiplier * surchargeAdj);
 
-  const итог = baseSalary + bonus;
-  const config = GROUP_CONFIG[agent.vetka] || { taxRate: 0.12 };
-  const налог = Math.round(итог * config.taxRate);
-  const наРуки = итог - налог;
-  const наКарту = наРуки - agent.advance;
+  const итог   = agent._apiItog   != null ? agent._apiItog   : baseSalary + bonus;
+  const config  = GROUP_CONFIG[agent.vetka] || { taxRate: 0.12 };
+  const налог   = agent._apiNalog  != null ? agent._apiNalog  : Math.round(итог * config.taxRate);
+  const наРуки  = agent._apiNaRuki != null ? agent._apiNaRuki : итог - налог;
+  const наКарту = agent._apiNaKartu != null ? agent._apiNaKartu : наРуки - agent.advance;
 
   // New supplementary fields – use agent value if provided, otherwise derive a default
   const limit           = agent.limit           ?? agent.surcharge;

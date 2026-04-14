@@ -2,7 +2,7 @@
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fmtTime, fmtNum, computeTotals } from '../data/calculations';
-import { mockAgents } from '../data/mockData';
+
 import { useLang } from '../i18n/LangContext';
 import { useTheme } from '../i18n/ThemeContext';
 import { translations } from '../i18n/translations';
@@ -13,19 +13,9 @@ const K_NARUKI  = 'наРуки';
 const K_NAKARTU = 'наКарту';
 const K_NALOG   = 'налог';
 
-// ── Dynamic column widths computed from all agent data ─────────────────────
-const _allAgentsFlat = Object.values(mockAgents).flat();
-// Count unique explanation types per agent (duplicates become a ×N badge on one icon)
-const _maxExplUniqueTypes = Math.max(1, ..._allAgentsFlat.map(a => {
-  const v = a.explanation;
-  const arr = Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []);
-  return new Set(arr).size;
-}));
-const _maxVacTypeLen = Math.max(1, ..._allAgentsFlat.map(a => (a.vacation?.type?.length ?? 0)));
-// Icon button: 26 px wide + 3 px gap. N unique types: N×26 + (N−1)×3 = 29N−3. Cell padding 10 px.
-const DYN_EXPL_WIDTH = Math.max(36, _maxExplUniqueTypes * 29 - 3 + 10);
-// badge: ~9px per Cyrillic char + 28px (padding + borders + cell)
-const DYN_VAC_WIDTH  = Math.max(44, _maxVacTypeLen * 9 + 28);
+// ── Fixed column widths (previously computed from all agents — now static for perf) ──
+const DYN_EXPL_WIDTH = 90;  // fits ~3 icon buttons (26px each + gaps + padding)
+const DYN_VAC_WIDTH  = 82;  // fits longest vacation type (6 Cyrillic chars + padding)
 
 // ── Column group header definitions ──────────────────────────────────────────
 const COL_GROUPS = [
@@ -57,9 +47,12 @@ const COLUMNS = [
   { key: 'vacation',        labelKey: 'col.vacation',         group: 'EFFICIENCY',         width: DYN_VAC_WIDTH  },
   { key: 'factScore',       labelKey: 'col.factScore',        group: 'EFFICIENCY',         width: 66  },
   // INFO
-  { key: 'debtTime',        labelKey: 'col.debtTime',         group: 'INFO',               width: 80  },
-  { key: 'workTime',        labelKey: 'col.workTime',         group: 'INFO',               width: 80  },
-  { key: 'systemError',     labelKey: 'col.systemError',      group: 'INFO',               width: 80  },
+  { key: 'totalDebt',       labelKey: 'col.totalDebt',        group: 'INFO',               width: 90  },
+  { key: 'sysBreak',        labelKey: 'col.sysBreak',         group: 'INFO',               width: 90  },
+  { key: 'netDebt',         labelKey: 'col.netDebt',          group: 'INFO',               width: 90  },
+  { key: 'compensated',     labelKey: 'col.compensated',      group: 'INFO',               width: 90  },
+  { key: 'notCompensated',  labelKey: 'col.notCompensated',   group: 'INFO',               width: 90  },
+  { key: 'remainingDebt',   labelKey: 'col.remainingDebt',    group: 'INFO',               width: 90  },
   // BONUS (merged with former LIMITS & GRADES)
   { key: 'b2',              labelKey: 'col.b2',               group: 'BONUS',              width: 90  },
   { key: 'surcharge',       labelKey: 'col.surcharge',        group: 'BONUS',              width: 66  },
@@ -102,7 +95,7 @@ const SECTION_ANCHORS = {
   'BASIC INFO':         new Set(['name']),
   'CALL METRICS':       new Set(['perfPct']),
   'EFFICIENCY':         new Set(['factScore']),    // explanation+vacation hidden when collapsed; shown via hover panel
-  'INFO':               new Set(['debtTime']),
+  'INFO':               new Set(['totalDebt']),
   'BONUS':        new Set(['b2']),  // only Факт бонус visible when collapsed
   'TABEL':        new Set(['tabel_worked', 'tabel_prazdHrs', 'tabel_vecherHrs', 'tabel_nochHrs']),
   'PROFIT':       new Set(['profitFromOp']),
@@ -140,6 +133,27 @@ function getMarchDay(dateStr) {
 function getAgentSchedule(agent) {
   if (_schedCache.has(agent.id)) return _schedCache.get(agent.id);
 
+  const sched = {};
+
+  // ── Use real API tabel.days when available ──
+  if (Array.isArray(agent.tabelDays) && agent.tabelDays.length >= 31) {
+    for (let d = 1; d <= 31; d++) {
+      const v = agent.tabelDays[d - 1];
+      if (v === '' || v == null) {
+        sched[d] = null;
+      } else if (v === '8' || v === '11') {
+        sched[d] = Number(v);
+      } else {
+        // Vacation/absence type string (e.g. 'О', 'Б', 'У', etc.)
+        sched[d] = v;
+      }
+    }
+    _schedCache.set(agent.id, sched);
+    return sched;
+  }
+
+  // ── Fallback: deterministic schedule generation for mock data ──
+
   // Vacation date range clamped to March days 1-31
   let vacFrom = null, vacTo = null;
   if (agent.vacation?.from && agent.vacation?.to) {
@@ -155,8 +169,6 @@ function getAgentSchedule(agent) {
   // Hash agent id for deterministic RNG
   let h = 0;
   for (let i = 0; i < agent.id.length; i++) h = (Math.imul(31, h) + agent.id.charCodeAt(i)) | 0;
-
-  const sched = {};
 
   if (ELEVEN_HOUR_AGENTS.has(agent.id)) {
     // ── 11-hour shift: 2 work days, 2 rest days, rotating (no fixed weekends) ──
@@ -328,7 +340,7 @@ const VAC_ICONS = {
 const VACATION_META = {
   'ДДО 2':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', darkColor: '#60a5fa', darkBg: '#0c1a2e', darkBorder: '#1e3a5f', icon: VAC_ICONS.ChildFriendly },
   'ДДО 3':   { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', darkColor: '#60a5fa', darkBg: '#0c1a2e', darkBorder: '#1e3a5f', icon: VAC_ICONS.ChildFriendly },
-  'Уволен':  { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5', darkColor: '#f87171', darkBg: '#1f0808', darkBorder: '#4c1010' },
+  'Уволен':  { color: '#dc2626', bg: '#fef2f2',  border: '#fca5a5', darkColor: '#f87171', darkBg: '#1f0808', darkBorder: '#4c1010', icon: VAC_ICONS.Work },
   'Б':       { color: '#a16207', bg: '#fef9c3',  border: '#fde68a', darkColor: '#facc15', darkBg: '#1a1400', darkBorder: '#3d3200', icon: VAC_ICONS.Thermometer },
   'О':       { color: '#1d4ed8', bg: '#dbeafe',  border: '#93c5fd', darkColor: '#60a5fa', darkBg: '#0c1a2e', darkBorder: '#1e3a5f', icon: VAC_ICONS.BeachAccess },
   'У':       { color: '#0369a1', bg: '#e0f2fe',  border: '#7dd3fc', darkColor: '#38bdf8', darkBg: '#0a1520', darkBorder: '#164e63', icon: VAC_ICONS.Student },
@@ -357,13 +369,14 @@ const EXPL_QUADRANTS = [
   { above: false, leftAnchor: true  }, // index 3: below, left:0  → extends RIGHT
 ];
 
-function ExplanationIconItem({ type, count, rowHovered, index }) {
+function ExplanationIconItem({ type, count, links, rowHovered, index }) {
   const [hovered, setHovered] = React.useState(false);
   const { dark } = useTheme();
   const meta = EXPL_META[type] || EXPL_META['Другое'];
   const s = getExplStyle(meta, dark);
   const showTooltip = hovered || rowHovered;
   const q = EXPL_QUADRANTS[(index || 0) % 4];
+  const hasLinks = links && links.some(Boolean);
 
   const boxStyle = q.above
     ? { bottom: 'calc(100% + 6px)', ...(q.leftAnchor ? { left: 0 } : { right: 0 }) }
@@ -371,17 +384,25 @@ function ExplanationIconItem({ type, count, rowHovered, index }) {
   const arrowSide = q.leftAnchor ? { left: '10px' } : { right: '10px' };
   const initY = q.above ? 4 : -4;
 
+  const handleClick = (e) => {
+    if (!hasLinks) return;
+    e.stopPropagation();
+    // Open each link for this type in a new tab
+    links.forEach(link => { if (link) window.open(link, '_blank', 'noopener,noreferrer'); });
+  };
+
   return (
     <span style={{ position: 'relative', display: 'inline-flex' }}>
       <span
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onClick={handleClick}
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 26, height: 26, borderRadius: 7,
           background: s.bg, color: s.color,
           border: `1.5px solid ${s.border}`,
-          cursor: 'default', boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
+          cursor: hasLinks ? 'pointer' : 'default', boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
           position: 'relative',
         }}
       >
@@ -437,13 +458,19 @@ function ExplanationIconItem({ type, count, rowHovered, index }) {
   );
 }
 
-function ExplanationIcons({ types, rowHovered }) {
-  const counts = {};
-  types.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+function ExplanationIcons({ items, rowHovered }) {
+  // items can be [{name, link}, ...] (API) or ['string', ...] (legacy mock)
+  const normalized = items.map(it => typeof it === 'string' ? { name: it, link: null } : { name: it.name || 'Другое', link: it.link || null });
+  // Group by name, collecting links per group
+  const grouped = {};
+  normalized.forEach(it => {
+    if (!grouped[it.name]) grouped[it.name] = [];
+    grouped[it.name].push(it.link);
+  });
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'nowrap', gap: 3, alignItems: 'center', justifyContent: 'flex-start' }}>
-      {Object.entries(counts).map(([type, count], index) => (
-        <ExplanationIconItem key={type} type={type} count={count} index={index} rowHovered={rowHovered} />
+      {Object.entries(grouped).map(([type, links], index) => (
+        <ExplanationIconItem key={`${type}-${index}`} type={type} links={links} count={links.length} index={index} rowHovered={rowHovered} />
       ))}
     </span>
   );
@@ -531,9 +558,11 @@ function VacationBadge({ v, rowHovered }) {
 
 /* ── Efficiency hover info panel (portal, shown when section is collapsed) ── */
 function EfficiencyHoverPanel({ agent, anchorEl }) {
-  const expl = Array.isArray(agent.explanation)
+  const rawExpl = Array.isArray(agent.explanation)
     ? agent.explanation.filter(Boolean)
     : (agent.explanation ? [agent.explanation] : []);
+  // Normalize to {name, link} objects
+  const expl = rawExpl.map(it => typeof it === 'string' ? { name: it, link: null } : { name: it.name || 'Другое', link: it.link || null });
   const vac = agent.vacation;
   if (!expl.length && !vac) return null;
 
@@ -541,7 +570,7 @@ function EfficiencyHoverPanel({ agent, anchorEl }) {
   if (!rect) return null;
 
   const counts = {};
-  expl.forEach(type => { counts[type] = (counts[type] || 0) + 1; });
+  expl.forEach(it => { counts[it.name] = (counts[it.name] || 0) + 1; });
 
   const panelTop  = rect.bottom + 4;
   const panelLeft = Math.max(8, Math.min(rect.left + 60, window.innerWidth - 440));
@@ -625,7 +654,7 @@ function fmtHMS(sec) {
 }
 
 /* ── Cell value renderer ──────────────────────────────────────────────────── */
-function CellValue({ colKey, agent, rowHovered, b2Val }) {
+const CellValue = React.memo(function CellValue({ colKey, agent, rowHovered, b2Val }) {
   const { lang } = useLang();
   const t = k => translations[lang]?.[k] ?? k;
   switch (colKey) {
@@ -633,9 +662,12 @@ function CellValue({ colKey, agent, rowHovered, b2Val }) {
     case 'factTime':
       return <span>{fmtTime(agent[colKey])}</span>;
 
-    case 'debtTime':
-    case 'workTime':
-    case 'systemError':
+    case 'totalDebt':
+    case 'sysBreak':
+    case 'netDebt':
+    case 'compensated':
+    case 'notCompensated':
+    case 'remainingDebt':
       return <span>{fmtHMS(agent[colKey])}</span>;
 
     case 'perfPct':
@@ -644,7 +676,7 @@ function CellValue({ colKey, agent, rowHovered, b2Val }) {
     case 'explanation': {
       const val = agent[colKey];
       const arr = Array.isArray(val) ? val.filter(Boolean) : (val ? [val] : []);
-      return arr.length > 0 ? <ExplanationIcons types={arr} rowHovered={rowHovered} /> : null;
+      return arr.length > 0 ? <ExplanationIcons items={arr} rowHovered={rowHovered} /> : null;
     }
 
     case 'vacation': {
@@ -673,15 +705,15 @@ function CellValue({ colKey, agent, rowHovered, b2Val }) {
     case 'tabel_worked':
       return <span style={{ fontWeight: 800, color: '#0369a1' }}>{agent.worked ?? 0}</span>;
     case 'tabel_prazdHrs': {
-      const v = Math.round((agent.prazdnichny || 0) / 15000);
+      const v = agent.tabelHD != null ? agent.tabelHD : Math.round((agent.prazdnichny || 0) / 15000);
       return <span style={{ color: v > 0 ? '#15803d' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
     }
     case 'tabel_vecherHrs': {
-      const v = Math.round((agent.vecher || 0) / 5000);
+      const v = agent.tabelEV != null ? agent.tabelEV : Math.round((agent.vecher || 0) / 5000);
       return <span style={{ color: v > 0 ? '#78350f' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
     }
     case 'tabel_nochHrs': {
-      const v = Math.round((agent.noch || 0) / 7500);
+      const v = agent.tabelNT != null ? agent.tabelNT : Math.round((agent.noch || 0) / 7500);
       return <span style={{ color: v > 0 ? '#1d4ed8' : '#cbd5e1' }}>{v > 0 ? v : '–'}</span>;
     }
     case 'limit': {
@@ -711,7 +743,7 @@ function CellValue({ colKey, agent, rowHovered, b2Val }) {
       return <span>{v ?? '–'}</span>;
     }
   }
-}
+});
 
 /* ── Editable B2 cell ────────────────────────────────────────────────────── */
 function B2Cell({ agentId, b1Val, override, onSave, onActivate }) {
@@ -909,6 +941,9 @@ function SkeletonRow({ colCount }) {
 }
 
 /* ── Main component ───────────────────────────────────────────────────────── */
+const INITIAL_VISIBLE = 23;
+const LOAD_MORE_STEP = 23;
+
 export default function PayrollTable({ agents, activeGroup, visibleColumns, totalAll, isLoading, onDeleteAgents, onTransferAgents, groupNames, b2Comments, showChangeLog, setShowChangeLog, onChangeLogCountChange }) {
   const { lang } = useLang();
   const { dark } = useTheme();
@@ -1038,6 +1073,31 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   // ─ Existing state ───────────────────────────────────────────
   const [ctxMenu, setCtxMenu] = React.useState({ visible: false, x: 0, y: 0, agentId: null });
   const [b2Overrides, setB2Overrides] = React.useState({});
+  const b2OverridesRef = React.useRef(b2Overrides);
+  React.useLayoutEffect(() => { b2OverridesRef.current = b2Overrides; }, [b2Overrides]);
+
+  // Seed b2Overrides from API bonus_changed (non-zero means someone changed it)
+  const agentsRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!agents || agents === agentsRef.current) return;
+    agentsRef.current = agents;
+    const seed = {};
+    agents.forEach(a => {
+      if (a._apiBonusChanged && a._apiBonusChanged !== a.b1) {
+        seed[a.id] = a._apiBonusChanged;
+      }
+    });
+    if (Object.keys(seed).length > 0) {
+      setB2Overrides(prev => {
+        const merged = { ...seed };
+        // User's local edits take priority over API seed
+        for (const [id, val] of Object.entries(prev)) {
+          merged[id] = val;
+        }
+        return merged;
+      });
+    }
+  }, [agents]);
   const [hoveredRowId, setHoveredRowId] = React.useState(null);
   const hoveredTrRef = React.useRef(null);
   const [selectedForDelete, setSelectedForDelete] = React.useState(new Set());
@@ -1081,22 +1141,33 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   }, []);
   const handleB2Save = React.useCallback((id, val) => {
     const ag = agents?.find(a => a.id === id);
-    const oldVal = b2Overrides[id] !== undefined ? b2Overrides[id] : ag?.b1;
+    const prev = b2OverridesRef.current;
+    const oldVal = prev[id] !== undefined ? prev[id] : ag?.b1;
     if (oldVal !== val) {
-      let action;
-      if (val === 0) action = 'deleted';
-      else if (val > oldVal) action = 'increased';
-      else action = 'decreased';
+      const action = val === 0 ? 'deleted' : val > oldVal ? 'increased' : 'decreased';
       addLogEntry(id, ag?.name || id, oldVal, val, action, currentUser);
     }
-    setB2Overrides(prev => ({ ...prev, [id]: val }));
-  }, [agents, b2Overrides, addLogEntry, currentUser]);
+    setB2Overrides(p => ({ ...p, [id]: val }));
+    if (ag?.name) {
+      saveBonusChange(ag.name, val).catch(err => console.error('Bonus save failed:', err));
+    }
+  }, [agents, addLogEntry, currentUser]);
   const handleB2Reset = React.useCallback((id) => {
     const ag = agents?.find(a => a.id === id);
-    const oldVal = b2Overrides[id];
-    if (oldVal !== undefined) addLogEntry(id, ag?.name || id, oldVal, ag?.b1, 'reset', currentUser);
-    setB2Overrides(prev => { const n = { ...prev }; delete n[id]; return n; });
-  }, [agents, b2Overrides, addLogEntry, currentUser]);
+    const prev = b2OverridesRef.current;
+    const oldVal = prev[id];
+    if (oldVal !== undefined) {
+      addLogEntry(id, ag?.name || id, oldVal, ag?.b1, 'reset', currentUser);
+    }
+    setB2Overrides(p => {
+      const n = { ...p };
+      delete n[id];
+      return n;
+    });
+    if (ag?.name) {
+      saveBonusChange(ag.name, 0).catch(err => console.error('Bonus reset failed:', err));
+    }
+  }, [agents, addLogEntry, currentUser]);
 
   const exitDeleteMode = () => { setDeleteMode(false); setSelectedForDelete(new Set()); };
   const exitTransferMode = () => { setTransferMode(false); setSelectedForTransfer(new Set()); setTransferExpandedSection(null); };
@@ -1129,6 +1200,32 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
       return sortDir === 'asc' ? av - bv : bv - av;
     });
   }, [agents, sortKey, sortDir]);
+
+  // ─ Progressive rendering (infinite scroll) ─────────────────────
+  const [visibleCount, setVisibleCount] = React.useState(INITIAL_VISIBLE);
+  const sentinelRef = React.useRef(null);
+
+  // Reset visible count when the agent list changes (filter / search / group switch)
+  const agentListId = (agents || []).length + '-' + (agents?.[0]?.id ?? '');
+  React.useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE);
+  }, [agentListId]);
+
+  // IntersectionObserver: when sentinel enters view, show more rows
+  React.useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0]?.isIntersecting) {
+        setVisibleCount(prev => prev + LOAD_MORE_STEP);
+      }
+    }, { rootMargin: '200px' });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [agentListId]);
+
+  const pagedAgents = allAgents.slice(0, visibleCount);
+  const hasMore = visibleCount < allAgents.length;
 
   const handleContextMenu = (e, agentId = null) => {
     if (e.shiftKey) return; // Shift+right-click → browser default
@@ -1682,7 +1779,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
             ? Array.from({ length: 8 }).map((_, i) => (
                 <SkeletonRow key={i} colCount={visibleCols.length} />
               ))
-            : allAgents.map((agent, idx) => {
+            : pagedAgents.map((agent, idx) => {
                 const isEven = idx % 2 === 1;
                 const rowClass = isEven ? 'row-even' : 'row-odd';
                 const isSelectedForDelete = selectedForDelete.has(agent.id);
@@ -1898,6 +1995,11 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
           );
         })()}
       </table>
+
+      {/* Scroll sentinel — triggers loading more rows when it enters the viewport */}
+      {!isLoading && hasMore && (
+        <div ref={sentinelRef} style={{ height: 1, width: '100%' }} />
+      )}
 
       {/* Efficiency hover panel — portal to body, shown when section is collapsed + row is hovered */}
       <AnimatePresence>
