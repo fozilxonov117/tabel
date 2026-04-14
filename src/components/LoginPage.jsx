@@ -19,7 +19,7 @@ export default function LoginPage({ onLogin }) {
     setLoading(true);
     setTimeout(() => {
       if (username === CREDENTIALS.username && password === CREDENTIALS.password) {
-        try { sessionStorage.setItem('auth', '1'); } catch {}
+        try { sessionStorage.setItem('auth', '1'); sessionStorage.setItem('loggedInUser', username); } catch {}
         onLogin();
       } else {
         setError('Неверный логин или пароль');

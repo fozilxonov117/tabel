@@ -1,11 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GROUP_NAMES } from '../data/mockData';
+import { GROUP_NAMES, HEADER_SECTIONS } from '../data/mockData';
 import { useLang } from '../i18n/LangContext';
 import { useTheme } from '../i18n/ThemeContext';
 import DarkModeToggle from './DarkModeToggle';
 
-const ALL_BRANCHES = ['All', ...GROUP_NAMES];
 const LANGS = ['EN', 'RU', 'UZ'];
 
 export default function Header({ activeGroup, onGroupChange, onLogout }) {
@@ -13,6 +12,8 @@ export default function Header({ activeGroup, onGroupChange, onLogout }) {
   const { dark, toggleDark } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const [openSection, setOpenSection] = useState(null);
+  const secRef = useRef(null);
 
   useEffect(() => {
     function handler(e) {
@@ -21,6 +22,14 @@ export default function Header({ activeGroup, onGroupChange, onLogout }) {
     if (menuOpen) document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [menuOpen]);
+
+  useEffect(() => {
+    function handler(e) {
+      if (secRef.current && !secRef.current.contains(e.target)) setOpenSection(null);
+    }
+    if (openSection) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [openSection]);
 
   return (
     <header
@@ -36,16 +45,72 @@ export default function Header({ activeGroup, onGroupChange, onLogout }) {
         flexShrink: 0,
       }}
     >
-      {/* Left: Branch tabs */}
-      <div className="flex items-center gap-1">
-        {ALL_BRANCHES.map(group => (
-          <BranchTab
-            key={group}
-            group={group}
-            active={activeGroup === group}
-            onClick={() => onGroupChange(group)}
-          />
-        ))}
+      {/* Left: All tab + Section dropdowns */}
+      <div className="flex items-center gap-1" ref={secRef}>
+        <BranchTab group="All" active={activeGroup === 'All'} onClick={() => { onGroupChange('All'); setOpenSection(null); }} />
+        {HEADER_SECTIONS.map(sec => {
+          const isActive = sec.groups.includes(activeGroup);
+          const isOpen = openSection === sec.label;
+          return (
+            <div key={sec.label} style={{ position: 'relative' }}>
+              <SectionTab
+                label={sec.label}
+                active={isActive}
+                open={isOpen}
+                subLabel={isActive && activeGroup !== 'All' ? activeGroup : null}
+                onClick={() => setOpenSection(isOpen ? null : sec.label)}
+              />
+              <AnimatePresence>
+                {isOpen && (
+                  <motion.div
+                    key={sec.label + '-dd'}
+                    initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.94, y: -6 }}
+                    transition={{ duration: 0.14, ease: [0.4, 0, 0.2, 1] }}
+                    style={{
+                      position: 'absolute', top: 'calc(100% + 6px)', left: 0,
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 11,
+                      boxShadow: dark
+                        ? '0 8px 32px rgba(0,0,0,0.55)'
+                        : '0 8px 28px rgba(0,0,0,0.10)',
+                      padding: '5px',
+                      minWidth: 150,
+                      zIndex: 9999,
+                      transformOrigin: 'top left',
+                    }}
+                  >
+                    <style>{`
+                      .sec-dd-item { transition: background 0.1s; border-radius: 7px; }
+                      .sec-dd-item:hover { background: ${dark ? '#1a2a3a' : '#f0f9ff'}; }
+                    `}</style>
+                    {sec.groups.map(g => (
+                      <button
+                        key={g}
+                        className="sec-dd-item"
+                        onClick={() => { onGroupChange(g); setOpenSection(null); }}
+                        style={{
+                          display: 'block', width: '100%', textAlign: 'left',
+                          padding: '6px 12px',
+                          background: activeGroup === g ? (dark ? '#0c2a3a' : '#e0f2fe') : 'transparent',
+                          border: 'none', cursor: 'pointer',
+                          fontSize: 12, fontWeight: activeGroup === g ? 700 : 500,
+                          color: activeGroup === g ? '#0ea5e9' : 'var(--text-primary)',
+                          fontFamily: "'Inter', system-ui, sans-serif",
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {g}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </div>
 
       {/* Right: Dark toggle + Language toggle + Avatar */}
@@ -189,6 +254,56 @@ export default function Header({ activeGroup, onGroupChange, onLogout }) {
         </div>
       </div>
     </header>
+  );
+}
+
+function SectionTab({ label, active, open, subLabel, onClick }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileTap={{ scale: 0.94 }}
+      className="relative px-3 py-1.5 text-xs font-bold rounded-full select-none outline-none"
+      style={{
+        color: active || open ? '#ffffff' : '#64748b',
+        cursor: 'pointer',
+        border: 'none',
+        background: active || open ? '#0ea5e9' : 'transparent',
+        boxShadow: active || open ? '0 0 10px rgba(14,165,233,0.35)' : 'none',
+        display: 'flex', alignItems: 'center', gap: 4,
+        transition: 'background 0.15s, color 0.15s, box-shadow 0.15s',
+      }}
+    >
+      {!active && !open && (
+        <motion.span
+          className="absolute inset-0 rounded-full"
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          style={{
+            background: 'rgba(14,165,233,0.15)',
+            border: '1px solid rgba(14,165,233,0.3)',
+          }}
+          transition={{ duration: 0.15 }}
+        />
+      )}
+      <span className="relative z-10" style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        {label}
+        {subLabel && (
+          <span style={{
+            fontSize: 9, fontWeight: 600, opacity: 0.85,
+            background: 'rgba(255,255,255,0.2)', borderRadius: 4,
+            padding: '1px 4px', lineHeight: 1.2,
+          }}>
+            {subLabel}
+          </span>
+        )}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.15s',
+        }}>
+          <path d="M2.5 3.5L5 6.5L7.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </span>
+    </motion.button>
   );
 }
 

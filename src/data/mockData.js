@@ -27,7 +27,14 @@
 //     requiresCardCheck вЂ“ red underline on % Р’Р«Рџ cell
 // в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
-export const GROUP_NAMES = ['1242', '1000', '1009', '1170'];
+export const GROUP_NAMES = ['1242', '1000', '1009', '1170', 'Qoganla (255)', '112', 'Qayta aloqa', '112-1000', 'Qoganla (112)', 'Андижан', 'Бухара', 'Джизак', 'Кашкадарья', 'Навои', 'Наманган', 'Самарканд', 'Сурхандарья', 'Сырдарья', 'Фергана', 'Хорезм', 'Qoganla (Region)', 'Nukus'];
+
+// ── Header navigation hierarchy ──────────────────────────────────────────────
+export const HEADER_SECTIONS = [
+  { label: '255',    groups: ['1242', '1000', '1009', '1170', 'Qoganla (255)'] },
+  { label: '112',    groups: ['112', 'Qayta aloqa', '112-1000', 'Qoganla (112)'] },
+  { label: 'Region', groups: ['Андижан', 'Бухара', 'Джизак', 'Кашкадарья', 'Навои', 'Наманган', 'Самарканд', 'Сурхандарья', 'Сырдарья', 'Фергана', 'Хорезм', 'Qoganla (Region)', 'Nukus'] },
+];
 
 export const mockAgents = {
   '1242': [
@@ -137,6 +144,52 @@ export const mockAgents = {
     { id: '1170-9',  shtat: 'AD', vetka: '1170', name: 'Qoraboyev Ulugbek Hamza ogli',    planCalls: 1400, factCalls: 1370, planTime: 295, factTime: 290, worked: 21, explanation: '',            b1: 97,  b2: 92,  surcharge: 92,  factScore: 94.5,  limit: 92,  razryad: 5, profitFromOp: 0,       nadbavka: 280000, noch: 0,     vecher: 0,     prazdnichny: 0,      stoimostBiletov: 0,     addBonus: 0,      vyslugaLet: 192000, advance: 1200000, baseSalary: 3200000, debtTime: 5242, workTime: 650677, systemError: 692, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
     { id: '1170-10', shtat: 'AB', vetka: '1170', name: 'Nazarova Gulbahor Shuhrat qizi',  planCalls: 1400, factCalls: 1620, planTime: 295, factTime: 335, worked: 22, explanation: '',            b1: 115, b2: 105, surcharge: 110, factScore: 110.0, limit: 110, razryad: 7, profitFromOp: 130000,  nadbavka: 450000, noch: 0,     vecher: 0,     prazdnichny: 120000, stoimostBiletov: 0,     addBonus: 180000, vyslugaLet: 255000, advance: 1700000, baseSalary: 4250000, debtTime: 0, workTime: 637901, systemError: 692, flags: { manualInput: false, thresholdAchieved: true,  requiresCardCheck: false } },
   ],
+  // ── Qoganla (255) group ─────────────────────────────────────────────────────
+  'Qoganla (255)': [
+    { id: 'QOG255-1', shtat: 'AD', vetka: 'Qoganla (255)', name: 'Raximov Sardor Dilshod ogli',     planCalls: 1350, factCalls: 1410, planTime: 290, factTime: 305, worked: 22, explanation: '',        b1: 105, b2: 98, surcharge: 98, factScore: 100.0, limit: 98, razryad: 6, profitFromOp: 60000,  nadbavka: 340000, noch: 0, vecher: 0, prazdnichny: 80000, stoimostBiletov: 0, addBonus: 100000, vyslugaLet: 210000, advance: 1380000, baseSalary: 3550000, debtTime: 810, workTime: 574050, systemError: 1200, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+    { id: 'QOG255-2', shtat: 'AB', vetka: 'Qoganla (255)', name: 'Tursunova Dilbar Anvar qizi',      planCalls: 1350, factCalls: 1380, planTime: 290, factTime: 298, worked: 22, explanation: '',        b1: 100, b2: 95, surcharge: 95, factScore: 97.5,  limit: 95, razryad: 5, profitFromOp: 0,      nadbavka: 300000, noch: 0, vecher: 0, prazdnichny: 0,     stoimostBiletov: 0, addBonus: 0,      vyslugaLet: 198000, advance: 1250000, baseSalary: 3300000, debtTime: 805, workTime: 574045, systemError: 1200, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+    { id: 'QOG255-3', shtat: 'AD', vetka: 'Qoganla (255)', name: 'Abdullayev Jamshid Komil ogli',    planCalls: 1350, factCalls: 1500, planTime: 290, factTime: 318, worked: 22, explanation: '',        b1: 110, b2: 100, surcharge: 102, factScore: 105.0, limit: 102, razryad: 7, profitFromOp: 90000, nadbavka: 400000, noch: 0, vecher: 0, prazdnichny: 100000, stoimostBiletov: 0, addBonus: 140000, vyslugaLet: 230000, advance: 1520000, baseSalary: 3850000, debtTime: 0, workTime: 574040, systemError: 1200, flags: { manualInput: false, thresholdAchieved: true, requiresCardCheck: false } },
+  ],
+  // ── Qoganla (112) group ─────────────────────────────────────────────────────
+  'Qoganla (112)': [
+    { id: 'QOG112-1', shtat: 'AD', vetka: 'Qoganla (112)', name: 'Kamolov Asror Baxtiyor ogli',    planCalls: 1380, factCalls: 1420, planTime: 295, factTime: 310, worked: 22, explanation: '',        b1: 103, b2: 97, surcharge: 97, factScore: 100.0, limit: 97, razryad: 6, profitFromOp: 45000,  nadbavka: 320000, noch: 0, vecher: 0, prazdnichny: 0,     stoimostBiletov: 0, addBonus: 80000,  vyslugaLet: 205000, advance: 1350000, baseSalary: 3450000, debtTime: 820, workTime: 575000, systemError: 1180, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+    { id: 'QOG112-2', shtat: 'AB', vetka: 'Qoganla (112)', name: 'Qurbonova Mohinur Shuhrat qizi',  planCalls: 1380, factCalls: 1370, planTime: 295, factTime: 292, worked: 21, explanation: '',        b1: 98,  b2: 93, surcharge: 93, factScore: 95.5,  limit: 93, razryad: 5, profitFromOp: 0,      nadbavka: 275000, noch: 0, vecher: 0, prazdnichny: 0,     stoimostBiletov: 0, addBonus: 0,      vyslugaLet: 188000, advance: 1180000, baseSalary: 3100000, debtTime: 815, workTime: 574200, systemError: 1180, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+  ],
+  // ── 112 group ──────────────────────────────────────────────────────────────
+  '112': [
+    { id: '112-1', shtat: 'AD', vetka: '112', name: 'Mirzayev Otabek Sherzod ogli',       planCalls: 1500, factCalls: 1550, planTime: 310, factTime: 320, worked: 22, explanation: '',        b1: 105, b2: 98, surcharge: 98, factScore: 100.0, limit: 98, razryad: 6, profitFromOp: 50000,  nadbavka: 330000, noch: 0, vecher: 0, prazdnichny: 80000, stoimostBiletov: 0, addBonus: 90000,  vyslugaLet: 205000, advance: 1360000, baseSalary: 3500000, debtTime: 900, workTime: 580000, systemError: 1100, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+    { id: '112-2', shtat: 'AB', vetka: '112', name: 'Xasanova Madina Baxtiyor qizi',      planCalls: 1500, factCalls: 1480, planTime: 310, factTime: 308, worked: 22, explanation: '',        b1: 100, b2: 95, surcharge: 95, factScore: 97.5,  limit: 95, razryad: 5, profitFromOp: 0,      nadbavka: 290000, noch: 0, vecher: 0, prazdnichny: 0,     stoimostBiletov: 0, addBonus: 0,      vyslugaLet: 192000, advance: 1200000, baseSalary: 3200000, debtTime: 895, workTime: 579000, systemError: 1100, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+  ],
+  // ── Qayta aloqa group ──────────────────────────────────────────────────────
+  'Qayta aloqa': [
+    { id: 'QA-1', shtat: 'AD', vetka: 'Qayta aloqa', name: 'Yuldashev Bobur Mansur ogli',  planCalls: 1400, factCalls: 1450, planTime: 300, factTime: 312, worked: 22, explanation: '',        b1: 103, b2: 96, surcharge: 96, factScore: 99.5, limit: 96, razryad: 6, profitFromOp: 40000,  nadbavka: 320000, noch: 0, vecher: 0, prazdnichny: 0,     stoimostBiletov: 0, addBonus: 80000,  vyslugaLet: 200000, advance: 1300000, baseSalary: 3400000, debtTime: 850, workTime: 575000, systemError: 1150, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+    { id: 'QA-2', shtat: 'AB', vetka: 'Qayta aloqa', name: 'Nurmatova Shahlo Rustam qizi',  planCalls: 1400, factCalls: 1390, planTime: 300, factTime: 296, worked: 21, explanation: '',        b1: 98,  b2: 93, surcharge: 93, factScore: 95.5, limit: 93, razryad: 5, profitFromOp: 0,      nadbavka: 275000, noch: 0, vecher: 0, prazdnichny: 0,     stoimostBiletov: 0, addBonus: 0,      vyslugaLet: 185000, advance: 1150000, baseSalary: 3100000, debtTime: 840, workTime: 574500, systemError: 1150, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+  ],
+  // ── 112-1000 group ──────────────────────────────────────────────────────────
+  '112-1000': [
+    { id: '112K-1', shtat: 'AD', vetka: '112-1000', name: 'Ergashev Nodir Baxrom ogli',     planCalls: 1450, factCalls: 1520, planTime: 305, factTime: 318, worked: 22, explanation: '',        b1: 107, b2: 100, surcharge: 100, factScore: 103.0, limit: 100, razryad: 6, profitFromOp: 70000, nadbavka: 360000, noch: 0, vecher: 0, prazdnichny: 90000, stoimostBiletov: 0, addBonus: 120000, vyslugaLet: 220000, advance: 1450000, baseSalary: 3700000, debtTime: 870, workTime: 577000, systemError: 1120, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+    { id: '112K-2', shtat: 'AB', vetka: '112-1000', name: 'Saidova Zulfiya Akbar qizi',     planCalls: 1450, factCalls: 1440, planTime: 305, factTime: 300, worked: 21, explanation: '',        b1: 98,  b2: 93, surcharge: 93, factScore: 95.5,  limit: 93, razryad: 5, profitFromOp: 0,      nadbavka: 280000, noch: 0, vecher: 0, prazdnichny: 0,     stoimostBiletov: 0, addBonus: 0,      vyslugaLet: 188000, advance: 1180000, baseSalary: 3150000, debtTime: 860, workTime: 576000, systemError: 1120, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+  ],
+  // ── Regional groups (minimal placeholder data) ────────────────────────────
+  'Nukus': [
+    { id: 'NUK-1', shtat: 'AD', vetka: 'Nukus', name: 'Jumaniyazov Azamat Ruslan ogli',     planCalls: 1300, factCalls: 1340, planTime: 280, factTime: 290, worked: 22, explanation: '',        b1: 102, b2: 96, surcharge: 96, factScore: 99.0, limit: 96, razryad: 5, profitFromOp: 30000, nadbavka: 290000, noch: 0, vecher: 0, prazdnichny: 0, stoimostBiletov: 0, addBonus: 60000, vyslugaLet: 190000, advance: 1200000, baseSalary: 3200000, debtTime: 0, workTime: 570000, systemError: 1050, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+  ],
+  // ── Qoganla (Region) group ──────────────────────────────────────────────────
+  'Qoganla (Region)': [
+    { id: 'QOGREG-1', shtat: 'AD', vetka: 'Qoganla (Region)', name: 'Toshmatov Ulugbek Saidakbar ogli', planCalls: 1320, factCalls: 1360, planTime: 285, factTime: 296, worked: 22, explanation: '',     b1: 103, b2: 95, surcharge: 95, factScore: 99.0, limit: 95, razryad: 5, profitFromOp: 35000, nadbavka: 295000, noch: 0, vecher: 0, prazdnichny: 0, stoimostBiletov: 0, addBonus: 70000, vyslugaLet: 195000, advance: 1220000, baseSalary: 3250000, debtTime: 0, workTime: 571000, systemError: 1060, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+    { id: 'QOGREG-2', shtat: 'AB', vetka: 'Qoganla (Region)', name: 'Jurayeva Komila Alisher qizi',    planCalls: 1320, factCalls: 1310, planTime: 285, factTime: 280, worked: 21, explanation: '',     b1: 98, b2: 92, surcharge: 92, factScore: 95.0, limit: 92, razryad: 5, profitFromOp: 0,     nadbavka: 260000, noch: 0, vecher: 0, prazdnichny: 0, stoimostBiletov: 0, addBonus: 0,     vyslugaLet: 182000, advance: 1130000, baseSalary: 3050000, debtTime: 0, workTime: 570500, systemError: 1060, flags: { manualInput: false, thresholdAchieved: false, requiresCardCheck: false } },
+  ],
+  'Андижан': [],
+  'Бухара': [],
+  'Джизак': [],
+  'Кашкадарья': [],
+  'Навои': [],
+  'Наманган': [],
+  'Самарканд': [],
+  'Сурхандарья': [],
+  'Сырдарья': [],
+  'Фергана': [],
+  'Хорезм': [],
 };
 
 export const TOTAL_AGENTS = Object.values(mockAgents).reduce((sum, arr) => sum + arr.length, 0);
