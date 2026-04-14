@@ -1194,6 +1194,20 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
       {/* Changelog slide-out panel */}
       <AnimatePresence>
         {showChangeLog && (
+          <>
+            {/* Backdrop — click outside to close */}
+            <motion.div
+              key="changelog-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => setShowChangeLog(false)}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 99996,
+                background: 'rgba(0,0,0,0.18)',
+              }}
+            />
           <motion.div
             initial={{ x: 360, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -1290,6 +1304,7 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
               )}
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
 
