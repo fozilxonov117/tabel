@@ -377,6 +377,7 @@ function ExplanationIconItem({ type, count, links, rowHovered, index }) {
   const showTooltip = hovered || rowHovered;
   const q = EXPL_QUADRANTS[(index || 0) % 4];
   const hasLinks = links && links.some(Boolean);
+  const validLinks = (links || []).filter(Boolean);
 
   const boxStyle = q.above
     ? { bottom: 'calc(100% + 6px)', ...(q.leftAnchor ? { left: 0 } : { right: 0 }) }
@@ -385,10 +386,9 @@ function ExplanationIconItem({ type, count, links, rowHovered, index }) {
   const initY = q.above ? 4 : -4;
 
   const handleClick = (e) => {
-    if (!hasLinks) return;
+    if (!hasLinks || count > 1) return; // single link → open directly; multi → use tooltip
     e.stopPropagation();
-    // Open each link for this type in a new tab
-    links.forEach(link => { if (link) window.open(link, '_blank', 'noopener,noreferrer'); });
+    window.open(validLinks[0], '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -428,18 +428,59 @@ function ExplanationIconItem({ type, count, links, rowHovered, index }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: initY, scale: 0.9 }}
             transition={{ duration: 0.15 }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             style={{
               position: 'absolute',
               ...boxStyle,
               background: 'var(--surface)', color: 'var(--text-primary)',
               fontSize: 11, fontWeight: 600,
-              whiteSpace: 'nowrap', padding: '4px 9px',
+              whiteSpace: 'nowrap',
+              padding: validLinks.length > 1 ? '4px 4px' : '4px 9px',
               borderRadius: 7, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
               border: '1px solid var(--border)',
-              zIndex: 9999, pointerEvents: 'none',
+              zIndex: 9999,
+              pointerEvents: hasLinks ? 'auto' : 'none',
+              display: 'flex', gap: 3,
             }}
           >
-            {count > 1 ? `${type} ×${count}` : type}
+            {validLinks.length > 1 ? (
+              /* Multiple links of same type → show each as a separate clickable pill */
+              validLinks.map((link, i) => (
+                <span
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); window.open(link, '_blank', 'noopener,noreferrer'); }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    background: s.bg, color: s.color,
+                    border: `1.5px solid ${s.border}`,
+                    padding: '3px 8px', borderRadius: 6,
+                    fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'filter 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.9)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}
+                >
+                  {React.cloneElement(meta.icon, { width: 14, height: 14 })}
+                  <span>{type} {i + 1}</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                </span>
+              ))
+            ) : hasLinks ? (
+              /* Single link → clickable label */
+              <span
+                onClick={(e) => { e.stopPropagation(); window.open(validLinks[0], '_blank', 'noopener,noreferrer'); }}
+                style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              >
+                {type}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              </span>
+            ) : type}
             {q.above ? (
               <>
                 <span style={{ position: 'absolute', top: '100%', ...arrowSide, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid var(--border)' }} />
@@ -569,8 +610,12 @@ function EfficiencyHoverPanel({ agent, anchorEl }) {
   const rect = anchorEl?.getBoundingClientRect?.();
   if (!rect) return null;
 
-  const counts = {};
-  expl.forEach(it => { counts[it.name] = (counts[it.name] || 0) + 1; });
+  // Group by type, keeping individual links
+  const grouped = {};
+  expl.forEach(it => {
+    if (!grouped[it.name]) grouped[it.name] = [];
+    grouped[it.name].push(it.link);
+  });
 
   const panelTop  = rect.bottom + 4;
   const panelLeft = Math.max(8, Math.min(rect.left + 60, window.innerWidth - 440));
@@ -595,24 +640,64 @@ function EfficiencyHoverPanel({ agent, anchorEl }) {
         display: 'flex',
         alignItems: 'center',
         gap: 6,
-        pointerEvents: 'none',
+        pointerEvents: 'auto',
         whiteSpace: 'nowrap',
       }}
     >
-      {Object.entries(counts).map(([type, count]) => {
+      {Object.entries(grouped).map(([type, links]) => {
         const meta = EXPL_META[type] || EXPL_META['Другое'];
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const s = getExplStyle(meta, isDark);
+        const validLinks = links.filter(Boolean);
+        if (validLinks.length > 1) {
+          // Multiple links of same type → show each as separate clickable pill
+          return validLinks.map((link, i) => (
+            <span
+              key={`${type}-${i}`}
+              onClick={() => window.open(link, '_blank', 'noopener,noreferrer')}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: s.bg, color: s.color,
+                border: `1.5px solid ${s.border}`,
+                padding: '3px 8px', borderRadius: 6,
+                fontSize: 11, fontWeight: 700,
+                cursor: 'pointer', transition: 'filter 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.9)'; }}
+              onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}
+            >
+              {React.cloneElement(meta.icon, { width: 18, height: 18 })}
+              <span>{type} {i + 1}</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </span>
+          ));
+        }
+        // Single (or no) link
         return (
-          <span key={type} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: s.bg, color: s.color,
-            border: `1.5px solid ${s.border}`,
-            padding: '3px 8px', borderRadius: 6,
-            fontSize: 11, fontWeight: 700,
-          }}>
+          <span
+            key={type}
+            onClick={validLinks.length === 1 ? () => window.open(validLinks[0], '_blank', 'noopener,noreferrer') : undefined}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              background: s.bg, color: s.color,
+              border: `1.5px solid ${s.border}`,
+              padding: '3px 8px', borderRadius: 6,
+              fontSize: 11, fontWeight: 700,
+              cursor: validLinks.length ? 'pointer' : 'default',
+              transition: 'filter 0.15s',
+            }}
+            onMouseEnter={e => { if (validLinks.length) e.currentTarget.style.filter = 'brightness(0.9)'; }}
+            onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}
+          >
             {React.cloneElement(meta.icon, { width: 18, height: 18 })}
-            <span>{type}{count > 1 ? ` ×${count}` : ''}</span>
+            <span>{type}{links.length > 1 ? ` ×${links.length}` : ''}</span>
+            {validLinks.length > 0 && (
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            )}
           </span>
         );
       })}
@@ -807,7 +892,8 @@ function B2Cell({ agentId, b1Val, override, onSave, onActivate }) {
 /* ── B2 cell with comment portal tooltip ─────────────────────────────────── */
 function B2CommentCell({ agent, b2Override, b2IsHigher, b2IsLower, borderRight, groupEndShadow, onContextMenu, onSave, b2Comments, rowHovered }) {
   const tdRef = React.useRef(null);
-  const comment = (b2Comments && b2Comments[agent.id]) || null;
+  const rawComment = agent._apiComment || (b2Comments && b2Comments[agent.id]) || null;
+  const comment = rawComment && typeof rawComment === 'object' ? rawComment.text || null : rawComment;
   const [tooltipPos, setTooltipPos] = React.useState(null);
   const [cellHovered, setCellHovered] = React.useState(false);
 

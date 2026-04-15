@@ -4,7 +4,7 @@ import Header from './components/Header';
 import Toolbar from './components/Toolbar';
 import PayrollTable from './components/PayrollTable';
 import StatusBar from './components/StatusBar';
-import { GROUP_NAMES, B2_COMMENTS } from './data/mockData';
+import { GROUP_NAMES } from './data/mockData';
 import { processGroup, generateCSV } from './data/calculations';
 import { fetchAgentReport } from './data/api';
 import { LangProvider } from './i18n/LangContext';
@@ -261,7 +261,7 @@ export default function App() {
           onDeleteAgents={handleDeleteAgents}
           onTransferAgents={handleTransferAgents}
           groupNames={groupNames}
-          b2Comments={B2_COMMENTS}
+          b2Comments={null}
           showChangeLog={showChangeLog}
           setShowChangeLog={setShowChangeLog}
           onChangeLogCountChange={setChangeLogCount}
