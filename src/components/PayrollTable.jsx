@@ -1276,13 +1276,21 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
   const allAgents = React.useMemo(() => {
     const base = agents || [];
     if (!sortKey) return base;
+    const SORT_FIELD = {
+      tabel_worked: 'worked',
+      tabel_prazdHrs: 'tabelHD',
+      tabel_vecherHrs: 'tabelEV',
+      tabel_nochHrs: 'tabelNT',
+      b2: 'b1',
+    };
+    const field = SORT_FIELD[sortKey] ?? sortKey;
     return [...base].sort((a, b) => {
-      if (sortKey === 'name') {
+      if (field === 'name') {
         const cmp = (a.name ?? '').localeCompare(b.name ?? '');
         return sortDir === 'asc' ? cmp : -cmp;
       }
-      const av = Number(a[sortKey]) || 0;
-      const bv = Number(b[sortKey]) || 0;
+      const av = Number(a[field]) || 0;
+      const bv = Number(b[field]) || 0;
       return sortDir === 'asc' ? av - bv : bv - av;
     });
   }, [agents, sortKey, sortDir]);
@@ -1824,14 +1832,14 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                 onDragOver={e => { e.preventDefault(); setDragOverKey(col.key); }}
                 onDragLeave={() => setDragOverKey(null)}
                 onDrop={e => { e.preventDefault(); const from = e.dataTransfer.getData('dkey'); if (e.dataTransfer.getData('dtype') === 'col') moveCol(from, col.key); setDragOverKey(null); }}
-                onClick={dragMode ? undefined : () => handleSortClick(col.key)}
+                onClick={dragMode ? undefined : () => { if (!col.day) handleSortClick(col.key); }}
                 style={{
                   textAlign: 'center',
                   verticalAlign: 'bottom',
                   padding: '5px 4px 6px',
                   fontSize: 10, fontWeight: 700,
-                  color: isOver ? '#60a5fa' : sortKey === col.key ? '#0284c7' : col.day && TABEL_WEEKENDS.has(col.day) ? '#4ade80' : 'var(--cell-text)',
-                  background: isOver ? '#252525' : sortKey === col.key ? '#1a1a1a' : col.day && TABEL_WEEKENDS.has(col.day) ? 'var(--tabel-weekend-bg)' : 'var(--surface)',
+                  color: isOver ? '#60a5fa' : sortKey === col.key ? '#0284c7' : 'var(--cell-text)',
+                  background: isOver ? '#252525' : sortKey === col.key ? 'var(--sort-header-bg)' : col.day && TABEL_WEEKENDS.has(col.day) ? 'var(--tabel-weekend-bg)' : 'var(--surface)',
                   borderBottom: isOver ? '2px solid #3b82f6' : sortKey === col.key ? '2px solid #0284c7' : '2px solid var(--border)',
                   borderRight: isGroupEnd ? '1px solid var(--section-border)' : '1px solid var(--col-border)',
                   boxShadow: isGroupEnd ? '3px 0 8px -2px rgba(0,0,0,0.10)' : undefined,
@@ -1967,14 +1975,11 @@ export default function PayrollTable({ agents, activeGroup, visibleColumns, tota
                         // background: symbol/vacation always uses own color; Sat/Sun → light green; worked → light green; rest → white
                         const bgColor = isSymbol              ? vacStyle.bg
                                       : isSatSun              ? 'var(--tabel-weekend-bg)'
-                                      : (isEmpty && is11h)    ? undefined
-                                      : (val === 11 && !is11h)? 'var(--tabel-11h-bg)'
                                       : isEmpty               ? undefined
-                                      : 'var(--row-bg)';
+                                      : undefined;
                         const textColor = isEmpty              ? 'transparent'
                                         : isSymbol             ? vacStyle.color
-                                        : (val === 11 && !is11h) ? '#60a5fa'
-                                        : '#4ade80';
+                                        : '#374151';
                         return (
                           <td
                             key={col.key}

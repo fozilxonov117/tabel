@@ -69,7 +69,7 @@ function mapApiRowToAgent(row) {
     factCalls:    Number(row.total_calls)  || 0,
     planTime:     Math.round((Number(row.aht_norm_sec) || 0) / 60), // sec → min (fmtTime expects minutes)
     factTime:     Math.round((Number(row.avg_talk_sec) || 0) / 60), // sec → min
-    worked:       Number(row.tabel?.WD) || 0,
+    worked:       Number(row.tabel?.bonus_days) || 0,
     tabelDays:    Array.isArray(row.tabel?.days) ? row.tabel.days : null,
     tabelHD:      Number(row.tabel?.HD) || 0,
     tabelEV:      Number(row.tabel?.EV) || 0,
@@ -80,7 +80,7 @@ function mapApiRowToAgent(row) {
     b2:           0,
     surcharge:    Number(row.old_bonus) || 0,
     _apiBonusChanged: Number(row.bonus_changed) || 0,
-    _apiComment:  row.comment || null,
+    _apiComment:  Array.isArray(row.comment) && row.comment.length > 0 ? row.comment.map(c => c.text).filter(Boolean).join('\n') || null : null,
     factScore:    Number(row.kpi_percent) || 0,
     razryad:      parseRazryad(row.position),
     limit:        GRADE_LIMIT[parseRazryad(row.position)] ?? 95,

@@ -24,8 +24,10 @@
   --input-bg-active: #f0f9ff;
   --cell-text:       #374151;
   --cell-text-muted: #475569;
-  --tabel-weekend-bg:#dcfce7;
+  --tabel-weekend-bg:#bbf7d0;
+  --tabel-workday-bg:#f0fdf4;
   --tabel-11h-bg:    #dbeafe;
+  --sort-header-bg:  #e0f2fe;
   --tabel-evening-bg:#fefce8;
   --tabel-night-bg:  #eff6ff;
   --cell-red-bg:     #fee2e2;
@@ -51,7 +53,9 @@
   --cell-text:       #d0d0d0;
   --cell-text-muted: #888888;
   --tabel-weekend-bg:#0a1a0a;
+  --tabel-workday-bg:#0d1f0d;
   --tabel-11h-bg:    #0a1520;
+  --sort-header-bg:  #0c1a2e;
   --tabel-evening-bg:#1a1500;
   --tabel-night-bg:  #0f0f22;
   --cell-red-bg:     #1f0808;
